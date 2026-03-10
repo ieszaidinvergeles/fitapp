@@ -5,11 +5,16 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Creates the gyms table without the manager_id FK.
+ * Creates the gyms table.
  *
  * SRP: Solely responsible for the gyms schema lifecycle.
- * NOTE: The manager_id foreign key is added in migration 000008
- *       after the users table exists, breaking the circular dependency.
+ * NOTE: gyms and users have a circular FK dependency — gyms.manager_id
+ *       references users, and users.current_gym_id references gyms.
+ *       Laravel migrations execute one by one in order, so the FK cannot
+ *       be declared here because users does not exist yet at this point.
+ *       manager_id is created as a plain unsignedBigInteger (same column
+ *       type as foreignId) and the FK constraint is added in migration
+ *       000008 once users has been created.
  */
 return new class extends Migration
 {
@@ -18,13 +23,12 @@ return new class extends Migration
     {
         Schema::create('gyms', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
+            $table->string('name',80);
             $table->unsignedBigInteger('manager_id')->nullable();
-            // es lo mismo que hacer la referenciación de a una clave foranea
-            $table->string('address')->nullable();
-            $table->string('city')->nullable();
-            $table->string('location_coords')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('address', 200);
+            $table->string('city', 80);
+            $table->string('location_coords', 100)->nullable();
+            $table->string('phone', 20);
         });
     }
 

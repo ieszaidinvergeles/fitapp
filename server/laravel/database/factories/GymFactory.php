@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  * Factory for Gym.
  *
  * SRP: Solely responsible for generating fake Gym data.
- * NOTE: manager_id is left null; assign after users are seeded.
+ * NOTE: manager_id is left null; assigned after users are seeded
+ *       in DatabaseSeeder to resolve the circular FK dependency.
  */
 class GymFactory extends Factory
 {
@@ -20,12 +21,12 @@ class GymFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'            => fake()->company() . ' Fitness',
+            'name'            => substr(fake()->company() . ' Fitness', 0, 80),
             'manager_id'      => null,
-            'address'         => fake()->streetAddress(),
+            'address'         => substr(fake()->streetAddress(), 0, 200),
             'city'            => fake()->city(),
             'location_coords' => fake()->latitude() . ',' . fake()->longitude(),
-            'phone'           => fake()->phoneNumber(),
+            'phone'           => substr(fake()->phoneNumber(), 0, 20),
         ];
     }
 }

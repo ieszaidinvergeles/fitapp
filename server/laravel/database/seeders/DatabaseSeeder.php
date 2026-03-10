@@ -7,24 +7,24 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
- * Root database seeder – orchestrates all seeders in dependency order.
+ * Root database seeder — orchestrates all seeders in dependency order.
  *
  * SRP: Solely responsible for defining the seeding execution order.
- * OCP: Add new seeders to the $seeders list without modifying existing logic.
- * DIP: Depends on Seeder abstractions; each child seeder is independently
+ * OCP: Add new seeders to the call list without modifying existing logic.
+ * DIP: Depends on individual seeder abstractions, each independently
  *      responsible for its own table.
  *
  * Execution order:
- *   1. Seed tables with no foreign keys (leaf nodes of the dependency graph).
- *   2. Seed tables whose dependencies are already populated.
- *   3. Resolve the gyms <-> users circular FK after both exist.
+ *   Step 1 — Tables with no FK dependencies (leaf nodes).
+ *   Step 2 — gyms first (manager_id null), then users.
+ *   Step 3 — Resolve circular FK: assign manager_id to each gym.
+ *   Step 4 — All remaining tables in FK dependency order.
  */
 class DatabaseSeeder extends Seeder
 {
     /** @inheritdoc */
     public function run(): void
     {
-        // Step 1 – tables with no FK dependencies
         $this->call([
             MembershipPlanSeeder::class,
             ActivitySeeder::class,
@@ -33,11 +33,9 @@ class DatabaseSeeder extends Seeder
             ExerciseSeeder::class,
         ]);
 
-        // Step 2 – gyms first (without manager_id), then users
         $this->call(GymSeeder::class);
         $this->call(UserSeeder::class);
 
-        // Step 3 – resolve circular FK: assign a manager to each gym
         Gym::all()->each(function (Gym $gym): void {
             $manager = User::where('role', 'manager')->inRandomOrder()->first();
             if ($manager) {
@@ -45,7 +43,6 @@ class DatabaseSeeder extends Seeder
             }
         });
 
-        // Step 4 – seed remaining tables in dependency order
         $this->call([
             RoomSeeder::class,
             GymInventorySeeder::class,

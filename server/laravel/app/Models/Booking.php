@@ -1,29 +1,27 @@
+
 <?php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Booking model.
+ * Represents a user's reservation for a gym class.
  *
- * SRP: Represents a single class booking made by a user.
- * DIP: Depends on Eloquent abstraction.
+ * @property int $id
+ * @property int $class_id
+ * @property int $user_id
+ * @property string $status
+ * @property \Illuminate\Support\Carbon $booked_at
+ * @property \Illuminate\Support\Carbon|null $cancelled_at
  *
- * @property int         $id
- * @property int         $class_id
- * @property int         $user_id
- * @property string|null $status   active|cancelled|attended|no_show
- * @property string      $booked_at
- * @property string|null $cancelled_at
+ * @property-read \App\Models\GymClass $gymClass
+ * @property-read \App\Models\User $user
  */
+
 class Booking extends Model
 {
-    use HasFactory;
-
-    /** @var bool */
     public $timestamps = false;
 
     /** @var list<string> */
@@ -37,29 +35,19 @@ class Booking extends Model
 
     /** @var array<string,string> */
     protected $casts = [
-        'booked_at'    => 'datetime',
+        'class_id' => 'integer',
+        'user_id' => 'integer',
+        'booked_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
 
-    /**
-     * Returns the gym class this booking is for.
-     *
-     * @return BelongsTo<GymClass, Booking>
-     */
     public function gymClass(): BelongsTo
     {
         return $this->belongsTo(GymClass::class, 'class_id');
     }
 
-    /**
-     * Returns the user who made this booking.
-     *
-     * @return BelongsTo<User, Booking>
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-
-    //  User::class --> App\Models\User
 }

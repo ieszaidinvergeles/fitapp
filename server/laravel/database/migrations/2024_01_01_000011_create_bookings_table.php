@@ -16,14 +16,14 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('class_id');  // ->constrained('classes')->cascadeOnDelete();
-            $table->foreignId('user_id');   // ->constrained('users')->cascadeOnDelete();
-            $table->enum('status', ['active', 'cancelled', 'attended', 'no_show'])->nullable();
+            $table->foreignId('class_id')->nullable();
+            $table->foreignId('user_id')->nullable();
+            $table->enum('status', ['active', 'cancelled', 'attended', 'no_show']);
             $table->timestamp('booked_at')->useCurrent();
             $table->timestamp('cancelled_at')->nullable();
             
-            $table->foreign('class_id')->references('id')->on('classes');
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('class_id')->references('id')->on('classes')->cascadeOnDelete();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
 

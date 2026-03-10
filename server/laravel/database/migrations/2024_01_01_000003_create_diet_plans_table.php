@@ -16,8 +16,8 @@ return new class extends Migration
     {
         Schema::create('diet_plans', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
-            $table->text('goal_description', 280)->nullable();
+            $table->string('name',80);
+            $table->text('goal_description')->nullable();
         });
     }
 

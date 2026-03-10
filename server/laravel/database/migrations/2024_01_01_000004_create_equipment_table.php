@@ -16,9 +16,9 @@ return new class extends Migration
     {
         Schema::create('equipment', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
-            $table->text('description', 280)->nullable();
-            $table->boolean('is_home_accessible')->nullable();
+            $table->string('name',80);
+            $table->text('description')->nullable();
+            $table->boolean('is_home_accessible')->default(false);
         });
     }
 

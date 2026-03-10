@@ -15,14 +15,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_active_routines', function (Blueprint $table) {
-            $table->foreignId('user_id');    // ->constrained('users')->cascadeOnDelete();
-            $table->foreignId('routine_id'); // ->constrained('routines')->cascadeOnDelete();
-            $table->boolean('is_active')->nullable();
-            $table->date('start_date')->nullable();
+            $table->foreignId('user_id');
+            $table->foreignId('routine_id');
+            $table->boolean('is_active')->default(false);
+            $table->date('start_date');
             $table->primary(['user_id', 'routine_id']);
 
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('routine_id')->references('id')->on('routines');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('routine_id')->references('id')->on('routines')->cascadeOnDelete();
 
         });
     }

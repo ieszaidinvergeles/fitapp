@@ -16,9 +16,9 @@ return new class extends Migration
     {
         Schema::create('activities', function (Blueprint $table) {
             $table->id();
-            $table->string('name', length: 80)->nullable();
-            $table->text('description', 280)->nullable();
-            $table->string('intensity_level')->nullable();
+            $table->string('name', 80);
+            $table->text('description')->nullable();
+            $table->enum('intensity_level', ['low', 'medium', 'high', 'extreme']);
         });
     }
 

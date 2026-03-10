@@ -16,14 +16,14 @@ return new class extends Migration
     {
         Schema::create('user_meal_schedule', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id');               // ->constrained('users')->cascadeOnDelete();
-            $table->date('date')->nullable();
-            $table->enum('meal_type', ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'])->nullable();
-            $table->foreignId('recipe_id')->nullable(); // ->constrained('recipes')->nullOnDelete();
-            $table->boolean('is_consumed')->nullable();
+            $table->foreignId('user_id')->nullable();
+            $table->date('date');
+            $table->enum('meal_type', ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout']);
+            $table->foreignId('recipe_id')->nullable();
+            $table->boolean('is_consumed')->default(false);
 
-            $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('recipe_id')->references('id')->on('recipes');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('recipe_id')->references('id')->on('recipes')->nullOnDelete();
 
         });
     }

@@ -24,7 +24,7 @@ class GymInventoryFactory extends Factory
             'gym_id'       => Gym::inRandomOrder()->first()?->id,
             'equipment_id' => Equipment::inRandomOrder()->first()?->id,
             'quantity'     => fake()->numberBetween(1, 20),
-            'status'       => fake()->randomElement(['operational', 'maintenance']),
+            'status'       => fake()->randomElement(['operational', 'maintenance', 'retired']),
         ];
     }
 }

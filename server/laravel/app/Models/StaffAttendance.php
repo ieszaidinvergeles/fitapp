@@ -1,29 +1,28 @@
+
 <?php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * StaffAttendance model.
+ * Represents a clock-in/clock-out record for a staff member.
  *
- * SRP: Records a staff member's clock-in/out event at a gym.
- * DIP: Depends on Eloquent abstraction.
+ * @property int $id
+ * @property int $staff_id
+ * @property int $gym_id
+ * @property \Illuminate\Support\Carbon $clock_in
+ * @property \Illuminate\Support\Carbon|null $clock_out
+ * @property \Illuminate\Support\Carbon $date
  *
- * @property int         $id
- * @property int|null    $staff_id
- * @property int|null    $gym_id
- * @property string      $clock_in
- * @property string|null $clock_out
- * @property string|null $date
+ * @property-read \App\Models\User $staff
+ * @property-read \App\Models\Gym $gym
  */
+
 class StaffAttendance extends Model
 {
-    use HasFactory;
-
-    /** @var bool */
+    protected $table = 'staff_attendance';
     public $timestamps = false;
 
     /** @var list<string> */
@@ -37,22 +36,18 @@ class StaffAttendance extends Model
 
     /** @var array<string,string> */
     protected $casts = [
-        'clock_in'  => 'datetime',
+        'staff_id' => 'integer',
+        'gym_id' => 'integer',
+        'clock_in' => 'datetime',
         'clock_out' => 'datetime',
-        'date'      => 'date',
+        'date' => 'date',
     ];
 
-    /**
-     * @return BelongsTo<User, StaffAttendance>
-     */
     public function staff(): BelongsTo
     {
         return $this->belongsTo(User::class, 'staff_id');
     }
 
-    /**
-     * @return BelongsTo<Gym, StaffAttendance>
-     */
     public function gym(): BelongsTo
     {
         return $this->belongsTo(Gym::class);

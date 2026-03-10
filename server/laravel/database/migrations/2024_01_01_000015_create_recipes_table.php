@@ -16,13 +16,13 @@ return new class extends Migration
     {
         Schema::create('recipes', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
-            $table->text('description', 280)->nullable();
-            $table->text('ingredients', 1500)->nullable();
-            $table->text('preparation_steps')->nullable();
-            $table->integer('calories', 5)->nullable(); // kcal!!
+            $table->string('name', 80);
+            $table->text('description');
+            $table->text('ingredients');
+            $table->text('preparation_steps');
+            $table->integer('calories');
             $table->json('macros_json')->nullable()->comment('{protein: 30, carbs: 50, fat: 10}');
-            $table->enum('type', ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'])->nullable();
+            $table->enum('type', ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout']);
             $table->string('image_url')->nullable();
         });
     }

@@ -16,12 +16,12 @@ return new class extends Migration
     {
         Schema::create('user_partners', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('primary_user_id'); // ->constrained('users')->cascadeOnDelete();
-            $table->foreignId('partner_user_id'); // ->constrained('users')->cascadeOnDelete();
+            $table->foreignId('primary_user_id')->nullable();
+            $table->foreignId('partner_user_id')->nullable();
             $table->timestamp('linked_at')->useCurrent();
 
-            $table->foreign('primary_user_id')->references('id')->on('users');
-            $table->foreign('partner_user_id')->references('id')->on('users');
+            $table->foreign('primary_user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('partner_user_id')->references('id')->on('users')->cascadeOnDelete();
 
         });
     }

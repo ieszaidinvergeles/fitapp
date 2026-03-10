@@ -15,16 +15,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('routine_exercises', function (Blueprint $table) {
-            $table->foreignId('routine_id');  // ->constrained('routines')->cascadeOnDelete();
-            $table->foreignId('exercise_id'); // ->constrained('exercises')->cascadeOnDelete();
-            $table->integer('order_index')->nullable();
-            $table->integer('recommended_sets', 2)->nullable();
-            $table->integer('recommended_reps', 2)->nullable();
-            $table->integer('rest_seconds', 3)->nullable();
+            $table->foreignId('routine_id');
+            $table->foreignId('exercise_id');
+            $table->integer('order_index');
+            $table->integer('recommended_sets');
+            $table->integer('recommended_reps');
+            $table->integer('rest_seconds');
             $table->primary(['routine_id', 'exercise_id']);
 
-            $table->foreign('routine_id')->references('id')->on('routines');
-            $table->foreign('exercise_id')->references('id')->on('exercises');
+            $table->foreign('routine_id')->references('id')->on('routines')->cascadeOnDelete();
+            $table->foreign('exercise_id')->references('id')->on('exercises')->cascadeOnDelete();
 
         });
     }

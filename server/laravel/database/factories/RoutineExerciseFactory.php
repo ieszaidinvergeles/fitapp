@@ -21,12 +21,12 @@ class RoutineExerciseFactory extends Factory
     public function definition(): array
     {
         return [
-            'routine_id'        => Routine::inRandomOrder()->first()?->id,
-            'exercise_id'       => Exercise::inRandomOrder()->first()?->id,
-            'order_index'       => fake()->numberBetween(1, 10),
-            'recommended_sets'  => fake()->numberBetween(2, 5),
-            'recommended_reps'  => fake()->numberBetween(6, 20),
-            'rest_seconds'      => fake()->randomElement([30, 60, 90, 120]),
+            'routine_id'       => Routine::inRandomOrder()->first()?->id,
+            'exercise_id'      => Exercise::inRandomOrder()->first()?->id,
+            'order_index'      => fake()->numberBetween(1, 10),
+            'recommended_sets' => fake()->numberBetween(2, 5),
+            'recommended_reps' => fake()->numberBetween(6, 20),
+            'rest_seconds'     => fake()->randomElement([30, 60, 90, 120]),
         ];
     }
 }

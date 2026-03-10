@@ -21,7 +21,7 @@ class AppNotificationFactory extends Factory
     public function definition(): array
     {
         return [
-            'sender_id'       => User::where('role', 'admin')->inRandomOrder()->first()?->id,
+            'sender_id'       => User::whereIn('role', ['admin', 'manager'])->inRandomOrder()->first()?->id,
             'title'           => fake()->sentence(4),
             'body'            => fake()->paragraph(),
             'target_audience' => fake()->randomElement(['global', 'staff_only', 'specific_gym', 'specific_user']),

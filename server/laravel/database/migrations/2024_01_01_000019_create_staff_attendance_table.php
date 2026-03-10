@@ -16,14 +16,14 @@ return new class extends Migration
     {
         Schema::create('staff_attendance', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('staff_id')->nullable(); // ->constrained('users')->nullOnDelete();
-            $table->foreignId('gym_id')->nullable();   // ->constrained('gyms')->nullOnDelete();
+            $table->foreignId('staff_id')->nullable();
+            $table->foreignId('gym_id')->nullable();
             $table->timestamp('clock_in')->useCurrent();
             $table->timestamp('clock_out')->nullable();
-            $table->date('date')->nullable();
+            $table->date('date');
 
-            $table->foreign('staff_id')->references('id')->on('users');
-            $table->foreign('gym_id')->references('id')->on('gyms');
+            $table->foreign('staff_id')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('gym_id')->references('id')->on('gyms')->nullOnDelete();
 
         });
     }

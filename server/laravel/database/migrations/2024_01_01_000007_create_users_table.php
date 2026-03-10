@@ -18,25 +18,25 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('username', length: 20)->nullable();
-            $table->string('email')->nullable()->unique();
-            $table->string('password_hash')->nullable();
-            $table->enum('role', ['admin', 'manager', 'staff', 'client', 'user_online'])->nullable();
-            $table->string('full_name', length: 300)->nullable();
-            $table->string('dni', length: 9)->nullable();
-            $table->date('birth_date')->nullable();
-            $table->string('profile_photo_url')->nullable();
-            $table->foreignId('current_gym_id')->nullable();     // ->constrained('gyms')->nullOnDelete();
-            $table->foreignId('membership_plan_id')->nullable(); // ->constrained('membership_plans')->nullOnDelete();
-            $table->string('membership_status')->nullable()->comment('active, paused, expired');
-                // convertir a array (enum)
-            $table->integer('cancellation_strikes')->default(0)->comment('Count of late cancellations');
+            $table->string('username', 20);
+            $table->string('email', 160)->unique();
+            $table->string('password_hash', 255)->nullable();
+            $table->enum('role', ['admin', 'manager', 'staff', 'client', 'user_online']);
+            $table->string('full_name', 160)->nullable(); 
+            $table->string('dni', 9);
+            $table->date('birth_date');
+            $table->string('profile_photo_url', 600)->nullable();
+
+            $table->foreignId('current_gym_id')->nullable();
+            $table->foreignId('membership_plan_id')->nullable();
+
+            $table->enum('membership_status', ['active', 'paused', 'expired']);
+            $table->integer('cancellation_strikes')->default(0);
             $table->boolean('is_blocked_from_booking')->default(false);
             $table->timestamps();
 
-            $table->foreign('current_gym_id')->references('id')->on('gyms');
-            $table->foreign('membership_plan_id')->references('id')->on('membership_plans');
-
+            $table->foreign('current_gym_id')->references('id')->on('gyms')->onDelete('set null');
+            $table->foreign('membership_plan_id')->references('id')->on('membership_plans')->onDelete('set null');
         });
     }
 

@@ -15,14 +15,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('gym_inventory', function (Blueprint $table) {
-            $table->foreignId('gym_id');       //->constrained('gyms')->cascadeOnDelete();
-            $table->foreignId('equipment_id'); //->constrained('equipment')->cascadeOnDelete();
-            $table->integer('quantity')->nullable();
-            $table->string('status')->nullable();
+            $table->foreignId('gym_id'); 
+            $table->foreignId('equipment_id');
+            $table->integer('quantity');
+            $table->enum('status', ['operational', 'maintenance', 'retired'])->default('operational');
             $table->primary(['gym_id', 'equipment_id']);
 
-            $table->foreign('gym_id')->references('id')->on('gyms');
-            $table->foreign('equipment_id')->references('id')->on('equipment');
+            $table->foreign('gym_id')->references('id')->on('gyms')->cascadeOnDelete();
+            $table->foreign('equipment_id')->references('id')->on('equipment')->cascadeOnDelete();
         });
     }
 

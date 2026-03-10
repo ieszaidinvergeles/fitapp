@@ -1,28 +1,24 @@
+
 <?php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * MembershipPlan model.
+ * Represents a membership plan available in the system.
  *
- * SRP: Represents a membership plan definition.
- * DIP: Depends on Eloquent abstraction.
- *
- * @property int         $id
- * @property string|null $name
- * @property string|null $type  physical|online|duo
- * @property bool        $allow_partner_link
- * @property float|null  $price
+ * @property int $id
+ * @property string $name
+ * @property string $type
+ * @property bool $allow_partner_link
+ * @property string $price
+ * * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
  */
+
 class MembershipPlan extends Model
 {
-    use HasFactory;
-
-    /** @var bool */
     public $timestamps = false;
 
     /** @var list<string> */
@@ -36,14 +32,9 @@ class MembershipPlan extends Model
     /** @var array<string,string> */
     protected $casts = [
         'allow_partner_link' => 'boolean',
-        'price'              => 'decimal:2',
+        'price' => 'decimal:2',
     ];
 
-    /**
-     * Returns all users subscribed to this plan.
-     *
-     * @return HasMany<User>
-     */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

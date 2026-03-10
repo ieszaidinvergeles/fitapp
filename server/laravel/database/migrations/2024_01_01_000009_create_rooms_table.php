@@ -16,11 +16,11 @@ return new class extends Migration
     {
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('gym_id')->nullable(); // ->constrained('gyms')->cascadeOnDelete();
-            $table->string('name', length: 80)->nullable();
-            $table->integer('capacity', 3)->nullable();
+            $table->foreignId('gym_id');
+            $table->string('name', 80);
+            $table->integer('capacity');
 
-            $table->foreign('gym_id')->references('id')->on('gyms');
+            $table->foreign('gym_id')->references('id')->on('gyms')->cascadeOnDelete();
 
         });
     }

@@ -16,11 +16,11 @@ return new class extends Migration
     {
         Schema::create('exercises', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
-            $table->text('description', 280)->nullable();
-            $table->string('image_url')->nullable();
-            $table->string('video_url')->nullable();
-            $table->string('target_muscle_group')->nullable();
+            $table->string('name',80);
+            $table->text('description');
+            $table->string('image_url', 600)->nullable();
+            $table->string('video_url', 600)->nullable();
+            $table->enum('target_muscle_group', ['chest','upper_back','lower_back','shoulders','biceps','triceps','forearms','core','obliques','quadriceps','hamstrings','glutes','calves','hip_flexors','adductors','abductors','traps','lats','neck','full_body',])->nullable();
         });
     }
 

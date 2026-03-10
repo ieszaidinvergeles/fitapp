@@ -18,18 +18,15 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sender_id')->nullable();     // ->constrained('users')->nullOnDelete()
-                //   ->comment('System or Admin/Manager');
-            $table->string('title')->nullable();
+            $table->foreignId('sender_id')->nullable();
+            $table->string('title', 200);
             $table->text('body')->nullable();
-            $table->string('target_audience')->nullable()
-                  ->comment('global, staff_only, specific_gym, specific_user');
-                  // poner como array
-            $table->foreignId('related_gym_id')->nullable(); // ->constrained('gyms')->nullOnDelete();
+            $table->enum('target_audience', ['global', 'staff_only', 'specific_gym', 'specific_user'])->nullable();
+            $table->foreignId('related_gym_id')->nullable();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->foreign('sender_id')->references('id')->on('users');
-            $table->foreign('related_gym_id')->references('id')->on('gyms');
+            $table->foreign('sender_id')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('related_gym_id')->references('id')->on('gyms')->nullOnDelete();
 
         });
     }

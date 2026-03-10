@@ -16,19 +16,19 @@ return new class extends Migration
     {
         Schema::create('classes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('gym_id');        // ->nullable()->constrained('gyms')->cascadeOnDelete();
-            $table->foreignId('activity_id');   // ->nullable()->constrained('activities')->nullOnDelete();
-            $table->foreignId('instructor_id'); // ->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('room_id');       // ->nullable()->constrained('rooms')->nullOnDelete();
+            $table->foreignId('gym_id');
+            $table->foreignId('activity_id')->nullable();
+            $table->foreignId('instructor_id')->nullable();
+            $table->foreignId('room_id')->nullable();
             $table->timestamp('start_time')->useCurrent();
             $table->timestamp('end_time')->nullable();
             $table->integer('capacity_limit')->nullable();
             $table->boolean('is_cancelled')->default(false);
 
-            $table->foreign('gym_id')->references('id')->on('gyms');
-            $table->foreign('activity_id')->references('id')->on('activities');
-            $table->foreign('instructor_id')->references('id')->on('users');
-            $table->foreign('room_id')->references('id')->on('rooms');
+            $table->foreign('gym_id')->references('id')->on('gyms')->cascadeOnDelete();
+            $table->foreign('activity_id')->references('id')->on('activities')->nullOnDelete();
+            $table->foreign('instructor_id')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('room_id')->references('id')->on('rooms')->nullOnDelete();
         });
     }
 

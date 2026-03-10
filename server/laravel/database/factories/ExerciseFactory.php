@@ -28,7 +28,9 @@ class ExerciseFactory extends Factory
             'image_url'           => fake()->imageUrl(640, 480, 'sports'),
             'video_url'           => 'https://example.com/videos/' . fake()->slug(),
             'target_muscle_group' => fake()->randomElement([
-                'Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Glutes',
+                'chest', 'upper_back', 'lower_back', 'shoulders', 'biceps',
+                'triceps', 'forearms', 'core', 'obliques', 'quadriceps',
+                'hamstrings', 'glutes', 'calves', 'hip_flexors', 'full_body',
             ]),
         ];
     }

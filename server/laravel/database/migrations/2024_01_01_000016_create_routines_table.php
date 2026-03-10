@@ -16,18 +16,15 @@ return new class extends Migration
     {
         Schema::create('routines', function (Blueprint $table) {
             $table->id();
-            $table->string('name', length:80)->nullable();
-            $table->text('description', 280)->nullable();
-            $table->foreignId('creator_id')->nullable();              // ->constrained('users')->nullOnDelete();
-            $table->string('difficulty_level')->nullable();
-                // cambiar a array
-            $table->integer('estimated_duration_min', 5)->nullable();
-            $table->foreignId('associated_diet_plan_id')->nullable(); // ->constrained('diet_plans')->nullOnDelete()
-                //   ->comment('Optional link');
+            $table->string('name', 80);
+            $table->text('description');
+            $table->foreignId('creator_id')->nullable(); 
+            $table->enum('difficulty_level', ['beginner', 'intermediate', 'advanced', 'expert']);
+            $table->integer('estimated_duration_min');
+            $table->foreignId('associated_diet_plan_id')->nullable(); 
 
-            $table->foreign('creator_id')->references('id')->on('users');
-            $table->foreign('associated_diet_plan_id')->references('id')->on('diet_plans');
-
+            $table->foreign('creator_id')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('associated_diet_plan_id')->references('id')->on('diet_plans')->nullOnDelete();
         });
     }
 

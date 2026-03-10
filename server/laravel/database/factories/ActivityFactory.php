@@ -24,7 +24,7 @@ class ActivityFactory extends Factory
                 'Boxing', 'Swimming', 'HIIT', 'Bodybuilding', 'Stretching',
             ]),
             'description'     => fake()->sentence(),
-            'intensity_level' => fake()->randomElement(['low', 'medium', 'high']),
+            'intensity_level' => fake()->randomElement(['low', 'medium', 'high', 'extreme']),
         ];
     }
 }

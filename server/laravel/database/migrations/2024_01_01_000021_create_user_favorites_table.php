@@ -15,13 +15,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_favorites', function (Blueprint $table) {
-            $table->foreignId('user_id'); // ->constrained('users')->cascadeOnDelete();
-            $table->string('entity_type')->comment('gym, activity, routine');
-                // array (enum)
+            $table->foreignId('user_id');
+            $table->enum('entity_type', ['gym', 'activity', 'routine']);
             $table->unsignedBigInteger('entity_id');
             $table->primary(['user_id', 'entity_type', 'entity_id']);
 
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
 

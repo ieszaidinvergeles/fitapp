@@ -22,10 +22,10 @@ class BodyMetricFactory extends Factory
         return [
             'user_id'         => User::inRandomOrder()->first()?->id,
             'date'            => fake()->dateTimeBetween('-6 months', 'now')->format('Y-m-d'),
-            'weight_kg'       => fake()->numberBetween(50, 120),
-            'height_cm'       => fake()->numberBetween(155, 200),
-            'body_fat_pct'    => fake()->numberBetween(8, 35),
-            'muscle_mass_pct' => fake()->numberBetween(30, 55),
+            'weight_kg'       => fake()->randomFloat(1, 40, 180),
+            'height_cm'       => fake()->randomFloat(1, 140, 220),
+            'body_fat_pct'    => fake()->randomFloat(2, 5, 50),
+            'muscle_mass_pct' => fake()->randomFloat(2, 20, 65),
         ];
     }
 }

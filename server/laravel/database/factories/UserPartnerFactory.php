@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  * Factory for UserPartner.
  *
  * SRP: Solely responsible for generating fake UserPartner data.
+ * NOTE: Fetches two distinct users to prevent linking a user to themselves.
  */
 class UserPartnerFactory extends Factory
 {
@@ -19,11 +20,12 @@ class UserPartnerFactory extends Factory
     /** @inheritdoc */
     public function definition(): array
     {
-        $users = User::inRandomOrder()->limit(2)->get();
+        $primary = User::inRandomOrder()->first();
+        $partner = User::where('id', '!=', $primary->id)->inRandomOrder()->first();
 
         return [
-            'primary_user_id' => $users->first()?->id ?? 1,
-            'partner_user_id' => $users->last()?->id ?? 2,
+            'primary_user_id' => $primary->id,
+            'partner_user_id' => $partner->id,
             'linked_at'       => fake()->dateTimeBetween('-6 months', 'now'),
         ];
     }

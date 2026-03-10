@@ -1,35 +1,27 @@
+
 <?php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
- * UserFavorite model.
+ * Represents a user's saved favorite entity (polymorphic).
  *
- * Stores a generic favourite reference (gym, activity, routine)
- * using entity_type + entity_id columns (manual polymorphism).
+ * @property int $user_id
+ * @property string $entity_type
+ * @property int $entity_id
  *
- * SRP: Represents a single saved favourite for a user.
- * DIP: Depends on Eloquent abstraction.
- *
- * @property int    $user_id
- * @property string $entity_type  gym|activity|routine
- * @property int    $entity_id
+ * @property-read \App\Models\User $user
+ * @property-read \Illuminate\Database\Eloquent\Model $entity
  */
+
 class UserFavorite extends Model
 {
-    use HasFactory;
-
-    /** @var string */
-    protected $table = 'user_favorites';
-
-    /** @var bool */
     public $incrementing = false;
-
-    /** @var bool */
+    protected $primaryKey = null;
     public $timestamps = false;
 
     /** @var list<string> */
@@ -39,11 +31,19 @@ class UserFavorite extends Model
         'entity_id',
     ];
 
-    /**
-     * @return BelongsTo<User, UserFavorite>
-     */
+    /** @var array<string,string> */
+    protected $casts = [
+        'user_id' => 'integer',
+        'entity_id' => 'integer',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function entity(): MorphTo
+    {
+        return $this->morphTo();
     }
 }

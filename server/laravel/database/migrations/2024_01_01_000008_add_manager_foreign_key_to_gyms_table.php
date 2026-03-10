@@ -5,11 +5,12 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Adds the manager_id foreign key to gyms now that users exists.
+ * Resolves the circular FK dependency between gyms and users.
  *
- * SRP: Solely responsible for adding the circular FK that resolves
- *      the gyms <-> users dependency.
- * OCP: Extends the gyms schema without modifying the original migration.
+ * SRP: Solely responsible for adding the manager_id FK constraint to gyms.
+ * OCP: Extends the gyms schema without modifying migration 000006.
+ * NOTE: This migration runs after 000007 (users), so users already exists
+ *       and the foreign key can be safely declared at this point.
  */
 return new class extends Migration
 {

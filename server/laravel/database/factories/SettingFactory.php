@@ -24,8 +24,8 @@ class SettingFactory extends Factory
             'share_workout_stats' => fake()->boolean(70),
             'share_body_metrics'  => fake()->boolean(30),
             'share_attendance'    => fake()->boolean(60),
-            'theme_preference'    => fake()->randomElement(['light', 'dark']),
-            'language_preference' => fake()->randomElement(['en', 'es', 'fr', 'de']),
+            'theme_preference'    => fake()->boolean(),
+            'language_preference' => fake()->randomElement(['es', 'en']),
         ];
     }
 }

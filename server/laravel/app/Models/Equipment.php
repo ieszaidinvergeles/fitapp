@@ -1,27 +1,25 @@
+
 <?php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * Equipment model.
+ * Represents a piece of equipment or machine.
  *
- * SRP: Represents a piece of gym equipment.
- * DIP: Depends on Eloquent abstraction.
- *
- * @property int         $id
- * @property string|null $name
+ * @property int $id
+ * @property string $name
  * @property string|null $description
- * @property bool|null   $is_home_accessible
+ * @property bool $is_home_accessible
+ *
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Gym> $gyms
  */
+
 class Equipment extends Model
 {
-    use HasFactory;
-
-    /** @var bool */
+    protected $table = 'equipment'; 
     public $timestamps = false;
 
     /** @var list<string> */
@@ -36,13 +34,9 @@ class Equipment extends Model
         'is_home_accessible' => 'boolean',
     ];
 
-    /**
-     * Returns all gym-inventory records that reference this equipment.
-     *
-     * @return HasMany<GymInventory>
-     */
-    public function gymInventory(): HasMany
+    public function gyms(): BelongsToMany
     {
-        return $this->hasMany(GymInventory::class);
+        return $this->belongsToMany(Gym::class, 'gym_inventory')
+                    ->withPivot('quantity', 'status');
     }
 }

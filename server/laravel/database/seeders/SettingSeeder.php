@@ -10,7 +10,9 @@ use Illuminate\Database\Seeder;
  * Seeds the settings table.
  *
  * SRP: Solely responsible for populating user setting records.
- * NOTE: Creates exactly one setting per user to respect the PK constraint.
+ * NOTE: Creates exactly one setting row per user to respect the
+ *       user_id primary key constraint. Uses firstOrCreate to
+ *       prevent duplicates on re-seed.
  */
 class SettingSeeder extends Seeder
 {
@@ -24,8 +26,8 @@ class SettingSeeder extends Seeder
                     'share_workout_stats' => true,
                     'share_body_metrics'  => false,
                     'share_attendance'    => true,
-                    'theme_preference'    => 'dark',
-                    'language_preference' => 'en',
+                    'theme_preference'    => false,
+                    'language_preference' => 'es',
                 ]
             );
         });

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->boolean('share_body_metrics')->default(false)->comment('Share weight/fat %');
             $table->boolean('share_attendance')->default(true);
             $table->boolean('theme_preference')->default(false)->comment('false->light or true->dark');
-            $table->string('language_preference')->nullable();
+            $table->enum('language_preference', ['es', 'en'])->default('es');
 
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });

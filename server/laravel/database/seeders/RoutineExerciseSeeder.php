@@ -8,11 +8,11 @@ use App\Models\RoutineExercise;
 use Illuminate\Database\Seeder;
 
 /**
- * Seeds the routine_exercises table.
+ * Seeds the routine_exercises pivot table.
  *
- * SRP: Solely responsible for populating routine exercise pivot records.
- * NOTE: Iterates routines and assigns unique exercises to avoid
- *       composite-key violations.
+ * SRP: Solely responsible for populating routine exercise records.
+ * NOTE: Each routine gets a unique set of 5 to 8 exercises in order.
+ *       firstOrCreate prevents composite-key violations on re-seed.
  */
 class RoutineExerciseSeeder extends Seeder
 {
@@ -23,16 +23,17 @@ class RoutineExerciseSeeder extends Seeder
 
         Routine::all()->each(function (Routine $routine) use ($exerciseIds): void {
             shuffle($exerciseIds);
-            $selected = array_slice($exerciseIds, 0, rand(4, 8));
+            $count    = rand(5, 8);
+            $selected = array_unique(array_slice($exerciseIds, 0, $count));
 
-            foreach (array_values(array_unique($selected)) as $index => $exerciseId) {
+            foreach (array_values($selected) as $index => $exerciseId) {
                 RoutineExercise::firstOrCreate(
                     ['routine_id' => $routine->id, 'exercise_id' => $exerciseId],
                     [
-                        'order_index'       => $index + 1,
-                        'recommended_sets'  => rand(3, 5),
-                        'recommended_reps'  => rand(8, 15),
-                        'rest_seconds'      => 60,
+                        'order_index'      => $index + 1,
+                        'recommended_sets' => rand(3, 5),
+                        'recommended_reps' => rand(6, 15),
+                        'rest_seconds'     => collect([30, 60, 90, 120])->random(),
                     ]
                 );
             }

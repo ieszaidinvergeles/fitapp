@@ -1,43 +1,53 @@
+
 <?php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * User model – the central entity of the application.
+ * Represents a registered user in the system.
  *
- * SRP: Represents a user and exposes its direct DB relationships.
- *      Business logic (booking policies, strike rules, etc.) belongs
- *      in dedicated service classes, not here.
- * DIP: Depends on Eloquent and Authenticatable abstractions.
- *
- * @property int         $id
- * @property string|null $username
- * @property string|null $email
+ * @property int $id
+ * @property string $username
+ * @property string $email
  * @property string|null $password_hash
- * @property string|null $role            admin|manager|staff|client|user_online
+ * @property string $role
  * @property string|null $full_name
- * @property string|null $dni
- * @property string|null $birth_date
+ * @property string $dni
+ * @property \Illuminate\Support\Carbon $birth_date
  * @property string|null $profile_photo_url
- * @property int|null    $current_gym_id
- * @property int|null    $membership_plan_id
- * @property string|null $membership_status
- * @property int         $cancellation_strikes
- * @property bool        $is_blocked_from_booking
- * @property string      $created_at
- * @property string      $updated_at
+ * @property int $current_gym_id
+ * @property int $membership_plan_id
+ * @property string $membership_status
+ * @property int $cancellation_strikes
+ * @property bool $is_blocked_from_booking
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @property-read \App\Models\Gym $currentGym
+ * @property-read \App\Models\MembershipPlan $membershipPlan
+ * @property-read \App\Models\Setting|null $settings
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\BodyMetric> $bodyMetrics
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Booking> $bookings
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Routine> $createdRoutines
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Notification> $sentNotifications
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\StaffAttendance> $staffAttendances
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UserMealSchedule> $mealSchedules
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UserFavorite> $favorites
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Routine> $activeRoutines
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $partners
  */
+
 class User extends Authenticatable
 {
-    use HasFactory;
-    use Notifiable;
+    use HasFactory, Notifiable;
 
     /** @var list<string> */
     protected $fillable = [
@@ -56,164 +66,77 @@ class User extends Authenticatable
         'is_blocked_from_booking',
     ];
 
-    /** @var list<string> Never serialised to JSON. */
+    /** @var array<string,string> */
+    protected $casts = [
+        'birth_date' => 'date',
+        'cancellation_strikes' => 'integer',
+        'is_blocked_from_booking' => 'boolean',
+        'password_hash' => 'hashed', 
+    ];
+
     protected $hidden = [
         'password_hash',
     ];
 
-    /** @var array<string,string> */
-    protected $casts = [
-        'birth_date'              => 'date',
-        'is_blocked_from_booking' => 'boolean',
-    ];
-
-    /**
-     * Returns the user's home gym.
-     *
-     * @return BelongsTo<Gym, User>
-     */
-    public function gym(): BelongsTo
+    public function currentGym(): BelongsTo
     {
         return $this->belongsTo(Gym::class, 'current_gym_id');
     }
 
-    /**
-     * Returns the user's membership plan.
-     *
-     * @return BelongsTo<MembershipPlan, User>
-     */
     public function membershipPlan(): BelongsTo
     {
-        return $this->belongsTo(MembershipPlan::class);
+        return $this->belongsTo(MembershipPlan::class, 'membership_plan_id');
     }
 
-    /**
-     * Returns all bookings made by this user.
-     *
-     * @return HasMany<Booking>
-     */
-    public function bookings(): HasMany
+    public function settings(): HasOne
     {
-        return $this->hasMany(Booking::class);
+        return $this->hasOne(Setting::class);
     }
 
-    /**
-     * Returns all body-metric snapshots for this user.
-     *
-     * @return HasMany<BodyMetric>
-     */
     public function bodyMetrics(): HasMany
     {
         return $this->hasMany(BodyMetric::class);
     }
 
-    /**
-     * Returns the settings record for this user.
-     *
-     * @return HasOne<Setting>
-     */
-    public function setting(): HasOne
+    public function bookings(): HasMany
     {
-        return $this->hasOne(Setting::class);
+        return $this->hasMany(Booking::class);
     }
 
-    /**
-     * Returns all active-routine links for this user.
-     *
-     * @return HasMany<UserActiveRoutine>
-     */
-    public function userActiveRoutines(): HasMany
+    public function createdRoutines(): HasMany
     {
-        return $this->hasMany(UserActiveRoutine::class);
+        return $this->hasMany(Routine::class, 'creator_id');
     }
 
-    /**
-     * Returns the user's favourite entities.
-     *
-     * @return HasMany<UserFavorite>
-     */
-    public function userFavorites(): HasMany
+    public function sentNotifications(): HasMany
     {
-        return $this->hasMany(UserFavorite::class);
+        return $this->hasMany(Notification::class, 'sender_id');
     }
 
-    /**
-     * Returns the user's meal-schedule entries.
-     *
-     * @return HasMany<UserMealSchedule>
-     */
-    public function userMealSchedules(): HasMany
-    {
-        return $this->hasMany(UserMealSchedule::class);
-    }
-
-    /**
-     * Returns partner links where this user is the primary account.
-     *
-     * @return HasMany<UserPartner>
-     */
-    public function primaryPartners(): HasMany
-    {
-        return $this->hasMany(UserPartner::class, 'primary_user_id');
-    }
-
-    /**
-     * Returns partner links where this user is the linked account.
-     *
-     * @return HasMany<UserPartner>
-     */
-    public function partnerLinks(): HasMany
-    {
-        return $this->hasMany(UserPartner::class, 'partner_user_id');
-    }
-
-    /**
-     * Returns attendance records for this user as staff.
-     *
-     * @return HasMany<StaffAttendance>
-     */
     public function staffAttendances(): HasMany
     {
         return $this->hasMany(StaffAttendance::class, 'staff_id');
     }
 
-    /**
-     * Returns notifications sent by this user.
-     *
-     * @return HasMany<AppNotification>
-     */
-    public function sentNotifications(): HasMany
+    public function mealSchedules(): HasMany
     {
-        return $this->hasMany(AppNotification::class, 'sender_id');
+        return $this->hasMany(UserMealSchedule::class);
     }
 
-    /**
-     * Returns gyms managed by this user.
-     *
-     * @return HasMany<Gym>
-     */
-    public function managedGyms(): HasMany
+    public function favorites(): HasMany
     {
-        return $this->hasMany(Gym::class, 'manager_id');
+        return $this->hasMany(UserFavorite::class);
     }
 
-    /**
-     * Returns classes where this user is the instructor.
-     *
-     * @return HasMany<GymClass>
-     */
-    public function instructedClasses(): HasMany
+    public function activeRoutines(): BelongsToMany
     {
-        return $this->hasMany(GymClass::class, 'instructor_id');
+        return $this->belongsToMany(Routine::class, 'user_active_routines')
+                    ->withPivot('is_active', 'start_date');
     }
 
-    /**
-     * Returns routines created by this user.
-     *
-     * @return HasMany<Routine>
-     */
-    public function createdRoutines(): HasMany
+    public function partners(): BelongsToMany
     {
-        return $this->hasMany(Routine::class, 'creator_id');
+        return $this->belongsToMany(User::class, 'user_partners', 'primary_user_id', 'partner_user_id')
+                    ->withPivot('linked_at');
     }
 }

@@ -1,31 +1,31 @@
+
 <?php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * Routine model.
+ * Represents a structured workout routine.
  *
- * SRP: Represents a workout routine definition.
- * DIP: Depends on Eloquent abstraction.
+ * @property int $id
+ * @property string $name
+ * @property string $description
+ * @property int $creator_id
+ * @property string $difficulty_level
+ * @property int $estimated_duration_min
+ * @property int|null $associated_diet_plan_id
  *
- * @property int         $id
- * @property string|null $name
- * @property string|null $description
- * @property int|null    $creator_id
- * @property string|null $difficulty_level
- * @property int|null    $estimated_duration_min
- * @property int|null    $associated_diet_plan_id
+ * @property-read \App\Models\User $creator
+ * @property-read \App\Models\DietPlan|null $dietPlan
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Exercise> $exercises
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $activeUsers
  */
+
 class Routine extends Model
 {
-    use HasFactory;
-
-    /** @var bool */
     public $timestamps = false;
 
     /** @var list<string> */
@@ -38,39 +38,32 @@ class Routine extends Model
         'associated_diet_plan_id',
     ];
 
-    /**
-     * @return BelongsTo<User, Routine>
-     */
+    /** @var array<string,string> */
+    protected $casts = [
+        'creator_id' => 'integer',
+        'estimated_duration_min' => 'integer',
+        'associated_diet_plan_id' => 'integer',
+    ];
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
 
-    /**
-     * @return BelongsTo<DietPlan, Routine>
-     */
     public function dietPlan(): BelongsTo
     {
         return $this->belongsTo(DietPlan::class, 'associated_diet_plan_id');
     }
 
-    /**
-     * Returns all exercise pivot records in this routine.
-     *
-     * @return HasMany<RoutineExercise>
-     */
-    public function routineExercises(): HasMany
+    public function exercises(): BelongsToMany
     {
-        return $this->hasMany(RoutineExercise::class);
+        return $this->belongsToMany(Exercise::class, 'routine_exercises')
+                    ->withPivot('order_index', 'recommended_sets', 'recommended_reps', 'rest_seconds');
     }
 
-    /**
-     * Returns all user-active-routine records for this routine.
-     *
-     * @return HasMany<UserActiveRoutine>
-     */
-    public function userActiveRoutines(): HasMany
+    public function activeUsers(): BelongsToMany
     {
-        return $this->hasMany(UserActiveRoutine::class);
+        return $this->belongsToMany(User::class, 'user_active_routines')
+                    ->withPivot('is_active', 'start_date');
     }
 }

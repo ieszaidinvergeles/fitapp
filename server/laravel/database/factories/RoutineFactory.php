@@ -21,11 +21,11 @@ class RoutineFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'                    => fake()->words(3, true) . ' Routine',
-            'description'             => fake()->paragraph(),
-            'creator_id'              => User::inRandomOrder()->first()?->id,
-            'difficulty_level'        => fake()->randomElement(['beginner', 'intermediate', 'advanced']),
-            'estimated_duration_min'  => fake()->randomElement([30, 45, 60, 90]),
+            'name'                   => fake()->words(3, true) . ' Routine',
+            'description'            => fake()->paragraph(),
+            'creator_id'             => User::inRandomOrder()->first()?->id,
+            'difficulty_level'       => fake()->randomElement(['beginner', 'intermediate', 'advanced', 'expert']),
+            'estimated_duration_min' => fake()->randomElement([30, 45, 60, 90]),
             'associated_diet_plan_id' => DietPlan::inRandomOrder()->first()?->id,
         ];
     }

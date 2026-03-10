@@ -23,10 +23,10 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'username'                => fake()->unique()->userName(),
+            'username'                => substr(fake()->unique()->userName(), 0, 20),
             'email'                   => fake()->unique()->safeEmail(),
             'password_hash'           => Hash::make('password'),
-            'role'                    => fake()->randomElement(['client', 'client', 'client', 'staff', 'manager']),
+            'role'                    => fake()->randomElement(['client', 'client', 'client', 'staff', 'manager', 'user_online']),
             'full_name'               => fake()->name(),
             'dni'                     => strtoupper(fake()->bothify('########?')),
             'birth_date'              => fake()->dateTimeBetween('-55 years', '-18 years')->format('Y-m-d'),
@@ -77,5 +77,15 @@ class UserFactory extends Factory
     public function admin(): static
     {
         return $this->state(['role' => 'admin']);
+    }
+
+    /**
+     * State for an online user.
+     *
+     * @return static
+     */
+    public function userOnline(): static
+    {
+        return $this->state(['role' => 'user_online', 'current_gym_id' => null]);
     }
 }
