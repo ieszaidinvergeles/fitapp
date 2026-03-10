@@ -30,7 +30,7 @@ class UserFactory extends Factory
             'full_name'               => fake()->name(),
             'dni'                     => strtoupper(fake()->bothify('########?')),
             'birth_date'              => fake()->dateTimeBetween('-55 years', '-18 years')->format('Y-m-d'),
-            'profile_photo_url'       => fake()->imageUrl(200, 200, 'people'),
+            'profile_photo_url'       => fake()->imageUrl(160, 160, 'people'),
             'current_gym_id'          => Gym::inRandomOrder()->first()?->id,
             'membership_plan_id'      => MembershipPlan::inRandomOrder()->first()?->id,
             'membership_status'       => fake()->randomElement(['active', 'active', 'paused', 'expired']),

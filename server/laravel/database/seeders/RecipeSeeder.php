@@ -27,7 +27,7 @@ class RecipeSeeder extends Seeder
             ['type' => 'dinner',      'name' => 'Salmon with Vegetables',    'calories' => 500, 'macros_json' => ['protein' => 40, 'carbs' => 25, 'fat' => 22]],
             ['type' => 'dinner',      'name' => 'Turkey Stir Fry',           'calories' => 460, 'macros_json' => ['protein' => 38, 'carbs' => 40, 'fat' => 12]],
             ['type' => 'dinner',      'name' => 'Lentil Soup',               'calories' => 380, 'macros_json' => ['protein' => 22, 'carbs' => 55, 'fat' => 6]],
-            ['type' => 'snack',       'name' => 'Protein Bar',               'calories' => 200, 'macros_json' => ['protein' => 20, 'carbs' => 22, 'fat' => 7]],
+            ['type' => 'snack',       'name' => 'Protein Bar',               'calories' => 160, 'macros_json' => ['protein' => 20, 'carbs' => 22, 'fat' => 7]],
             ['type' => 'snack',       'name' => 'Apple with Peanut Butter',  'calories' => 250, 'macros_json' => ['protein' => 6,  'carbs' => 30, 'fat' => 12]],
             ['type' => 'snack',       'name' => 'Mixed Nuts',                'calories' => 180, 'macros_json' => ['protein' => 5,  'carbs' => 8,  'fat' => 16]],
             ['type' => 'pre_workout', 'name' => 'Banana and Coffee',         'calories' => 130, 'macros_json' => ['protein' => 2,  'carbs' => 28, 'fat' => 1]],
@@ -35,7 +35,7 @@ class RecipeSeeder extends Seeder
             ['type' => 'pre_workout', 'name' => 'Oat and Honey Shake',       'calories' => 310, 'macros_json' => ['protein' => 10, 'carbs' => 58, 'fat' => 4]],
             ['type' => 'post_workout','name' => 'Whey Protein Shake',        'calories' => 180, 'macros_json' => ['protein' => 30, 'carbs' => 10, 'fat' => 3]],
             ['type' => 'post_workout','name' => 'Chicken with Sweet Potato', 'calories' => 520, 'macros_json' => ['protein' => 42, 'carbs' => 55, 'fat' => 8]],
-            ['type' => 'post_workout','name' => 'Cottage Cheese with Berries','calories' => 200,'macros_json' => ['protein' => 24, 'carbs' => 18, 'fat' => 4]],
+            ['type' => 'post_workout','name' => 'Cottage Cheese with Berries','calories' => 160,'macros_json' => ['protein' => 24, 'carbs' => 18, 'fat' => 4]],
         ];
 
         foreach ($fixed as $data) {

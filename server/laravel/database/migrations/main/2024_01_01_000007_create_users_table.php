@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('full_name', 160)->nullable(); 
             $table->string('dni', 9);
             $table->date('birth_date');
-            $table->string('profile_photo_url', 600)->nullable();
+            $table->string('profile_photo_url', 500)->nullable();
 
             $table->foreignId('current_gym_id')->nullable();
             $table->foreignId('membership_plan_id')->nullable();

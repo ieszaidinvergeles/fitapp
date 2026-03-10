@@ -1,23 +1,23 @@
-# Gym — Database and Laravel Implementation Review v3
+# Gym — Database and Laravel Implementation v4
 
 This document describes the revised and fixed database schema conventions, migration rules,
-foreign key behaviors, and the Eloquent model configuration used in the Gym App backend.
+foreign key behaviors, and the Eloquent model configuration used in the Gym backend.
  
-# Migration Conventions — Gym App
+# 1. Migration Conventions
 
-## Column Types and Lengths
+## 1.1. Column Types and Lengths
 
 | Type                         | Rule                   | Example                          |
 | ---------------------------- | ---------------------- | -------------------------------- |
 | `string` name                | 80 characters          | `string('name', 80)`             |
-| `string` address             | 200 characters         | `string('address', 200)`         |
+| `string` address             | 160 characters         | `string('address', 160)`         |
 | `string` city                | 80 characters          | `string('city', 80)`             |
 | `string` phone               | 20 characters          | `string('phone', 20)`            |
 | `string` coordinates         | 100 characters         | `string('location_coords', 100)` |
 | `string` image/video URL     | 500 characters         | `string('image_url', 500)`       |
-| `string` email               | 150 characters         | `string('email', 150)`           |
+| `string` email               | 160 characters         | `string('email', 160)`           |
 | `string` password_hash       | 255 characters         | `string('password_hash', 255)`   |
-| `string` full_name           | 150 characters         | `string('full_name', 150)`       |
+| `string` full_name           | 160 characters         | `string('full_name', 160)`       |
 | `string` dni                 | 9 characters           | `string('dni', 9)`               |
 | `text`                       | No length in migration | `text('description')`            |
 | `integer`                    | Never has length       | `integer('capacity')`            |
@@ -28,7 +28,7 @@ foreign key behaviors, and the Eloquent model configuration used in the Gym App 
 > `text` does not accept length in the migration — the limit goes in the FormRequest with `max:280`.
 > `integer` does not accept length — the limit goes in the FormRequest with `max:`.
 
-## Fields Converted to ENUM
+## 1.2. Fields Converted to ENUM
 
 | Table                | Field                     | Values                                                                                                                                                                                                                               |
 | -------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -48,7 +48,7 @@ foreign key behaviors, and the Eloquent model configuration used in the Gym App 
 | `classes`            | `start_time` / `end_time` | —                                                                                                                                                                                                                                    |
 
 
-## Nullable Rules
+## 1.3. Nullable Rules
 
 ### Never nullable
 
@@ -62,7 +62,7 @@ foreign key behaviors, and the Eloquent model configuration used in the Gym App 
 * Optional FKs (`recipe_id` in `user_meal_schedule`, `associated_diet_plan_id` in `routines`)
 * URLs and profile photos
 
-## Foreign Key Behavior
+## 1.4. Foreign Key Behavior
 
 | Situation                                   | Behavior            | Example                      |
 | ------------------------------------------- | ------------------- | ---------------------------- |
@@ -93,7 +93,7 @@ foreign key behaviors, and the Eloquent model configuration used in the Gym App 
 | `gyms`                 | `manager_id` (migration 000008)           | null     |
 | `users`                | `current_gym_id`, `membership_plan_id`    | null     |
 
-## Circular Dependency gyms ↔ users
+## 1.5. Circular Dependency gyms ↔ users
 
 `gyms.manager_id` references `users` and `users.current_gym_id` references `gyms`.
 Laravel runs migrations one by one in order, so both FKs cannot be declared at the same time.
@@ -108,7 +108,7 @@ Laravel runs migrations one by one in order, so both FKs cannot be declared at t
 > The difference is that `foreignId` allows chaining `->constrained()`, but since the FK
 > is added in a later migration, `unsignedBigInteger` is used to leave it unconstrained.
 
-## settings Table: Strict 1-to-1 Relationship
+## 1.6. settings Table: Strict 1-to-1 Relationship
 
 It omits the classic auto-increment `id` to create a pure one-to-one relationship directly tied to the `users` table.
 
@@ -121,7 +121,7 @@ It omits the classic auto-increment `id` to create a pure one-to-one relationshi
 > By using `$table->unsignedBigInteger('user_id')->primary()`, the need for a separate `id` column is removed. This optimizes storage and structurally enforces the 1-to-1 relationship at the database engine level.
 
 
-## user_favorites Table: Polymorphism and Composite PK
+## 1.7. user_favorites Table: Polymorphism and Composite PK
 
 It works as a universal pivot table using a polymorphic pattern, avoiding the creation of individual tables (like `gym_user_favorites` or `routine_user_favorites`).
 
@@ -134,14 +134,14 @@ It works as a universal pivot table using a polymorphic pattern, avoiding the cr
 > The `entity_id` column is defined as `unsignedBigInteger` without an explicit Foreign Key. This is because, in a polymorphic design, relational database engines do not allow a single FK to dynamically point to different tables depending on the value of another column (`entity_type`).
 
 
-## Code Comments
+## 1.8. Code Comments
 
 * No inline comments (`//`) in columns
 * JavaDoc in the top block of each migration class
 * ENUMs document their possible values by themselves and do not need `->comment()`
 
 
-# Why Delete Pivot Table Models?
+# 2. Why Delete Pivot Table Models?
 
 In Laravel, purely relational intermediate tables do not need their own Model class. For this reason, you can safely delete these 4 files from your `app/Models` directory:
 
@@ -153,7 +153,7 @@ In Laravel, purely relational intermediate tables do not need their own Model cl
 The framework is designed to manage these tables transparently through the `belongsToMany` methods of your main models. Keeping these files only adds unnecessary complexity and clutters your code. By deleting them, you follow the framework’s standard conventions, avoid redundant code, and centralize logic in the truly important entities (such as `Gym`, `Routine`, or `User`), accessing intermediate data easily through the magic property `->pivot`.
 
 
-## Foreign Keys in Eloquent: Convention vs Configuration
+## 2.1 Foreign Keys in Eloquent: Convention vs Configuration
 
 Laravel follows the principle of **"Convention over Configuration"**. If you name your columns following its standard, the framework automatically infers relationships. If you use custom names, you must explicitly define them.
 
@@ -170,7 +170,7 @@ Laravel follows the principle of **"Convention over Configuration"**. If you nam
 
 
 
-## Using the `$casts` Property (Type Conversion)
+## 2.2 Using the `$casts` Property (Type Conversion)
 
 **Why use `$casts` in general?**
 
@@ -186,11 +186,11 @@ This provides:
 * **Security:** The `hashed` cast automatically encrypts passwords before saving.
 
 
-## Breakdown of Models, Migrations and Their Casts
+## 2.3 Breakdown of Models, Migrations and Their Casts
 
 Here is the exact relationship of all the main models generated from the migrations, and which type conversions (`$casts`) apply to each one:
 
-### 1. App Core and User Models
+### 2.3.1. App Core and User Models
 
 * **`MembershipPlan`** (Migration: `000001_create_membership_plans_table`)
 
@@ -214,7 +214,7 @@ Here is the exact relationship of all the main models generated from the migrati
 
 * `share_workout_stats`, `share_body_metrics`, `share_attendance`, `theme_preference` `=> boolean`: All cast to native `bool` for easier conditionals in the frontend.
 
-### 2. Facility Models
+### 2.3.2. Facility Models
 
 * **`Gym`** (Migration: `000006_create_gyms_table`)
 
@@ -228,7 +228,7 @@ Here is the exact relationship of all the main models generated from the migrati
 
 * `is_home_accessible => boolean`: Converts the state to a strict boolean.
 
-### 3. Training Models
+### 2.3.3. Training Models
 
 * **`Activity`** (Migration: `000002_create_activities_table`)
 
@@ -256,7 +256,7 @@ Here is the exact relationship of all the main models generated from the migrati
 
 * `booked_at`, `cancelled_at => datetime`: Converts timestamps to Carbon objects.
 
-### 4. Nutrition and Health
+### 2.3.4. Nutrition and Health
 
 * **`DietPlan`** (Migration: `000003_create_diet_plans_table`)
 
@@ -279,7 +279,7 @@ Here is the exact relationship of all the main models generated from the migrati
 * `body_fat_pct`, `muscle_mass_pct => decimal:2`: Cast with 2 precision digits.
 
 
-### 5. Logs and Utility Models (Logs/Notifications)
+### 2.3.5. Logs and Utility Models (Logs/Notifications)
 
 * **`Notification`** (Migration: `000014_create_notifications_table`)
 
@@ -308,23 +308,23 @@ Here is the exact relationship of all the main models generated from the migrati
 * `user_id`, `entity_id => integer`. *(Note: `entity_type` is an enum and remains a `string`.)*
 
 
-## Fix Report: Database Migrations
+## 2.4. Fix Report: Database Migrations
 
 To make the schema fully functional in a real MySQL environment, the following critical adjustments were made:
 
-### 1. Consistency in `SET NULL` Constraints
+### 2.4.1. Consistency in `SET NULL` Constraints
 
 * **Error:** `onDelete('set null')` was applied to columns that did not accept null values.
 * **Solution:** Added the `->nullable()` method to all foreign key columns using the set-null deletion rule.
 * **Affected tables:** `users` (gym_id), `notifications` (related_gym_id), `user_meal_schedule` (recipe_id), and the circular relationship in `gyms` (manager_id).
 
-### 2. Integrity of Composite Primary Keys (Pivot Tables)
+### 2.4.2. Integrity of Composite Primary Keys (Pivot Tables)
 
 * **Error:** MySQL prohibits any column that is part of a `PRIMARY KEY` from being `nullable`.
 * **Solution:** Removed the `->nullable()` attribute from IDs in pivot tables and changed deletion logic to `cascadeOnDelete()`. If a parent disappears, the pivot record is fully removed.
 * **Affected tables:** `gym_inventory`, `routine_exercises`, `user_active_routines`, and all other many-to-many tables.
 
-### 3. Circular Dependency Resolution (Gyms ↔ Users)
+### 2.4.3. Circular Dependency Resolution (Gyms ↔ Users)
 
 * **Error:** A gym needed a `manager_id` (User) while a user needed a `current_gym_id` (Gym). One of the tables always failed during migration because the other did not exist yet.
 * **Solution:** 
@@ -332,14 +332,41 @@ To make the schema fully functional in a real MySQL environment, the following c
   2. Created the `users` table with its FK to gyms.
   3. Added an extra migration (`add_manager_foreign_key_to_gyms_table`) to inject the manager relationship once both tables existed.
 
-### 4. Removal of Duplicate Definitions
+### 2.4.4. Removal of Duplicate Definitions
 
 * **Error:** Redundant use of `$table->foreignId('name')` followed by another manual definition of the same column, causing `Duplicate column name`.
 * **Solution:** Standardized the flow in **2 phases** within the same `Blueprint`:
   * **Phase 1:** Column definition (`foreignId`).
   * **Phase 2:** Logical constraint definition (`foreign()->references()->on()`).
 
-## Code Comments
+### 2.4.5. exercises — URL Field Length
+
+* **Error:** `image_url` and `video_url` were defined as `varchar(600)`, inconsistent with the project URL convention of `varchar(500)`.
+* **Solution:** Changed both columns to match all other URL fields in the schema.
+  * `exercises.image_url`: `varchar(600)` → `varchar(500)`
+  * `exercises.video_url`: `varchar(600)` → `varchar(500)`
+
+### 2.4.6. notifications — Title Field Length
+
+* **Error:** `title` was defined as `varchar(200)`, inconsistent with the project convention for title fields of `varchar(150)`.
+* **Solution:** Changed the column to match the established naming convention.
+  * `notifications.title`: `varchar(200)` → `varchar(150)`
+
+### 2.4.7. recipes — image_url Field Length
+
+* **Error:** `image_url` was defined without explicit length, defaulting to Laravel's `varchar(255)`, inconsistent with all other URL fields in the schema which use `varchar(500)`.
+* **Solution:** Added explicit length of `500` to match the URL convention.
+  * `recipes.image_url`: `varchar(255)` → `varchar(500)`
+
+### 2.4.8. bookings and user_meal_schedule — Nullable and Cascade Inconsistency
+
+* **Error:** `bookings.class_id`, `bookings.user_id` and `user_meal_schedule.user_id` were defined as `nullable` but had `ON DELETE CASCADE`, which is logically inconsistent — nullable implies the relationship is optional while cascade implies the child has no meaning without the parent.
+* **Solution:** Removed `->nullable()` from all three fields so they become `NOT NULL`, making cascade semantically correct. A booking without a class or user and a meal schedule entry without a user have no business meaning and should be deleted when the parent is removed.
+  * `bookings.class_id`: `->nullable()` removed
+  * `bookings.user_id`: `->nullable()` removed
+  * `user_meal_schedule.user_id`: `->nullable()` removed
+
+## 2.5. Code Comments
 
 * No inline comments (`//`) in columns
 * JavaDoc in the top block of each migration class

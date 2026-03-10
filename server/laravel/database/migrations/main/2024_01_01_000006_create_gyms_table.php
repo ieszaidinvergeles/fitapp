@@ -25,7 +25,7 @@ return new class extends Migration
             $table->id();
             $table->string('name',80);
             $table->unsignedBigInteger('manager_id')->nullable();
-            $table->string('address', 200);
+            $table->string('address', 160);
             $table->string('city', 80);
             $table->string('location_coords', 100)->nullable();
             $table->string('phone', 20);

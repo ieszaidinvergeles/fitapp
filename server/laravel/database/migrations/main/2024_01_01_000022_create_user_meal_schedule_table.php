@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('user_meal_schedule', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->nullable();
+            $table->foreignId('user_id');
             $table->date('date');
             $table->enum('meal_type', ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout']);
             $table->foreignId('recipe_id')->nullable();

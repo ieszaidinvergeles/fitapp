@@ -20,7 +20,7 @@ class GymSeeder extends Seeder
         $fixed = [
             ['name' => 'FitZone Madrid Centro',   'address' => 'Calle Gran Vía 45',          'city' => 'Madrid',    'phone' => '+34 910 000 001'],
             ['name' => 'FitZone Madrid Norte',    'address' => 'Calle Bravo Murillo 120',    'city' => 'Madrid',    'phone' => '+34 910 000 002'],
-            ['name' => 'FitZone Barcelona',       'address' => 'Avinguda Diagonal 200',      'city' => 'Barcelona', 'phone' => '+34 930 000 001'],
+            ['name' => 'FitZone Barcelona',       'address' => 'Avinguda Diagonal 160',      'city' => 'Barcelona', 'phone' => '+34 930 000 001'],
             ['name' => 'FitZone Valencia',        'address' => 'Carrer de Colom 18',         'city' => 'Valencia',  'phone' => '+34 960 000 001'],
             ['name' => 'FitZone Sevilla',         'address' => 'Avenida de la Constitución 5','city' => 'Sevilla',  'phone' => '+34 950 000 001'],
             ['name' => 'FitZone Bilbao',          'address' => 'Calle Autonomía 30',         'city' => 'Bilbao',    'phone' => '+34 940 000 001'],

@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sender_id')->nullable();
-            $table->string('title', 200);
+            $table->string('title', 160);
             $table->text('body')->nullable();
             $table->enum('target_audience', ['global', 'staff_only', 'specific_gym', 'specific_user'])->nullable();
             $table->foreignId('related_gym_id')->nullable();

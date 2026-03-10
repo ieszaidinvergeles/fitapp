@@ -23,7 +23,7 @@ class GymFactory extends Factory
         return [
             'name'            => substr(fake()->company() . ' Fitness', 0, 80),
             'manager_id'      => null,
-            'address'         => substr(fake()->streetAddress(), 0, 200),
+            'address'         => substr(fake()->streetAddress(), 0, 160),
             'city'            => fake()->city(),
             'location_coords' => fake()->latitude() . ',' . fake()->longitude(),
             'phone'           => substr(fake()->phoneNumber(), 0, 20),

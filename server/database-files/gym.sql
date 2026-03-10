@@ -61,8 +61,8 @@ DROP TABLE IF EXISTS `bookings`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `bookings` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `class_id` bigint unsigned DEFAULT NULL,
-  `user_id` bigint unsigned DEFAULT NULL,
+  `class_id` bigint unsigned NOT NULL,
+  `user_id`  bigint unsigned NOT NULL,
   `status` enum('active','cancelled','attended','no_show') COLLATE utf8mb4_unicode_ci NOT NULL,
   `booked_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `cancelled_at` timestamp NULL DEFAULT NULL,
@@ -145,8 +145,8 @@ CREATE TABLE `exercises` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `image_url` varchar(600) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `video_url` varchar(600) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `video_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `target_muscle_group` enum('chest','upper_back','lower_back','shoulders','biceps','triceps','forearms','core','obliques','quadriceps','hamstrings','glutes','calves','hip_flexors','adductors','abductors','traps','lats','neck','full_body') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -182,7 +182,7 @@ CREATE TABLE `gyms` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `manager_id` bigint unsigned DEFAULT NULL,
-  `address` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `address` varchar(160) COLLATE utf8mb4_unicode_ci NOT NULL,
   `city` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `location_coords` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `phone` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -218,7 +218,7 @@ DROP TABLE IF EXISTS `migrations`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `migrations` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `migration` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -234,7 +234,7 @@ DROP TABLE IF EXISTS `notifications`;
 CREATE TABLE `notifications` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `sender_id` bigint unsigned DEFAULT NULL,
-  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(160) COLLATE utf8mb4_unicode_ci NOT NULL,
   `body` text COLLATE utf8mb4_unicode_ci,
   `target_audience` enum('global','staff_only','specific_gym','specific_user') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `related_gym_id` bigint unsigned DEFAULT NULL,
@@ -263,7 +263,7 @@ CREATE TABLE `recipes` (
   `calories` int NOT NULL,
   `macros_json` json DEFAULT NULL COMMENT '{protein: 30, carbs: 50, fat: 10}',
   `type` enum('breakfast','lunch','dinner','snack','pre_workout','post_workout') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `image_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -415,7 +415,7 @@ DROP TABLE IF EXISTS `user_meal_schedule`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `user_meal_schedule` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint unsigned DEFAULT NULL,
+  `user_id` bigint unsigned NOT NULL;
   `date` date NOT NULL,
   `meal_type` enum('breakfast','lunch','dinner','snack','pre_workout','post_workout') COLLATE utf8mb4_unicode_ci NOT NULL,
   `recipe_id` bigint unsigned DEFAULT NULL,
@@ -464,7 +464,7 @@ CREATE TABLE `users` (
   `full_name` varchar(160) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `dni` varchar(9) COLLATE utf8mb4_unicode_ci NOT NULL,
   `birth_date` date NOT NULL,
-  `profile_photo_url` varchar(600) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `profile_photo_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `current_gym_id` bigint unsigned DEFAULT NULL,
   `membership_plan_id` bigint unsigned DEFAULT NULL,
   `membership_status` enum('active','paused','expired') COLLATE utf8mb4_unicode_ci NOT NULL,

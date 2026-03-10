@@ -18,8 +18,8 @@ return new class extends Migration
             $table->id();
             $table->string('name',80);
             $table->text('description');
-            $table->string('image_url', 600)->nullable();
-            $table->string('video_url', 600)->nullable();
+            $table->string('image_url', 500)->nullable();
+            $table->string('video_url', 500)->nullable();
             $table->enum('target_muscle_group', ['chest','upper_back','lower_back','shoulders','biceps','triceps','forearms','core','obliques','quadriceps','hamstrings','glutes','calves','hip_flexors','adductors','abductors','traps','lats','neck','full_body',])->nullable();
         });
     }
