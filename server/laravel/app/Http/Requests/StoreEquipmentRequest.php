@@ -15,7 +15,7 @@ class StoreEquipmentRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:80',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:280',
             'is_home_accessible' => 'required|boolean',
         ];
     }

@@ -15,7 +15,7 @@ class UpdateActivityRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|required|string|max:80',
-            'description' => 'sometimes|nullable|string',
+            'description' => 'sometimes|nullable|string|max:280',
             'intensity_level' => 'sometimes|required|in:low,medium,high,extreme',
         ];
     }

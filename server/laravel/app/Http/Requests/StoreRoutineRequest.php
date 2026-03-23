@@ -15,7 +15,7 @@ class StoreRoutineRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:80',
-            'description' => 'required|string',
+            'description' => 'required|string|max:280',
             'creator_id' => 'nullable|exists:users,id',
             'difficulty_level' => 'required|in:beginner,intermediate,advanced,expert',
             'estimated_duration_min' => 'required|integer|min:1',

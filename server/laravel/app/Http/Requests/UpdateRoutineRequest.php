@@ -15,7 +15,7 @@ class UpdateRoutineRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|required|string|max:80',
-            'description' => 'sometimes|required|string',
+            'description' => 'sometimes|required|string|max:280',
             'creator_id' => 'sometimes|nullable|exists:users,id',
             'difficulty_level' => 'sometimes|required|in:beginner,intermediate,advanced,expert',
             'estimated_duration_min' => 'sometimes|required|integer|min:1',

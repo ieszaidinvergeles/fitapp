@@ -15,7 +15,7 @@ class UpdateRecipeRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|required|string|max:80',
-            'description' => 'sometimes|required|string',
+            'description' => 'sometimes|required|string|max:280',
             'ingredients' => 'sometimes|required|string',
             'preparation_steps' => 'sometimes|required|string',
             'calories' => 'sometimes|required|integer|min:0',

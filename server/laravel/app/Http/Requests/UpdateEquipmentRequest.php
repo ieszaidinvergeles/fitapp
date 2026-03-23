@@ -15,7 +15,7 @@ class UpdateEquipmentRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|required|string|max:80',
-            'description' => 'sometimes|nullable|string',
+            'description' => 'sometimes|nullable|string|max:280',
             'is_home_accessible' => 'sometimes|required|boolean',
         ];
     }

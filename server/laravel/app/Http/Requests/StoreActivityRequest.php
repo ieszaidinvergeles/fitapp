@@ -15,7 +15,7 @@ class StoreActivityRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:80',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:280',
             'intensity_level' => 'required|in:low,medium,high,extreme',
         ];
     }

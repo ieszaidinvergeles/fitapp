@@ -15,7 +15,7 @@ class UpdateExerciseRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|required|string|max:80',
-            'description' => 'sometimes|required|string',
+            'description' => 'sometimes|required|string|max:280',
             'image_url' => 'sometimes|nullable|url|max:500',
             'video_url' => 'sometimes|nullable|url|max:500',
             'target_muscle_group' => 'sometimes|nullable|in:chest,upper_back,lower_back,shoulders,biceps,triceps,forearms,core,obliques,quadriceps,hamstrings,glutes,calves,hip_flexors,adductors,abductors,traps,lats,neck,full_body',

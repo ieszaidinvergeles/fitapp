@@ -15,7 +15,7 @@ class StoreExerciseRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:80',
-            'description' => 'required|string',
+            'description' => 'required|string|max:280',
             'image_url' => 'nullable|url|max:500',
             'video_url' => 'nullable|url|max:500',
             'target_muscle_group' => 'nullable|in:chest,upper_back,lower_back,shoulders,biceps,triceps,forearms,core,obliques,quadriceps,hamstrings,glutes,calves,hip_flexors,adductors,abductors,traps,lats,neck,full_body',

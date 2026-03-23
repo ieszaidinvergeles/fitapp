@@ -15,9 +15,9 @@ class StoreRecipeRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:80',
-            'description' => 'required|string',
-            'ingredients' => 'required|string',
-            'preparation_steps' => 'required|string',
+            'description' => 'required|string|max:280',
+            'ingredients' => 'required|string|max:1024',
+            'preparation_steps' => 'required|string|max:2048',
             'calories' => 'required|integer|min:0',
             'macros_json' => 'nullable|json',
             'type' => 'required|in:breakfast,lunch,dinner,snack,pre_workout,post_workout',
