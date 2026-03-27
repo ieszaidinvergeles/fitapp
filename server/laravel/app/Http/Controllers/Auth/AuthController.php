@@ -303,21 +303,43 @@ class AuthController extends Controller
      *
      * SRP: Isolates log persistence so it does not interrupt the main auth flow.
      *
+     * Maps generic event types to the enum values defined in the auth_logs table.
+     *
      * @param  Request     $request
      * @param  int|null    $userId
-     * @param  string      $eventType
-     * @param  bool        $success
+     * @param  string      $eventType (register, login, logout, register_failed, login_failed, logout_failed, email_verified)
+     * @param  bool        $success   (used for logging purposes, not stored)
      * @return void
      */
     private function writeAuthLog(Request $request, ?int $userId, string $eventType, bool $success): void
     {
         try {
+            // Map generic event types to enum values defined in auth_logs table
+            $eventMap = [
+                'register'         => null, // Not in enum — may need new enum value 'registration'
+                'register_failed'  => null, // Not in enum
+                'login'            => 'login_ok',
+                'login_failed'     => 'login_failed',
+                'logout'           => 'logout',
+                'logout_failed'    => null, // Not in enum — still log as logout
+                'email_verified'   => null, // Not in enum — may need new enum value
+            ];
+
+            // Get the email being used (prefer the authenticated user's email, fall back to request input)
+            $emailAttempt = $request->user()?->email ?? $request->input('email', 'unknown');
+
+            // Only log if event is in the enum; otherwise skip
+            $event = $eventMap[$eventType] ?? null;
+            if ($event === null) {
+                return; // Skip logging events not yet in the auth_logs enum
+            }
+
             AuthLog::create([
-                'user_id'    => $userId,
-                'event_type' => $eventType,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'success'    => $success,
+                'user_id'       => $userId,
+                'email_attempt' => $emailAttempt,
+                'event'         => $event,
+                'ip_address'    => $request->ip(),
+                'user_agent'    => $request->userAgent(),
             ]);
         } catch (\Throwable $e) {
             // Auth log failures must never interrupt the main auth response.

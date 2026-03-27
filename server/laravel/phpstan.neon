@@ -1,0 +1,24 @@
+includes:
+    - ./vendor/larastan/larastan/extension.neon
+
+parameters:
+
+    paths:
+        - app
+        - bootstrap
+        - config
+        - database
+        - resources
+        - routes
+        - tests
+
+    # Level 9 is the highest level
+    level: 5
+
+    ignoreErrors:
+        - '#Access to undefined constant LARAVEL#'
+
+    excludePaths:
+        - ./*/*/FileToBeExcluded.php
+
+    checkMissingIterableValueType: false
