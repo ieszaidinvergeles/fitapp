@@ -1,30 +1,73 @@
-# GymApp — Controllers and API Architecture (v8)
+# Gym — Controllers, API Architecture and Middleware
 
 **Date:** 2026-04-06 &nbsp;|&nbsp; **Release:** `v0.8.0-controllers`
 
-This document outlines the API structure, routing, and controller implementation for the GymApp backend.
+This document describes the API v1 structure, naming conventions, and 
+the architectural implementation of the request handling and authorization layer.
 
-## 1. Infrastructure and Routing
-- **`bootstrap/app.php`**: Integrated API route file and registered role-based middleware aliases.
-- **Middleware Aliases**:
-    - `admin`: Requires `role = 'admin'`.
-    - `advanced`: Requires `role` to be one of `admin`, `manager`, or `staff`.
-- **`routes/api.php`**: Defined **105 routes** under the `v1` prefix, organized by access level (Public, Authenticated, Advanced, Admin).
+# 1. API Structure and Routing
 
-## 2. Controller Pattern
-All controllers follow a standardized implementation pattern:
-- **Try-Catch Blocks**: Every database operation is wrapped to ensure JSON error responses.
-- **Standardized Response**: Uses `$result` and `$messageArray` structure as defined in conventions.
-- **Sanitization**: Applied `limpiarCampo`, `limpiarOrden`, and `limpiarNumeros` helpers where appropriate.
-- **Pagination**: Mandatory `paginate(10)->withQueryString()` for all list endpoints.
+The backend exposes a **RESTful API** under the `api/v1/` prefix, ensuring non-breaking 
+changes for future integrations.
 
-## 3. Key Controller Features
-- **BookingController**: Validates availability, status transitions, and writes to `BookingHistory`.
-- **GymClassController**: Implements server-side conflict detection for rooms and instructors.
-- **NotificationController**: Automates delivery log creation for all targeted recipients.
-- **RoutineController**: Handles polymorphic exercise ordering and cloning.
-- **UserController**: Administrative tools for blocking users and resetting strikes.
+## 1.1. Theoretical Justification: Why v1?
+*   **Versioning:** Allows for major changes in `v2` without affecting older clients.
+*   **Consistency:** All endpoints follow pluralized naming (e.g., `/users`, `/gym-classes`).
+*   **Namespacing:** All controllers for this version are located in `App\Http\Controllers`.
 
-## 4. API Documentation
-The API is now fully operational with all 18 entities accessible through their respective endpoints.
-Total Registered Routes: **105**.
+# 2. Authorization Layer and Middleware
+
+Authorization is handled through **role-based access control (RBAC)** integrated into the 
+routing middleware layer at `bootstrap/app.php`.
+
+## 2.1. Registered Middleware Aliases
+
+| Alias | Middleware Class | Purpose |
+| :--- | :--- | :--- |
+| `admin` | `AdminMiddleware` | Restricts access to super-users (`role = 'admin'`). |
+| `advanced` | `AdvancedMiddleware` | Access for `admin`, `manager`, and `staff` roles. |
+| `auth:sanctum`| `EnsureFrontendRequestsAreStateful` | Core Laravel authentication layer. |
+
+> Middleware is applied at the route level in `routes/api.php`, allowing for granular 
+> permission control per endpoint (e.g., users can view plans, but only admins can create them).
+
+# 3. Controller Pattern and Response Standards
+
+All 18 controllers follow a strict, standardized implementation pattern to 
+guarantee response consistency.
+
+## 3.1. Standardized Response Format
+Every response returns a JSON object with two mandatory keys:
+*   **`result`**: Contains the requested data (Object, Array, Boolean) or `false` on failure.
+*   **`message`**: A keyed array (e.g., `['general' => '...']`) for error strings or success reports.
+
+## 3.2. Architecture: Why the try-catch block?
+*   **Silence Database Errors:** Prevents internal SQL errors or traces from leaking to the client.
+*   **Guaranteed Structure:** Ensures the API consumer always receives the same key structure, even when 500-level errors occur.
+*   **Graceful Degradation:** Allows the controller to provide a human-readable reason for failure.
+
+# 4. Request Sanitization and Pagination
+
+The API enforces strict rules for data input and output formatting.
+
+## 4.1. Sanitization Helpers
+Global helpers are used before every `create` or `update` operation:
+*   `limpiarCampo()`: Generic string trimming and sanitization.
+*   `limpiarOrden()`: Ensures sort parameters are safe against SQL injection.
+*   `limpiarNumeros()`: Casts and cleans numeric inputs for IDs or quantities.
+
+## 4.2. Pagination Rules
+All list endpoints (`index`) **must** include:
+*   `paginate(10)`: Fixed chunking of 10 items per page.
+*   `withQueryString()`: Persists filter parameters (like `gym_id` or `role`) during navigation.
+
+# 5. API v1 — Route Summary
+
+Total Routes Registered: **105** (Checked via `php artisan route:list`).
+
+| Resource Groups | Access Level | Primary Actions |
+| :--- | :--- | :--- |
+| `plans`, `activities`, `recipes` | Public / Auth | View catalog. |
+| `bookings`, `metrics`, `meals` | Auth (Own) | Manage personal training/nutrition. |
+| `routines`, `classes`, `rooms` | Advanced | Operational gym management. |
+| `users`, `gyms`, `settings` | Admin | Full control and administrative overrides. |
