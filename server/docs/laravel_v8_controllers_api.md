@@ -10,12 +10,13 @@ the architectural implementation of the request handling and authorization layer
 The backend exposes a **RESTful API** under the `api/v1/` prefix, ensuring non-breaking 
 changes for future integrations.
 
-## 1.1. Architectural Glossary: RESTful
-| Concept | Definition | Application in GymApp |
-| :--- | :--- | :--- |
-| **REST** | Representational State Transfer. A standard set of constraints for creating web services. | All services are based on HTTP verbs. |
-| **Statelessness** | No client context is stored on the server between requests. | Each request contains all information needed to process it (Sanctum Tokens). |
-| **Uniform Interface** | Consistent naming and structure for all API resources. | JSON responses always follow the `result`/`message` keys. |
+## 1.1. RESTful Standards
+
+### 1.1.1. What is a RESTful API?
+A standardized set of constraints (Representational State Transfer) for creating web services. All services in the GymApp are resource-based and leverage HTTP verbs (GET, POST, PUT, DELETE) to define actions, creating a predictable interface for client integration.
+
+### 1.1.2. Statelessness and Uniformity
+The API is designed to be stateless, meaning no client data is stored on the server between requests. Each call must contain all necessary data (Sanctum tokens) to be processed. Responses always use a uniform structure based on the `result` and `message` identifiers.
 
 ## 1.2. Theoretical Justification: Why v1?
 *   **Versioning:** Allows for major changes in `v2` without affecting older clients.
@@ -43,13 +44,13 @@ routing middleware layer at `bootstrap/app.php`.
 All 18 controllers follow a strict, standardized implementation pattern to 
 guarantee response consistency.
 
-## 3.1. Architectural Glossary: Thin Controllers
+## 3.1. Architectural Patterns
 
-| Concept | Definition | Application in GymApp |
-| :--- | :--- | :--- |
-| **Thin Controller** | A controller that only handles HTTP request parsing and response formatting. | No logic calculations are done in the controller's body. |
-| **Coordination** | The controller acts as a conductor, telling other objects what to do. | The controller calls model methods like `$gym->assignManager()`. |
-| **Separation of Concerns** | Keeping the "how" (logic) separate from the "where" (web entry point). | If we change a gym rule, we only change the model, not the controller. |
+### 3.1.1. Thin Controllers
+Controllers that only handle HTTP request parsing and response formatting. In this pattern, the controller is a "mediator" that doesn't perform calculations or business logic; it merely collects input, calls its corresponding domain model, and returns the result.
+
+### 3.1.2. Coordination and Separation
+The controller acts as a conductor, delegating the "how" (logic) to the models. This separation of concerns ensures that if a gym rule changes (e.g., how the strike counter works), we only modify the model, keeping the web infrastructure untouched.
 
 ## 3.2. Standardized Response Format
 Every response returns a JSON object with two mandatory keys:

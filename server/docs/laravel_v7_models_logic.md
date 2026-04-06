@@ -10,13 +10,13 @@ relationship mapping, and the architectural decisions regarding domain encapsula
 The backend implementation follows the **Fat Model** architectural pattern, where the bulk 
 of the application's business logic resides within the Eloquent models rather than the controllers.
 
-## 1.1. Architectural Glossary: Fat Models
+## 1.1. Architectural Patterns
 
-| Concept | Definition | Application in GymApp |
-| :--- | :--- | :--- |
-| **Fat Model** | A design pattern where models handle data validation, relationships, and complex business calculations. | Logic like `cancel()` in `GymClass` or `bmi()` in `BodyMetric` is encapsulated here. |
-| **Encapsulation** | Hiding the internal state and requiring all interaction to be performed through an object's methods. | Controllers call `$user->incrementStrike()` instead of manually updating columns. |
-| **Domain Logic** | The specific rules that govern how a business operates (gym rules in this case). | Rules regarding booking capacity and member blocking are defined at the model level. |
+### 1.1.1. Fat Models
+A design pattern where Eloquent models handle data validation, relationships, and complex business calculations. In this architecture, the model is "intelligent" and knows how to manage its own state and side effects (such as updating counters or cascading deletions).
+
+### 1.1.2. Domain Encapsulation
+The practice of hiding internal record states and requiring all interactions to be performed through dedicated model methods. This ensures that business rules (like member blocking or booking capacity) are always enforced, regardless of which controller or command triggers the action.
 
 ## 1.2. Theoretical Justification: Why Fat Models?
 *   **Centralization:** Rules (like "when a booking is cancelled, increment strikes") are defined once.
