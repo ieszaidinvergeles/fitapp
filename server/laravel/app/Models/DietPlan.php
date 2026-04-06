@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -7,17 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Represents a dietary strategy or plan.
+ * Represents a nutritional diet plan that can be associated with routines.
  *
- * @property int $id
- * @property string $name
+ * SRP: Encapsulates diet plan metadata and its relationship to routines.
+ *
+ * @property int         $id
+ * @property string      $name
  * @property string|null $goal_description
  *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Routine> $routines
  */
-
 class DietPlan extends Model
 {
+    /** @var bool */
     public $timestamps = false;
 
     /** @var list<string> */
@@ -26,9 +27,11 @@ class DietPlan extends Model
         'goal_description',
     ];
 
-    /** @var array<string,string> */
-    protected $casts = [];
-
+    /**
+     * Relationship: all routines associated with this diet plan.
+     *
+     * @return HasMany
+     */
     public function routines(): HasMany
     {
         return $this->hasMany(Routine::class, 'associated_diet_plan_id');
