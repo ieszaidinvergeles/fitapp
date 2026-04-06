@@ -1,27 +1,37 @@
 <?php
 
-namespace App\Models\Log;
+namespace App\Models\logs;
 
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Model for the booking_history table.
+ * Immutable record of a booking status transition.
  *
- * SRP: Solely responsible for representing a single booking status transition.
- * NOTE: Stores a full snapshot of booking_id, class_id and user_id at the
- *       time of the transition so the record is self-contained even if the
- *       original booking is deleted. changed_by_id is null for automatic
- *       system-driven transitions.
+ * SRP: Solely responsible for representing a single status change event for a booking.
+ *
+ * NOTE: No Eloquent relationships. Stores booking_id, class_id and user_id as
+ *       a snapshot at the time of transition. Records are self-contained even
+ *       if the original booking is hard-deleted. Only created_at is used.
+ *
+ * @property int         $id
+ * @property int         $booking_id
+ * @property int         $class_id
+ * @property int         $user_id
+ * @property string      $from_status
+ * @property string      $to_status
+ * @property int|null    $changed_by_id
+ * @property string|null $reason
+ * @property \Illuminate\Support\Carbon $created_at
  */
 class BookingHistory extends Model
 {
-    /** @var bool Disable automatic timestamp management. */
+    /** @var bool */
     public $timestamps = false;
 
-    /** @var string Table name. */
+    /** @var string */
     protected $table = 'booking_history';
 
-    /** @var string[] Fillable fields. */
+    /** @var list<string> */
     protected $fillable = [
         'booking_id',
         'class_id',
@@ -33,8 +43,12 @@ class BookingHistory extends Model
         'created_at',
     ];
 
-    /** @var array<string, string> Cast definitions. */
+    /** @var array<string, string> */
     protected $casts = [
-        'created_at' => 'datetime',
+        'booking_id'    => 'integer',
+        'class_id'      => 'integer',
+        'user_id'       => 'integer',
+        'changed_by_id' => 'integer',
+        'created_at'    => 'datetime',
     ];
 }
