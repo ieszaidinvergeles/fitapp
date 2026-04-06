@@ -5,12 +5,20 @@
 This document describes the implementation of the 18 main Eloquent models, their internal logic,
 relationship mapping, and the architectural decisions regarding domain encapsulation.
 
-# 1. Model Encapsulation and SRP
+# 1. Model Encapsulation (The "Fat Model" Pattern)
 
-The backend follows the **Fat Model, Thin Controller** pattern. Each Eloquent model is responsible
-for its own data integrity and business rules.
+The backend implementation follows the **Fat Model** architectural pattern, where the bulk 
+of the application's business logic resides within the Eloquent models rather than the controllers.
 
-## 1.1. Theoretical Justification: Why Logic in Models?
+## 1.1. Architectural Glossary: Fat Models
+
+| Concept | Definition | Application in GymApp |
+| :--- | :--- | :--- |
+| **Fat Model** | A design pattern where models handle data validation, relationships, and complex business calculations. | Logic like `cancel()` in `GymClass` or `bmi()` in `BodyMetric` is encapsulated here. |
+| **Encapsulation** | Hiding the internal state and requiring all interaction to be performed through an object's methods. | Controllers call `$user->incrementStrike()` instead of manually updating columns. |
+| **Domain Logic** | The specific rules that govern how a business operates (gym rules in this case). | Rules regarding booking capacity and member blocking are defined at the model level. |
+
+## 1.2. Theoretical Justification: Why Fat Models?
 *   **Centralization:** Rules (like "when a booking is cancelled, increment strikes") are defined once.
 *   **Reuse:** Logic is available in Controllers, Jobs, and CLI commands without replication.
 *   **Testability:** Unit tests can verify business logic by interacting directly with the model state.
