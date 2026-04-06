@@ -1,27 +1,27 @@
-# Gym — Models, Controllers and Business Logic
+# Gym — Architectural Logic and Entity Roles
 
-**Date:** 2026-04-06 &nbsp;|&nbsp; **Releases:** `v0.7.0-models` & `v0.8.0-controllers`
+**Date:** 2026-04-06 &nbsp;|&nbsp; **Core Logic Reference**
 
-This document serves as the definitive technical guide for the GymApp backend, consolidating 
-the implementation details for the domain models, API layer, and core business logic.
+This document describes the foundational architectural patterns and the specific business rules 
+assigned to each entity in the system.
 
-# 1. Architectural Foundation
+# 1. Architectural Patterns
 
-## 1.1. RESTful Standards
+## 1.1. Fat Models (Domain Logic)
 
-### 1.1.1. What is a RESTful API?
-A standardized set of constraints (Representational State Transfer) for creating web services. All services in the GymApp are resource-based and leverage HTTP verbs (GET, POST, PUT, DELETE) to define actions, creating a predictable interface for client integration.
-
-### 1.1.2. Statelessness and Uniformity
-The API is designed to be stateless, meaning no client data is stored on the server between requests. Each call must contain all necessary data (Sanctum tokens) to be processed. Responses always use a uniform structure based on the `result` and `message` identifiers.
-
-## 1.2. Architectural Patterns
-
-### 1.2.1. Fat Models (Domain Logic)
+### 1.1.1. What are Fat Models?
 A design pattern where Eloquent models handle data validation, relationships, and complex business calculations. In this architecture, the model is "intelligent" and knows how to manage its own state and side effects (such as updating counters or cascading deletions).
 
-### 1.2.2. Thin Controllers (Coordination)
+### 1.1.2. Domain Encapsulation
+The practice of hiding internal record states and requiring all interactions to be performed through dedicated model methods. This ensures that business rules (like member blocking or booking capacity) are always enforced, regardless of which controller or command triggers the action.
+
+## 1.2. Thin Controllers (Coordination)
+
+### 1.2.1. What are Thin Controllers?
 Controllers that only handle HTTP request parsing and response formatting. In this pattern, the controller is a "mediator" that doesn't perform calculations or business logic; it merely collects input, calls its corresponding domain model, and returns the result.
+
+### 1.2.2. Coordination and Separation
+The controller acts as a conductor, delegating the "how" (logic) to the models. This separation of concerns ensures that if a gym rule changes (e.g., how the strike counter works), we only modify the model, keeping the web infrastructure untouched.
 
 # 2. Detailed Business Logic Catalog
 
@@ -65,10 +65,3 @@ This catalog details the responsibilities for each entity, including visibility 
 | **StaffAttendance**| Work session tracking. | Clock-out timestamp. | `staff_id`, `gym_id`, Date. |
 | **Notification** | Audience-targeted broadcasts. | Title, message, audience. | Recipient resolution logic. |
 | **Logs (Audit, Auth, etc.)** | Immutable history of changes. | **None** (Read-only). | All data is immutable. |
-
-# 3. Request and Permission Guidelines
-
-*   **View Access**: All catalog entities (Plans, Activities, Recipes) are publicly viewable by authenticated users. Logs and historic metrics are restricted for direct editing.
-*   **User Ownership**: Clients can only edit their own `Settings`, `Favorites`, `MealSchedules`, and `BodyMetrics`.
-*   **Advanced Access**: Staff and Managers can edit `GymClasses`, `Rooms`, `Routines`, and `Equipment` status.
-*   **Admin Override**: Admins have full CRUD on `Users`, `Gyms`, `Plans`, and system-wide configurations.
