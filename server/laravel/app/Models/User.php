@@ -39,6 +39,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property-read \App\Models\Gym|null                                              $currentGym
  * @property-read \App\Models\MembershipPlan|null                                   $membershipPlan
  * @property-read \App\Models\Setting|null                                          $settings
+ * @property-read \App\Models\BodyMetric|null                                       $latestBodyMetric
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\BodyMetric>       $bodyMetrics
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Booking>          $bookings
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Routine>          $createdRoutines
@@ -168,6 +169,46 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Increments the user's cancellation strike counter and blocks if threshold is reached.
+     *
+     * @return void
+     */
+    public function incrementStrike(): void
+    {
+        $this->increment('cancellation_strikes');
+        $this->refresh();
+        $this->blockIfNeeded();
+    }
+
+    /**
+     * Blocks the user from booking if their cancellation strikes reach 3 or more.
+     *
+     * @return void
+     */
+    public function blockIfNeeded(): void
+    {
+        if ($this->cancellation_strikes >= 3 && !$this->is_blocked_from_booking) {
+            $this->update(['is_blocked_from_booking' => true]);
+        }
+    }
+
+    /**
+     * Returns whether the user's membership is expiring within the given number of days.
+     *
+     * @param  int  $daysThreshold
+     * @return bool
+     */
+    public function isMembershipExpiringSoon(int $daysThreshold = 7): bool
+    {
+        if (!$this->membershipPlan) {
+            return false;
+        }
+
+        return $this->membership_status === 'active'
+            && $this->membershipPlan->updated_at?->diffInDays(now(), false) >= (30 - $daysThreshold);
+    }
+
+    /**
      * Relationship: the gym this user is currently assigned to.
      *
      * @return BelongsTo
@@ -291,5 +332,27 @@ class User extends Authenticatable implements MustVerifyEmail
             'primary_user_id',
             'partner_user_id'
         )->withPivot('linked_at');
+    }
+
+    /**
+     * Relationship: the most recent body metric record for this user.
+     *
+     * @return HasOne
+     */
+    public function latestBodyMetric(): HasOne
+    {
+        return $this->hasOne(BodyMetric::class)->latestOfMany('date');
+    }
+
+    /**
+     * Relationship: routines currently active for this user (pivot is_active = true).
+     *
+     * @return BelongsToMany
+     */
+    public function currentActiveRoutine(): BelongsToMany
+    {
+        return $this->belongsToMany(Routine::class, 'user_active_routines')
+                    ->withPivot('is_active', 'start_date')
+                    ->wherePivot('is_active', true);
     }
 }
