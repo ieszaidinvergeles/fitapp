@@ -1,4 +1,6 @@
-# Gym — Log System Documentation v1
+# Gym — Log System Documentation 
+
+**Date:** 2026-03-06 (Release: `v0.3.0-log-system`)
 
 ## 1. Why are logs necessary?
 

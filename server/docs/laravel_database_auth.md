@@ -1,6 +1,6 @@
-# Gym — Authentication System Implementation v2
+# Gym — Authentication System Implementation 
 
-This document describes the standardized authentication architecture, design decisions, request validation, middleware behavior, route structure, and audit logging system used in the Gym backend.
+**Date:** 2026-03-27 (Release: `v0.6.0-auth-system`)
 
 # 1. Authentication Conventions
 
@@ -199,37 +199,37 @@ public function getAuthPasswordName(): string
 
 ### RegisterRequest
 
-| Field                   | Rules     |                |                    |              |                                               |
-| ----------------------- | --------- | -------------- | ------------------ | ------------ | --------------------------------------------- |
-| `username`              | `required | string         | unique:users       | max:80       | regex:/^[a-zA-Z0-9_-.]+$/`                    |
-| `email`                 | `required | email          | unique:users       | max:160`     |                                               |
-| `password`              | `required | string         | min:8              | max:255      | regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%])/` |
-| `password_confirmation` | `required | same:password` |                    |              |                                               |
-| `full_name`             | `required | string         | max:160`           |              |                                               |
-| `dni`                   | `required | string         | size:9             | unique:users | regex:/^[0-9]{8}[A-Za-z]$/`                   |
-| `birth_date`            | `required | date           | before:2010-01-01` |              |                                               |
+| Field                   | Rules |
+| ----------------------- | ----- |
+| `username`              | `required`, `string`, `unique:users`, `max:80`, `regex:/^[a-zA-Z0-9_-.]+$/` |
+| `email`                 | `required`, `email`, `unique:users`, `max:160` |
+| `password`              | `required`, `string`, `min:8`, `max:255`, `regex:/^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%])/` |
+| `password_confirmation` | `required`, `same:password` |
+| `full_name`             | `required`, `string`, `max:160` |
+| `dni`                   | `required`, `string`, `size:9`, `unique:users`, `regex:/^[0-9]{8}[A-Za-z]$/` |
+| `birth_date`            | `required`, `date`, `before:2010-01-01` |
 
 ### LoginRequest
 
-| Field      | Rules     |         |          |
-| ---------- | --------- | ------- | -------- |
-| `email`    | `required | email   | max:160` |
-| `password` | `required | string` |          |
+| Field      | Rules |
+| ---------- | ----- |
+| `email`    | `required`, `email`, `max:160` |
+| `password` | `required`, `string` |
 
 ### ForgotPasswordRequest
 
-| Field   | Rules     |       |              |          |
-| ------- | --------- | ----- | ------------ | -------- |
-| `email` | `required | email | exists:users | max:160` |
+| Field   | Rules |
+| ------- | ----- |
+| `email` | `required`, `email`, `exists:users`, `max:160` |
 
 ### ResetPasswordRequest
 
-| Field                   | Rules     |                |              |          |
-| ----------------------- | --------- | -------------- | ------------ | -------- |
-| `email`                 | `required | email          | exists:users | max:160` |
-| `token`                 | `required | string`        |              |          |
-| `password`              | `required | string         | min:8        | max:255` |
-| `password_confirmation` | `required | same:password` |              |          |
+| Field                   | Rules |
+| ----------------------- | ----- |
+| `email`                 | `required`, `email`, `exists:users`, `max:160` |
+| `token`                 | `required`, `string` |
+| `password`              | `required`, `string`, `min:8`, `max:255` |
+| `password_confirmation` | `required`, `same:password` |
 
 ---
 

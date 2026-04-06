@@ -1,8 +1,7 @@
-# Gym — Database and Laravel Implementation v4
+# Gym — Database and Laravel Implementation
 
-This document describes the revised and fixed database schema conventions, migration rules,
-foreign key behaviors, and the Eloquent model configuration used in the Gym backend.
- 
+**Date:** 2026-03-05 (Release: `v0.2.0-database`) &nbsp;|&nbsp; **Updated:** 2026-03-10 (Release: `v0.4.0-docs-and-patches`)
+
 # 1. Migration Conventions
 
 ## 1.1. Column Types and Lengths

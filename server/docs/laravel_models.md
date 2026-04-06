@@ -2,9 +2,6 @@
 
 **Date:** 2026-04-06 &nbsp;|&nbsp; **Release:** `v0.7.0-models`
 
-This document details the implementation of the 18 main Eloquent models and the domain logic added during 
-the v0.7.0 development cycle.
-
 # 1. Domain Entities Implementation
 
 The following entities were fully implemented with their respective attributes, Eloquent casts, 

@@ -111,8 +111,11 @@ A single tag can group multiple related commits that together complete a logical
 
 ### 4.2 Version history
 
-| Tag | Scope | Commits included |
-|---|---|---|
-| `v0.1.0` | Project setup | Initial commit, `.env.example` |
-| `v0.2.0` | Database | SQL schema draft, Laravel Eloquent implementation, fixes and docs folder |
-| `v0.3.0` | Log system | Log system documentation, 6 log migrations approved |
+| Tag | Date | Scope | Commits included |
+|---|---|---|---|
+| `v0.1.0-project-setup` | 2026-01-13 | Project setup & SQL DB | Initial commit, `.env.example`, `gym.sql` (SQL DB) |
+| `v0.2.0-database` | 2026-03-05 | Database with Laravel | SQL schema translated to Laravel Migrations & Models |
+| `v0.3.0-log-system` | 2026-03-06 | Log system | Log system documentation, 6 log migrations approved |
+| `v0.4.0-docs-and-patches` | 2026-03-10 | Patches | DB Review schema fixes, constraint adjustments |
+| `v0.5.0-validators` | 2026-03-23 | Request Validators | Centralization of FormRequests and validation rules |
+| `v0.6.0-auth-system` | 2026-03-27 | Auth System | Sanctum integration, protected routes, AuthControllers |

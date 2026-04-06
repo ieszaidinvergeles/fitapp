@@ -1,8 +1,7 @@
-# Gym — Controllers, API Architecture and Middleware (v8)
+# Gym — Controllers, API Architecture and Middleware 
 
 **Date:** 2026-04-06 &nbsp;|&nbsp; **Release:** `v0.8.0-controllers`
 
-This document outlines the API structure, routing, and controller implementation for the GymApp backend.
 
 # 1. API Infrastructure and Routing
 

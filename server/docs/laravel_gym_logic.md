@@ -2,8 +2,6 @@
 
 **Date:** 2026-04-06 &nbsp;|&nbsp; **Core Logic Reference**
 
-This document describes the foundational architectural patterns and the specific business rules 
-assigned to each entity in the system.
 
 # 1. Architectural Patterns
 
