@@ -5,15 +5,34 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * Transforms a Routine model into a standardized API JSON response.
+ *
+ * SRP: Solely responsible for shaping the public-facing representation of a routine.
+ * DIP: Consumers depend on this resource contract, not on the raw Routine model.
+ *
+ * Related models are conditionally loaded via whenLoaded() to prevent N+1 queries.
+ */
 class RoutineResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
+     * Transforms the Routine model into an array representation.
      *
+     * @param  Request  $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id'                       => $this->id,
+            'name'                     => $this->name,
+            'description'              => $this->description,
+            'difficulty_level'         => $this->difficulty_level,
+            'estimated_duration_min'   => $this->estimated_duration_min,
+            'creator_id'               => $this->creator_id,
+            'associated_diet_plan_id'  => $this->associated_diet_plan_id,
+            'creator'                  => new UserResource($this->whenLoaded('creator')),
+            'exercises'                => ExerciseResource::collection($this->whenLoaded('exercises')),
+        ];
     }
 }

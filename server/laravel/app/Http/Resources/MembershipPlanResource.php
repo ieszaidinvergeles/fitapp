@@ -5,15 +5,30 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * Transforms a MembershipPlan model into a standardized API JSON response.
+ *
+ * SRP: Solely responsible for shaping the public-facing representation of a membership plan.
+ * DIP: Consumers depend on this resource contract, not on the raw MembershipPlan model.
+ */
 class MembershipPlanResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
+     * Transforms the MembershipPlan model into an array representation.
      *
+     * @param  Request  $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id'                   => $this->id,
+            'name'                 => $this->name,
+            'description'          => $this->description,
+            'type'                 => $this->type,
+            'price'                => $this->price,
+            'duration_months'      => $this->duration_months,
+            'allow_partner_link'   => $this->allow_partner_link,
+        ];
     }
 }
