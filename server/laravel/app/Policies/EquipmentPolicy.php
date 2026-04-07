@@ -4,28 +4,48 @@ namespace App\Policies;
 
 use App\Models\Equipment;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
+/**
+ * Authorization policy for Equipment resources.
+ *
+ * SRP: Solely responsible for determining access to equipment records.
+ * OCP: New equipment abilities are added as methods without modifying existing logic.
+ * LSP: Substitutable for any policy implementation contracted by the Gate.
+ *
+ * Public read rule: Equipment is publicly viewable. Only admins may mutate it.
+ * Admin bypass is handled globally via Gate::before in AppServiceProvider.
+ */
 class EquipmentPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Determines whether the user can list equipment.
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determines whether the user can view a specific equipment record.
+     *
+     * @param  User       $user
+     * @param  Equipment  $equipment
+     * @return bool
      */
     public function view(User $user, Equipment $equipment): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Determines whether the user can create an equipment record.
+     * Only admins may create equipment (Gate::before handles this).
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function create(User $user): bool
     {
@@ -33,7 +53,12 @@ class EquipmentPolicy
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Determines whether the user can update an equipment record.
+     * Only admins may update equipment (Gate::before handles this).
+     *
+     * @param  User       $user
+     * @param  Equipment  $equipment
+     * @return bool
      */
     public function update(User $user, Equipment $equipment): bool
     {
@@ -41,25 +66,14 @@ class EquipmentPolicy
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determines whether the user can delete an equipment record.
+     * Only admins may delete equipment (Gate::before handles this).
+     *
+     * @param  User       $user
+     * @param  Equipment  $equipment
+     * @return bool
      */
     public function delete(User $user, Equipment $equipment): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Equipment $equipment): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Equipment $equipment): bool
     {
         return false;
     }

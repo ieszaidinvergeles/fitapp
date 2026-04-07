@@ -3,62 +3,86 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
+/**
+ * Authorization policy for User resources.
+ *
+ * SRP: Solely responsible for determining access to user profile records.
+ * OCP: New user abilities are added as methods without modifying existing logic.
+ * LSP: Substitutable for any policy implementation contracted by the Gate.
+ *
+ * Ownership rule: A standard user may only view or update their own profile.
+ * Admin bypass is handled globally via Gate::before in AppServiceProvider.
+ */
 class UserPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Determines whether the user can list all users.
+     * Only advanced staff may list all platform users.
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->isAdvanced();
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determines whether the user can view a specific user profile.
+     * Advanced staff can view any profile; a user may only view their own.
+     *
+     * @param  User  $user
+     * @param  User  $model
+     * @return bool
      */
     public function view(User $user, User $model): bool
     {
-        return false;
+        if ($user->isAdvanced()) {
+            return true;
+        }
+
+        return $user->id === $model->id;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Determines whether the user can create a new user record.
+     * Only advanced staff may create users programmatically.
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->isAdvanced();
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Determines whether the user can update a user profile.
+     * Advanced staff may update any profile; a user may only update their own.
+     *
+     * @param  User  $user
+     * @param  User  $model
+     * @return bool
      */
     public function update(User $user, User $model): bool
     {
-        return false;
+        if ($user->isAdvanced()) {
+            return true;
+        }
+
+        return $user->id === $model->id;
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determines whether the user can delete a user record.
+     * Only admins may delete users (Gate::before handles this).
+     *
+     * @param  User  $user
+     * @param  User  $model
+     * @return bool
      */
     public function delete(User $user, User $model): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, User $model): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, User $model): bool
     {
         return false;
     }

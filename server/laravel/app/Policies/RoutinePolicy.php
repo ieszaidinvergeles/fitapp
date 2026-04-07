@@ -4,62 +4,81 @@ namespace App\Policies;
 
 use App\Models\Routine;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
+/**
+ * Authorization policy for Routine resources.
+ *
+ * SRP: Solely responsible for determining access to routine records.
+ * OCP: New routine abilities are added as methods without modifying existing logic.
+ * LSP: Substitutable for any policy implementation contracted by the Gate.
+ *
+ * Hybrid rule: Any authenticated user can view routines. Only advanced staff
+ * or the original creator may mutate a routine. Only admins may delete.
+ * Admin bypass is handled globally via Gate::before in AppServiceProvider.
+ */
 class RoutinePolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Determines whether the user can list routines.
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determines whether the user can view a specific routine.
+     *
+     * @param  User     $user
+     * @param  Routine  $routine
+     * @return bool
      */
     public function view(User $user, Routine $routine): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Determines whether the user can create a routine.
+     * Only advanced staff may create platform routines.
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->isAdvanced();
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Determines whether the user can update a routine.
+     * Advanced staff may update any routine; a user may only update their own created routines.
+     *
+     * @param  User     $user
+     * @param  Routine  $routine
+     * @return bool
      */
     public function update(User $user, Routine $routine): bool
     {
-        return false;
+        if ($user->isAdvanced()) {
+            return true;
+        }
+
+        return $user->id === $routine->creator_id;
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determines whether the user can delete a routine.
+     * Only admins may delete routines (Gate::before handles this).
+     *
+     * @param  User     $user
+     * @param  Routine  $routine
+     * @return bool
      */
     public function delete(User $user, Routine $routine): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Routine $routine): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Routine $routine): bool
     {
         return false;
     }

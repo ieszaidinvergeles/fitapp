@@ -4,28 +4,49 @@ namespace App\Policies;
 
 use App\Models\Activity;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
+/**
+ * Authorization policy for Activity resources.
+ *
+ * SRP: Solely responsible for determining access to activity records.
+ * OCP: New activity abilities are added as methods without modifying existing logic.
+ * LSP: Substitutable for any policy implementation contracted by the Gate.
+ *
+ * Public read rule: Activities are publicly viewable. Only admins may mutate them.
+ * Admin bypass is handled globally via Gate::before in AppServiceProvider.
+ */
 class ActivityPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Determines whether the user can list activities.
+     * Activities are publicly available.
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determines whether the user can view a specific activity.
+     *
+     * @param  User      $user
+     * @param  Activity  $activity
+     * @return bool
      */
     public function view(User $user, Activity $activity): bool
     {
-        return false;
+        return true;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Determines whether the user can create an activity.
+     * Only admins may create activities (Gate::before handles this).
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function create(User $user): bool
     {
@@ -33,7 +54,12 @@ class ActivityPolicy
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Determines whether the user can update an activity.
+     * Only admins may update activities (Gate::before handles this).
+     *
+     * @param  User      $user
+     * @param  Activity  $activity
+     * @return bool
      */
     public function update(User $user, Activity $activity): bool
     {
@@ -41,25 +67,14 @@ class ActivityPolicy
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determines whether the user can delete an activity.
+     * Only admins may delete activities (Gate::before handles this).
+     *
+     * @param  User      $user
+     * @param  Activity  $activity
+     * @return bool
      */
     public function delete(User $user, Activity $activity): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Activity $activity): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Activity $activity): bool
     {
         return false;
     }

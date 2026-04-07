@@ -4,62 +4,64 @@ namespace App\Policies;
 
 use App\Models\Notification;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
+/**
+ * Authorization policy for Notification resources.
+ *
+ * SRP: Solely responsible for determining access to notification records.
+ * OCP: New notification abilities are added as methods without modifying existing logic.
+ * LSP: Substitutable for any policy implementation contracted by the Gate.
+ *
+ * Advanced-staff rule: Only advanced staff may list, view, create, or delete notifications.
+ * Admin bypass is handled globally via Gate::before in AppServiceProvider.
+ */
 class NotificationPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Determines whether the user can list notifications.
+     * Only advanced staff may manage the notification system.
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->isAdvanced();
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determines whether the user can view a specific notification.
+     *
+     * @param  User          $user
+     * @param  Notification  $notification
+     * @return bool
      */
     public function view(User $user, Notification $notification): bool
     {
-        return false;
+        return $user->isAdvanced();
     }
 
     /**
-     * Determine whether the user can create models.
+     * Determines whether the user can create and send a notification.
+     * Only advanced staff may send notifications to audiences.
+     *
+     * @param  User  $user
+     * @return bool
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->isAdvanced();
     }
 
     /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Notification $notification): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can delete the model.
+     * Determines whether the user can delete a notification.
+     * Only admins may delete notifications (Gate::before handles this).
+     *
+     * @param  User          $user
+     * @param  Notification  $notification
+     * @return bool
      */
     public function delete(User $user, Notification $notification): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Notification $notification): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Notification $notification): bool
     {
         return false;
     }
