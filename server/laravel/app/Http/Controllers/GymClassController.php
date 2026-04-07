@@ -5,13 +5,16 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreGymClassRequest;
 use App\Http\Requests\UpdateGymClassRequest;
 use App\Models\GymClass;
+use App\Models\Room;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 /**
  * Handles CRUD and management operations for gym class sessions.
  *
  * SRP: Solely responsible for handling HTTP requests related to gym classes.
+ * DIP: Delegates authorization decisions to GymClassPolicy via the Gate contract.
  */
 class GymClassController extends Controller
 {
@@ -23,21 +26,21 @@ class GymClassController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve classes.'];
 
         try {
             $query = GymClass::query();
 
             if ($request->filled('gym_id')) {
-                $query->where('gym_id', limpiarNumeros($request->input('gym_id')));
+                $query->where('gym_id', (int) $request->input('gym_id'));
             }
 
             if ($request->filled('date')) {
-                $query->where('start_time', 'like', limpiarCampo($request->input('date')) . '%');
+                $query->where('start_time', 'like', $request->input('date') . '%');
             }
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -54,11 +57,14 @@ class GymClassController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve class.'];
 
         try {
-            $result      = GymClass::findOrFail($id);
+            $gymClass = GymClass::findOrFail($id);
+            $this->authorize('view', $gymClass);
+
+            $result       = $gymClass;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -68,23 +74,26 @@ class GymClassController extends Controller
     }
 
     /**
-     * Creates a new class session with room and instructor conflict validation. Advanced only.
+     * Creates a new class session with room and instructor conflict validation.
+     * Restricted to advanced staff within their own gym (enforced by GymClassPolicy).
      *
      * @param  StoreGymClassRequest  $request
      * @return JsonResponse
      */
     public function store(StoreGymClassRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create class.'];
 
         try {
+            $this->authorize('create', GymClass::class);
+
             $data  = $request->validated();
-            $start = \Illuminate\Support\Carbon::parse($data['start_time']);
-            $end   = \Illuminate\Support\Carbon::parse($data['end_time']);
+            $start = Carbon::parse($data['start_time']);
+            $end   = Carbon::parse($data['end_time']);
 
             if (!empty($data['room_id'])) {
-                $room = \App\Models\Room::findOrFail($data['room_id']);
+                $room = Room::findOrFail($data['room_id']);
                 if ($room->hasConflict($start, $end)) {
                     return response()->json(['result' => false, 'message' => ['general' => 'Room is already booked for this time slot.']], 422);
                 }
@@ -97,7 +106,7 @@ class GymClassController extends Controller
                 }
             }
 
-            $result      = GymClass::create($data);
+            $result       = GymClass::create($data);
             $messageArray = ['general' => 'Class created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -107,7 +116,8 @@ class GymClassController extends Controller
     }
 
     /**
-     * Updates an existing class. Advanced only.
+     * Updates an existing class.
+     * Restricted to advanced staff within their own gym (enforced by GymClassPolicy).
      *
      * @param  UpdateGymClassRequest  $request
      * @param  int                    $id
@@ -115,12 +125,14 @@ class GymClassController extends Controller
      */
     public function update(UpdateGymClassRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update class.'];
 
         try {
-            $gymClass    = GymClass::findOrFail($id);
-            $result      = $gymClass->update($request->validated());
+            $gymClass = GymClass::findOrFail($id);
+            $this->authorize('update', $gymClass);
+
+            $result       = $gymClass->update($request->validated());
             $messageArray = ['general' => 'Class updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -130,19 +142,23 @@ class GymClassController extends Controller
     }
 
     /**
-     * Deletes a class. Admin only.
+     * Deletes a class.
+     * Restricted to advanced staff within their own gym (enforced by GymClassPolicy via Gate::before for admins).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete class.'];
 
         try {
-            GymClass::findOrFail($id)->delete();
-            $result      = true;
+            $gymClass = GymClass::findOrFail($id);
+            $this->authorize('delete', $gymClass);
+
+            $gymClass->delete();
+            $result       = true;
             $messageArray = ['general' => 'Class deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -152,19 +168,22 @@ class GymClassController extends Controller
     }
 
     /**
-     * Cancels a class and all its active bookings. Admin or manager.
+     * Cancels a class and all its active bookings.
+     * Restricted to advanced staff within their own gym (enforced by GymClassPolicy).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function cancel(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not cancel class.'];
 
         try {
-            $gymClass    = GymClass::findOrFail($id);
-            $result      = $gymClass->cancel();
+            $gymClass = GymClass::findOrFail($id);
+            $this->authorize('delete', $gymClass);
+
+            $result       = $gymClass->cancel();
             $messageArray = ['general' => 'Class cancelled.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -174,20 +193,23 @@ class GymClassController extends Controller
     }
 
     /**
-     * Marks all active bookings for a class as attended. Staff or above.
+     * Marks all active bookings for a class as attended.
+     * Restricted to advanced staff within their own gym (enforced by GymClassPolicy).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function markAttendance(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not mark attendance.'];
 
         try {
             $gymClass = GymClass::findOrFail($id);
+            $this->authorize('update', $gymClass);
+
             $gymClass->markAllAttended();
-            $result      = true;
+            $result       = true;
             $messageArray = ['general' => 'Attendance marked.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

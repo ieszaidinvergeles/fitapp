@@ -12,29 +12,32 @@ use Illuminate\Http\Request;
  * Handles CRUD and administrative operations for users.
  *
  * SRP: Solely responsible for handling HTTP requests related to user management.
+ * DIP: Delegates authorization decisions to UserPolicy via the Gate contract.
  */
 class UserController extends Controller
 {
     /**
-     * Returns a paginated list of users, optionally filtered by role. Admin only.
+     * Returns a paginated list of users, optionally filtered by role.
+     * Access restricted to advanced staff and above by middleware and Policy.
      *
      * @param  Request  $request
      * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve users.'];
 
         try {
+            $this->authorize('viewAny', User::class);
+
             $query = User::query();
 
             if ($request->filled('role')) {
-                $role = limpiarCampo($request->input('role'));
-                $query->where('role', $role);
+                $query->where('role', $request->input('role'));
             }
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -44,7 +47,8 @@ class UserController extends Controller
     }
 
     /**
-     * Returns a single user by ID. Admin or own user.
+     * Returns a single user by ID.
+     * A non-advanced user may only view their own profile (enforced by UserPolicy).
      *
      * @param  Request  $request
      * @param  int      $id
@@ -52,17 +56,14 @@ class UserController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve user.'];
 
         try {
             $user = User::findOrFail($id);
+            $this->authorize('view', $user);
 
-            if (!$request->user()->isAdmin() && $request->user()->id !== $user->id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
-
-            $result      = $user;
+            $result       = $user;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -72,18 +73,21 @@ class UserController extends Controller
     }
 
     /**
-     * Creates a new user (admin-created, not registration). Admin only.
+     * Creates a new user (admin-created, not self-registration).
+     * Restricted to advanced staff by route middleware and UserPolicy.
      *
      * @param  StoreUserRequest  $request
      * @return JsonResponse
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create user.'];
 
         try {
-            $result      = User::create($request->validated());
+            $this->authorize('create', User::class);
+
+            $result       = User::create($request->validated());
             $messageArray = ['general' => 'User created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -93,7 +97,8 @@ class UserController extends Controller
     }
 
     /**
-     * Updates an existing user. Admin or own user.
+     * Updates an existing user profile.
+     * A non-advanced user may only update their own profile (enforced by UserPolicy).
      *
      * @param  UpdateUserRequest  $request
      * @param  int                $id
@@ -101,17 +106,14 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update user.'];
 
         try {
             $user = User::findOrFail($id);
+            $this->authorize('update', $user);
 
-            if (!$request->user()->isAdmin() && $request->user()->id !== $user->id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
-
-            $result      = $user->update($request->validated());
+            $result       = $user->update($request->validated());
             $messageArray = ['general' => 'User updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -121,19 +123,22 @@ class UserController extends Controller
     }
 
     /**
-     * Deletes a user. Admin only.
+     * Deletes a user. Admin only (handled by route middleware and Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete user.'];
 
         try {
-            User::findOrFail($id)->delete();
-            $result      = true;
+            $user = User::findOrFail($id);
+            $this->authorize('delete', $user);
+
+            $user->delete();
+            $result       = true;
             $messageArray = ['general' => 'User deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -150,12 +155,12 @@ class UserController extends Controller
      */
     public function block(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not block user.'];
 
         try {
-            $user        = User::findOrFail($id);
-            $result      = $user->update(['is_blocked_from_booking' => true]);
+            $user         = User::findOrFail($id);
+            $result       = $user->update(['is_blocked_from_booking' => true]);
             $messageArray = ['general' => 'User blocked from booking.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -172,12 +177,12 @@ class UserController extends Controller
      */
     public function unblock(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not unblock user.'];
 
         try {
-            $user        = User::findOrFail($id);
-            $result      = $user->update(['is_blocked_from_booking' => false]);
+            $user         = User::findOrFail($id);
+            $result       = $user->update(['is_blocked_from_booking' => false]);
             $messageArray = ['general' => 'User unblocked.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -194,12 +199,12 @@ class UserController extends Controller
      */
     public function resetStrikes(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not reset strikes.'];
 
         try {
-            $user        = User::findOrFail($id);
-            $result      = $user->update(['cancellation_strikes' => 0]);
+            $user         = User::findOrFail($id);
+            $result       = $user->update(['cancellation_strikes' => 0]);
             $messageArray = ['general' => 'Strikes reset.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

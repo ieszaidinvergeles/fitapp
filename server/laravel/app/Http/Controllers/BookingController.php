@@ -13,26 +13,30 @@ use Illuminate\Support\Carbon;
  * Handles booking operations for gym class sessions.
  *
  * SRP: Solely responsible for handling HTTP requests related to bookings.
+ * DIP: Delegates authorization decisions to BookingPolicy via the Gate contract.
  */
 class BookingController extends Controller
 {
     /**
-     * Returns a paginated list of bookings. Admins see all; users see their own.
+     * Returns a paginated list of bookings.
+     * Advanced staff and admins see all; standard users see their own.
      *
      * @param  Request  $request
      * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve bookings.'];
 
         try {
-            $query = $request->user()->isAdmin()
+            $this->authorize('viewAny', Booking::class);
+
+            $query = $request->user()->isAdvanced()
                 ? Booking::query()
                 : Booking::where('user_id', $request->user()->id);
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -42,7 +46,8 @@ class BookingController extends Controller
     }
 
     /**
-     * Returns a single booking by ID. Admin or own booking.
+     * Returns a single booking by ID.
+     * Access restricted to the owner or advanced staff (enforced by BookingPolicy).
      *
      * @param  Request  $request
      * @param  int      $id
@@ -50,17 +55,14 @@ class BookingController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve booking.'];
 
         try {
             $booking = Booking::findOrFail($id);
+            $this->authorize('view', $booking);
 
-            if (!$request->user()->isAdmin() && $request->user()->id !== $booking->user_id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
-
-            $result      = $booking;
+            $result       = $booking;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -71,19 +73,21 @@ class BookingController extends Controller
 
     /**
      * Creates a new booking for the authenticated user.
-     * Validates class availability, user eligibility, and time conflicts.
+     * Validates class availability, user eligibility, and duplicate booking.
      *
      * @param  Request  $request
      * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create booking.'];
 
         try {
-            $classId = (int) $request->input('class_id');
-            $user    = $request->user();
+            $this->authorize('create', Booking::class);
+
+            $classId  = (int) $request->input('class_id');
+            $user     = $request->user();
             $gymClass = GymClass::findOrFail($classId);
 
             if ($gymClass->is_cancelled) {
@@ -119,7 +123,7 @@ class BookingController extends Controller
                 'reason'        => 'Booking created',
             ]);
 
-            $result      = $booking;
+            $result       = $booking;
             $messageArray = ['general' => 'Booking created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -129,7 +133,8 @@ class BookingController extends Controller
     }
 
     /**
-     * Cancels a booking. Own user or admin.
+     * Cancels a booking.
+     * Access restricted to the owner or advanced staff (enforced by BookingPolicy).
      * Returns 422 if the class starts within 2 hours.
      *
      * @param  Request  $request
@@ -138,22 +143,19 @@ class BookingController extends Controller
      */
     public function cancel(Request $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not cancel booking.'];
 
         try {
             $booking = Booking::findOrFail($id);
-
-            if (!$request->user()->isAdmin() && $request->user()->id !== $booking->user_id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
+            $this->authorize('update', $booking);
 
             if (!$booking->isCancellable()) {
                 return response()->json(['result' => false, 'message' => ['general' => 'Booking cannot be cancelled within 2 hours of class start.']], 422);
             }
 
             $booking->cancel();
-            $result      = true;
+            $result       = true;
             $messageArray = ['general' => 'Booking cancelled.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -163,19 +165,23 @@ class BookingController extends Controller
     }
 
     /**
-     * Hard deletes a booking. Admin only.
+     * Hard deletes a booking.
+     * Restricted to advanced staff (enforced by BookingPolicy).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete booking.'];
 
         try {
-            Booking::findOrFail($id)->delete();
-            $result      = true;
+            $booking = Booking::findOrFail($id);
+            $this->authorize('delete', $booking);
+
+            $booking->delete();
+            $result       = true;
             $messageArray = ['general' => 'Booking deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

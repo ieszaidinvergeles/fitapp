@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
  * Handles operations for user favourite entities.
  *
  * SRP: Solely responsible for handling HTTP requests related to user favourites.
+ * DIP: Delegates authorization decisions to UserFavoritePolicy via the Gate contract.
  */
 class UserFavoriteController extends Controller
 {
@@ -22,18 +23,19 @@ class UserFavoriteController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve favourites.'];
 
         try {
+            $this->authorize('viewAny', UserFavorite::class);
+
             $query = UserFavorite::where('user_id', $request->user()->id);
 
             if ($request->filled('entity_type')) {
-                $type = limpiarCampo($request->input('entity_type'));
-                $query->ofType($type);
+                $query->ofType($request->input('entity_type'));
             }
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -43,17 +45,19 @@ class UserFavoriteController extends Controller
     }
 
     /**
-     * Creates a new favourite entry for own user. Validates no duplicates.
+     * Creates a new favourite entry for the authenticated user. Validates no duplicates.
      *
      * @param  StoreUserFavoriteRequest  $request
      * @return JsonResponse
      */
     public function store(StoreUserFavoriteRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not add favourite.'];
 
         try {
+            $this->authorize('create', UserFavorite::class);
+
             $userId     = $request->user()->id;
             $entityType = $request->input('entity_type');
             $entityId   = (int) $request->input('entity_id');
@@ -62,7 +66,7 @@ class UserFavoriteController extends Controller
                 return response()->json(['result' => false, 'message' => ['general' => 'Already in favourites.']], 422);
             }
 
-            $result      = UserFavorite::create([
+            $result       = UserFavorite::create([
                 'user_id'     => $userId,
                 'entity_type' => $entityType,
                 'entity_id'   => $entityId,
@@ -76,26 +80,23 @@ class UserFavoriteController extends Controller
     }
 
     /**
-     * Deletes a favourite. Own user or admin.
+     * Deletes a favourite entry.
+     * A user may only remove their own favourites (enforced by UserFavoritePolicy).
      *
-     * @param  Request  $request
-     * @param  int      $id
+     * @param  int  $id
      * @return JsonResponse
      */
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not remove favourite.'];
 
         try {
             $favorite = UserFavorite::findOrFail($id);
-
-            if (!$request->user()->isAdmin() && $request->user()->id !== $favorite->user_id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
+            $this->authorize('delete', $favorite);
 
             $favorite->delete();
-            $result      = true;
+            $result       = true;
             $messageArray = ['general' => 'Removed from favourites.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

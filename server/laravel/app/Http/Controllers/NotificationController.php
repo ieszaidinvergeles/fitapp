@@ -13,22 +13,26 @@ use Illuminate\Support\Carbon;
  * Handles broadcast notification operations.
  *
  * SRP: Solely responsible for handling HTTP requests related to notifications.
+ * DIP: Delegates authorization decisions to NotificationPolicy via the Gate contract.
  */
 class NotificationController extends Controller
 {
     /**
-     * Returns a paginated list of notifications. Admin sees all.
+     * Returns a paginated list of notifications.
+     * Only advanced staff may access this endpoint (enforced by NotificationPolicy).
      *
      * @param  Request  $request
      * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve notifications.'];
 
         try {
-            $result      = Notification::paginate(10)->withQueryString();
+            $this->authorize('viewAny', Notification::class);
+
+            $result       = Notification::paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -38,18 +42,22 @@ class NotificationController extends Controller
     }
 
     /**
-     * Returns a single notification by ID. Admin or recipient.
+     * Returns a single notification by ID.
+     * Only advanced staff may view notification details (enforced by NotificationPolicy).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve notification.'];
 
         try {
-            $result      = Notification::findOrFail($id);
+            $notification = Notification::findOrFail($id);
+            $this->authorize('view', $notification);
+
+            $result       = $notification;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -60,17 +68,19 @@ class NotificationController extends Controller
 
     /**
      * Creates a notification and writes delivery log entries for all resolved recipients.
-     * Advanced only.
+     * Only advanced staff may send notifications (enforced by NotificationPolicy).
      *
      * @param  StoreNotificationRequest  $request
      * @return JsonResponse
      */
     public function store(StoreNotificationRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create notification.'];
 
         try {
+            $this->authorize('create', Notification::class);
+
             $data               = $request->validated();
             $data['sender_id']  = $request->user()->id;
             $data['created_at'] = Carbon::now();
@@ -89,7 +99,7 @@ class NotificationController extends Controller
                 ]);
             }
 
-            $result      = $notification;
+            $result       = $notification;
             $messageArray = ['general' => 'Notification sent to ' . $recipients->count() . ' recipients.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -99,19 +109,22 @@ class NotificationController extends Controller
     }
 
     /**
-     * Deletes a notification. Admin only.
+     * Deletes a notification. Admin only (enforced by NotificationPolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete notification.'];
 
         try {
-            Notification::findOrFail($id)->delete();
-            $result      = true;
+            $notification = Notification::findOrFail($id);
+            $this->authorize('delete', $notification);
+
+            $notification->delete();
+            $result       = true;
             $messageArray = ['general' => 'Notification deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

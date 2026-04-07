@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
  * Handles CRUD and management operations for routines.
  *
  * SRP: Solely responsible for handling HTTP requests related to routines.
+ * DIP: Delegates authorization decisions to RoutinePolicy via the Gate contract.
  */
 class RoutineController extends Controller
 {
@@ -86,17 +87,14 @@ class RoutineController extends Controller
      */
     public function update(UpdateRoutineRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update routine.'];
 
         try {
             $routine = Routine::findOrFail($id);
+            $this->authorize('update', $routine);
 
-            if (!$request->user()->isAdvanced() && $request->user()->id !== $routine->creator_id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
-
-            $result      = $routine->update($request->validated());
+            $result       = $routine->update($request->validated());
             $messageArray = ['general' => 'Routine updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

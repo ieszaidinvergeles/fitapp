@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
  * Handles CRUD operations for recipes.
  *
  * SRP: Solely responsible for handling HTTP requests related to recipes.
+ * DIP: Delegates authorization decisions to RecipePolicy via the Gate contract.
  */
 class RecipeController extends Controller
 {
@@ -23,23 +24,21 @@ class RecipeController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve recipes.'];
 
         try {
             $query = Recipe::query();
 
             if ($request->filled('type')) {
-                $type = limpiarCampo($request->input('type'));
-                $query->byType($type);
+                $query->byType($request->input('type'));
             }
 
             if ($request->filled('max_calories')) {
-                $max = limpiarNumeros($request->input('max_calories'));
-                $query->byCalorieRange(0, (int) $max);
+                $query->byCalorieRange(0, (int) $request->input('max_calories'));
             }
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -56,11 +55,14 @@ class RecipeController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve recipe.'];
 
         try {
-            $result      = Recipe::findOrFail($id);
+            $recipe = Recipe::findOrFail($id);
+            $this->authorize('view', $recipe);
+
+            $result       = $recipe;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -70,18 +72,20 @@ class RecipeController extends Controller
     }
 
     /**
-     * Creates a new recipe. Advanced only.
+     * Creates a new recipe. Advanced staff only (enforced by RecipePolicy).
      *
      * @param  StoreRecipeRequest  $request
      * @return JsonResponse
      */
     public function store(StoreRecipeRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create recipe.'];
 
         try {
-            $result      = Recipe::create($request->validated());
+            $this->authorize('create', Recipe::class);
+
+            $result       = Recipe::create($request->validated());
             $messageArray = ['general' => 'Recipe created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -91,7 +95,7 @@ class RecipeController extends Controller
     }
 
     /**
-     * Updates an existing recipe. Advanced only.
+     * Updates an existing recipe. Advanced staff only (enforced by RecipePolicy).
      *
      * @param  UpdateRecipeRequest  $request
      * @param  int                  $id
@@ -99,12 +103,14 @@ class RecipeController extends Controller
      */
     public function update(UpdateRecipeRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update recipe.'];
 
         try {
-            $recipe      = Recipe::findOrFail($id);
-            $result      = $recipe->update($request->validated());
+            $recipe = Recipe::findOrFail($id);
+            $this->authorize('update', $recipe);
+
+            $result       = $recipe->update($request->validated());
             $messageArray = ['general' => 'Recipe updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -114,19 +120,22 @@ class RecipeController extends Controller
     }
 
     /**
-     * Deletes a recipe. Admin only.
+     * Deletes a recipe. Admin only (enforced by RecipePolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete recipe.'];
 
         try {
-            Recipe::findOrFail($id)->delete();
-            $result      = true;
+            $recipe = Recipe::findOrFail($id);
+            $this->authorize('delete', $recipe);
+
+            $recipe->delete();
+            $result       = true;
             $messageArray = ['general' => 'Recipe deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
  * Handles CRUD operations for user meal schedule entries.
  *
  * SRP: Solely responsible for handling HTTP requests related to meal scheduling.
+ * DIP: Delegates authorization decisions to UserMealSchedulePolicy via the Gate contract.
  */
 class UserMealScheduleController extends Controller
 {
@@ -23,18 +24,19 @@ class UserMealScheduleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve meal schedule.'];
 
         try {
+            $this->authorize('viewAny', UserMealSchedule::class);
+
             $query = UserMealSchedule::where('user_id', $request->user()->id);
 
             if ($request->filled('date')) {
-                $date = limpiarCampo($request->input('date'));
-                $query->forDate($date);
+                $query->forDate($request->input('date'));
             }
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -44,7 +46,8 @@ class UserMealScheduleController extends Controller
     }
 
     /**
-     * Returns a single meal entry. Own or admin.
+     * Returns a single meal entry.
+     * Access restricted to the owner (enforced by UserMealSchedulePolicy).
      *
      * @param  Request  $request
      * @param  int      $id
@@ -52,17 +55,14 @@ class UserMealScheduleController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve meal entry.'];
 
         try {
             $entry = UserMealSchedule::findOrFail($id);
+            $this->authorize('view', $entry);
 
-            if (!$request->user()->isAdmin() && $request->user()->id !== $entry->user_id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
-
-            $result      = $entry;
+            $result       = $entry;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -72,17 +72,19 @@ class UserMealScheduleController extends Controller
     }
 
     /**
-     * Creates a meal schedule entry for own user.
+     * Creates a meal schedule entry for the authenticated user.
      *
      * @param  StoreUserMealScheduleRequest  $request
      * @return JsonResponse
      */
     public function store(StoreUserMealScheduleRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create meal entry.'];
 
         try {
+            $this->authorize('create', UserMealSchedule::class);
+
             $data            = $request->validated();
             $data['user_id'] = $request->user()->id;
             $result          = UserMealSchedule::create($data);
@@ -95,7 +97,8 @@ class UserMealScheduleController extends Controller
     }
 
     /**
-     * Updates a meal entry — primarily for marking as consumed. Own user only.
+     * Updates a meal entry, primarily for marking as consumed.
+     * Access restricted to the owner (enforced by UserMealSchedulePolicy).
      *
      * @param  UpdateUserMealScheduleRequest  $request
      * @param  int                            $id
@@ -103,17 +106,14 @@ class UserMealScheduleController extends Controller
      */
     public function update(UpdateUserMealScheduleRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update meal entry.'];
 
         try {
             $entry = UserMealSchedule::findOrFail($id);
+            $this->authorize('update', $entry);
 
-            if ($request->user()->id !== $entry->user_id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
-
-            $result      = $entry->update($request->validated());
+            $result       = $entry->update($request->validated());
             $messageArray = ['general' => 'Meal entry updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -123,26 +123,23 @@ class UserMealScheduleController extends Controller
     }
 
     /**
-     * Deletes a meal entry. Own user or admin.
+     * Deletes a meal entry.
+     * Access restricted to the owner (enforced by UserMealSchedulePolicy).
      *
-     * @param  Request  $request
-     * @param  int      $id
+     * @param  int  $id
      * @return JsonResponse
      */
-    public function destroy(Request $request, int $id): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete meal entry.'];
 
         try {
             $entry = UserMealSchedule::findOrFail($id);
-
-            if (!$request->user()->isAdmin() && $request->user()->id !== $entry->user_id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
+            $this->authorize('delete', $entry);
 
             $entry->delete();
-            $result      = true;
+            $result       = true;
             $messageArray = ['general' => 'Meal entry deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

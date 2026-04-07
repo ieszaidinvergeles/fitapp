@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
  * Handles CRUD operations for equipment.
  *
  * SRP: Solely responsible for handling HTTP requests related to equipment.
+ * DIP: Delegates authorization decisions to EquipmentPolicy via the Gate contract.
  */
 class EquipmentController extends Controller
 {
@@ -21,11 +22,11 @@ class EquipmentController extends Controller
      */
     public function index(): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve equipment.'];
 
         try {
-            $result      = Equipment::paginate(10)->withQueryString();
+            $result       = Equipment::paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -42,11 +43,14 @@ class EquipmentController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve equipment.'];
 
         try {
-            $result      = Equipment::findOrFail($id);
+            $equipment = Equipment::findOrFail($id);
+            $this->authorize('view', $equipment);
+
+            $result       = $equipment;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -56,18 +60,20 @@ class EquipmentController extends Controller
     }
 
     /**
-     * Creates a new equipment item. Admin only.
+     * Creates a new equipment item. Admin only (enforced by EquipmentPolicy + Gate::before).
      *
      * @param  StoreEquipmentRequest  $request
      * @return JsonResponse
      */
     public function store(StoreEquipmentRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create equipment.'];
 
         try {
-            $result      = Equipment::create($request->validated());
+            $this->authorize('create', Equipment::class);
+
+            $result       = Equipment::create($request->validated());
             $messageArray = ['general' => 'Equipment created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -77,7 +83,7 @@ class EquipmentController extends Controller
     }
 
     /**
-     * Updates an existing equipment item. Admin only.
+     * Updates an existing equipment item. Admin only (enforced by EquipmentPolicy + Gate::before).
      *
      * @param  UpdateEquipmentRequest  $request
      * @param  int                     $id
@@ -85,12 +91,14 @@ class EquipmentController extends Controller
      */
     public function update(UpdateEquipmentRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update equipment.'];
 
         try {
-            $equipment   = Equipment::findOrFail($id);
-            $result      = $equipment->update($request->validated());
+            $equipment = Equipment::findOrFail($id);
+            $this->authorize('update', $equipment);
+
+            $result       = $equipment->update($request->validated());
             $messageArray = ['general' => 'Equipment updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -100,19 +108,22 @@ class EquipmentController extends Controller
     }
 
     /**
-     * Deletes an equipment item. Admin only.
+     * Deletes an equipment item. Admin only (enforced by EquipmentPolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete equipment.'];
 
         try {
-            Equipment::findOrFail($id)->delete();
-            $result      = true;
+            $equipment = Equipment::findOrFail($id);
+            $this->authorize('delete', $equipment);
+
+            $equipment->delete();
+            $result       = true;
             $messageArray = ['general' => 'Equipment deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

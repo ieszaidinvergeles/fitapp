@@ -11,26 +11,30 @@ use Illuminate\Http\Request;
  * Handles CRUD operations for body metric records.
  *
  * SRP: Solely responsible for handling HTTP requests related to body metrics.
+ * DIP: Delegates authorization decisions to BodyMetricPolicy via the Gate contract.
  */
 class BodyMetricController extends Controller
 {
     /**
-     * Returns a paginated list of body metrics for the authenticated user or all (admin).
+     * Returns a paginated list of body metrics.
+     * Admins see all records; standard users see only their own (scoped by Policy).
      *
      * @param  Request  $request
      * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve body metrics.'];
 
         try {
+            $this->authorize('viewAny', BodyMetric::class);
+
             $query = $request->user()->isAdmin()
                 ? BodyMetric::query()
-                : BodyMetric::forUser($request->user()->id);
+                : BodyMetric::where('user_id', $request->user()->id);
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -40,7 +44,8 @@ class BodyMetricController extends Controller
     }
 
     /**
-     * Returns a single body metric record. Own or admin.
+     * Returns a single body metric record.
+     * Access is restricted to the owner or an admin (enforced by BodyMetricPolicy).
      *
      * @param  Request  $request
      * @param  int      $id
@@ -48,17 +53,14 @@ class BodyMetricController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve body metric.'];
 
         try {
             $metric = BodyMetric::findOrFail($id);
+            $this->authorize('view', $metric);
 
-            if (!$request->user()->isAdmin() && $request->user()->id !== $metric->user_id) {
-                return response()->json(['result' => false, 'message' => ['general' => 'Forbidden.']], 403);
-            }
-
-            $result      = $metric;
+            $result       = $metric;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -68,18 +70,20 @@ class BodyMetricController extends Controller
     }
 
     /**
-     * Creates a new body metric record for own user.
+     * Creates a new body metric record for the authenticated user.
      *
      * @param  StoreBodyMetricRequest  $request
      * @return JsonResponse
      */
     public function store(StoreBodyMetricRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create body metric.'];
 
         try {
-            $data           = $request->validated();
+            $this->authorize('create', BodyMetric::class);
+
+            $data            = $request->validated();
             $data['user_id'] = $request->user()->id;
             $result          = BodyMetric::create($data);
             $messageArray    = ['general' => 'Body metric recorded.'];
@@ -91,19 +95,22 @@ class BodyMetricController extends Controller
     }
 
     /**
-     * Deletes a body metric record. Admin only.
+     * Deletes a body metric record. Admin only (enforced by BodyMetricPolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete body metric.'];
 
         try {
-            BodyMetric::findOrFail($id)->delete();
-            $result      = true;
+            $metric = BodyMetric::findOrFail($id);
+            $this->authorize('delete', $metric);
+
+            $metric->delete();
+            $result       = true;
             $messageArray = ['general' => 'Body metric deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

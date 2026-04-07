@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
  * Handles CRUD operations for exercises.
  *
  * SRP: Solely responsible for handling HTTP requests related to exercises.
+ * DIP: Delegates authorization decisions to ExercisePolicy via the Gate contract.
  */
 class ExerciseController extends Controller
 {
@@ -23,18 +24,17 @@ class ExerciseController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve exercises.'];
 
         try {
             $query = Exercise::query();
 
             if ($request->filled('muscle_group')) {
-                $group = limpiarCampo($request->input('muscle_group'));
-                $query->byMuscleGroup($group);
+                $query->byMuscleGroup($request->input('muscle_group'));
             }
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -51,11 +51,14 @@ class ExerciseController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve exercise.'];
 
         try {
-            $result      = Exercise::findOrFail($id);
+            $exercise = Exercise::findOrFail($id);
+            $this->authorize('view', $exercise);
+
+            $result       = $exercise;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -65,18 +68,20 @@ class ExerciseController extends Controller
     }
 
     /**
-     * Creates a new exercise. Advanced only.
+     * Creates a new exercise. Advanced staff only (enforced by ExercisePolicy).
      *
      * @param  StoreExerciseRequest  $request
      * @return JsonResponse
      */
     public function store(StoreExerciseRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create exercise.'];
 
         try {
-            $result      = Exercise::create($request->validated());
+            $this->authorize('create', Exercise::class);
+
+            $result       = Exercise::create($request->validated());
             $messageArray = ['general' => 'Exercise created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -86,7 +91,7 @@ class ExerciseController extends Controller
     }
 
     /**
-     * Updates an existing exercise. Advanced only.
+     * Updates an existing exercise. Advanced staff only (enforced by ExercisePolicy).
      *
      * @param  UpdateExerciseRequest  $request
      * @param  int                    $id
@@ -94,12 +99,14 @@ class ExerciseController extends Controller
      */
     public function update(UpdateExerciseRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update exercise.'];
 
         try {
-            $exercise    = Exercise::findOrFail($id);
-            $result      = $exercise->update($request->validated());
+            $exercise = Exercise::findOrFail($id);
+            $this->authorize('update', $exercise);
+
+            $result       = $exercise->update($request->validated());
             $messageArray = ['general' => 'Exercise updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -109,19 +116,22 @@ class ExerciseController extends Controller
     }
 
     /**
-     * Deletes an exercise. Admin only.
+     * Deletes an exercise. Admin only (enforced by ExercisePolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete exercise.'];
 
         try {
-            Exercise::findOrFail($id)->delete();
-            $result      = true;
+            $exercise = Exercise::findOrFail($id);
+            $this->authorize('delete', $exercise);
+
+            $exercise->delete();
+            $result       = true;
             $messageArray = ['general' => 'Exercise deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

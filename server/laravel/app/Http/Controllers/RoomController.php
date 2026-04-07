@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
  * Handles CRUD operations for gym rooms.
  *
  * SRP: Solely responsible for handling HTTP requests related to rooms.
+ * DIP: Delegates authorization decisions to RoomPolicy via the Gate contract.
  */
 class RoomController extends Controller
 {
@@ -23,18 +24,17 @@ class RoomController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve rooms.'];
 
         try {
             $query = Room::query();
 
             if ($request->filled('gym_id')) {
-                $gymId = limpiarNumeros($request->input('gym_id'));
-                $query->where('gym_id', $gymId);
+                $query->where('gym_id', (int) $request->input('gym_id'));
             }
 
-            $result      = $query->paginate(10)->withQueryString();
+            $result       = $query->paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -51,11 +51,14 @@ class RoomController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve room.'];
 
         try {
-            $result      = Room::findOrFail($id);
+            $room = Room::findOrFail($id);
+            $this->authorize('view', $room);
+
+            $result       = $room;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -65,18 +68,20 @@ class RoomController extends Controller
     }
 
     /**
-     * Creates a new room. Advanced only.
+     * Creates a new room. Advanced staff within their own gym (enforced by RoomPolicy).
      *
      * @param  StoreRoomRequest  $request
      * @return JsonResponse
      */
     public function store(StoreRoomRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create room.'];
 
         try {
-            $result      = Room::create($request->validated());
+            $this->authorize('create', Room::class);
+
+            $result       = Room::create($request->validated());
             $messageArray = ['general' => 'Room created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -86,7 +91,7 @@ class RoomController extends Controller
     }
 
     /**
-     * Updates an existing room. Advanced only.
+     * Updates an existing room. Advanced staff within their own gym (enforced by RoomPolicy).
      *
      * @param  UpdateRoomRequest  $request
      * @param  int                $id
@@ -94,12 +99,14 @@ class RoomController extends Controller
      */
     public function update(UpdateRoomRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update room.'];
 
         try {
-            $room        = Room::findOrFail($id);
-            $result      = $room->update($request->validated());
+            $room = Room::findOrFail($id);
+            $this->authorize('update', $room);
+
+            $result       = $room->update($request->validated());
             $messageArray = ['general' => 'Room updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -109,19 +116,22 @@ class RoomController extends Controller
     }
 
     /**
-     * Deletes a room. Admin only.
+     * Deletes a room. Admin only (enforced by RoomPolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete room.'];
 
         try {
-            Room::findOrFail($id)->delete();
-            $result      = true;
+            $room = Room::findOrFail($id);
+            $this->authorize('delete', $room);
+
+            $room->delete();
+            $result       = true;
             $messageArray = ['general' => 'Room deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

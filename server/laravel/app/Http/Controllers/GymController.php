@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
  * Handles CRUD and management operations for gyms.
  *
  * SRP: Solely responsible for handling HTTP requests related to gyms.
+ * DIP: Delegates authorization decisions to GymPolicy via the Gate contract.
  */
 class GymController extends Controller
 {
@@ -22,11 +23,11 @@ class GymController extends Controller
      */
     public function index(): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve gyms.'];
 
         try {
-            $result      = Gym::paginate(10)->withQueryString();
+            $result       = Gym::paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -43,11 +44,14 @@ class GymController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve gym.'];
 
         try {
-            $result      = Gym::findOrFail($id);
+            $gym = Gym::findOrFail($id);
+            $this->authorize('view', $gym);
+
+            $result       = $gym;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -57,18 +61,20 @@ class GymController extends Controller
     }
 
     /**
-     * Creates a new gym. Admin only.
+     * Creates a new gym. Admin only (enforced by GymPolicy + Gate::before).
      *
      * @param  StoreGymRequest  $request
      * @return JsonResponse
      */
     public function store(StoreGymRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create gym.'];
 
         try {
-            $result      = Gym::create($request->validated());
+            $this->authorize('create', Gym::class);
+
+            $result       = Gym::create($request->validated());
             $messageArray = ['general' => 'Gym created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -78,7 +84,8 @@ class GymController extends Controller
     }
 
     /**
-     * Updates an existing gym. Admin only.
+     * Updates an existing gym.
+     * Managers may update their own gym; admins may update any (enforced by GymPolicy).
      *
      * @param  UpdateGymRequest  $request
      * @param  int               $id
@@ -86,12 +93,14 @@ class GymController extends Controller
      */
     public function update(UpdateGymRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update gym.'];
 
         try {
-            $gym         = Gym::findOrFail($id);
-            $result      = $gym->update($request->validated());
+            $gym = Gym::findOrFail($id);
+            $this->authorize('update', $gym);
+
+            $result       = $gym->update($request->validated());
             $messageArray = ['general' => 'Gym updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -101,19 +110,22 @@ class GymController extends Controller
     }
 
     /**
-     * Deletes a gym. Admin only.
+     * Deletes a gym. Admin only (enforced by GymPolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete gym.'];
 
         try {
-            Gym::findOrFail($id)->delete();
-            $result      = true;
+            $gym = Gym::findOrFail($id);
+            $this->authorize('delete', $gym);
+
+            $gym->delete();
+            $result       = true;
             $messageArray = ['general' => 'Gym deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -131,12 +143,12 @@ class GymController extends Controller
      */
     public function assignManager(Request $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not assign manager.'];
 
         try {
-            $gym         = Gym::findOrFail($id);
-            $result      = $gym->assignManager((int) $request->input('user_id'));
+            $gym          = Gym::findOrFail($id);
+            $result       = $gym->assignManager((int) $request->input('user_id'));
             $messageArray = ['general' => 'Manager assigned.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

@@ -12,21 +12,23 @@ use Illuminate\Http\JsonResponse;
  *
  * SRP: Solely responsible for handling HTTP requests related to membership plans.
  * OCP: New plan-related endpoints are added as new methods without modifying existing ones.
+ * DIP: Delegates authorization decisions to MembershipPlanPolicy via the Gate contract.
  */
 class MembershipPlanController extends Controller
 {
     /**
      * Returns a paginated list of all membership plans.
+     * Publicly available (no authorization required).
      *
      * @return JsonResponse
      */
     public function index(): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve membership plans.'];
 
         try {
-            $result      = MembershipPlan::paginate(10)->withQueryString();
+            $result       = MembershipPlan::paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -43,11 +45,14 @@ class MembershipPlanController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve membership plan.'];
 
         try {
-            $result      = MembershipPlan::findOrFail($id);
+            $plan = MembershipPlan::findOrFail($id);
+            $this->authorize('view', $plan);
+
+            $result       = $plan;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -57,18 +62,20 @@ class MembershipPlanController extends Controller
     }
 
     /**
-     * Creates a new membership plan. Admin only.
+     * Creates a new membership plan. Admin only (enforced by MembershipPlanPolicy + Gate::before).
      *
      * @param  StoreMembershipPlanRequest  $request
      * @return JsonResponse
      */
     public function store(StoreMembershipPlanRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create membership plan.'];
 
         try {
-            $result      = MembershipPlan::create($request->validated());
+            $this->authorize('create', MembershipPlan::class);
+
+            $result       = MembershipPlan::create($request->validated());
             $messageArray = ['general' => 'Membership plan created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -78,7 +85,7 @@ class MembershipPlanController extends Controller
     }
 
     /**
-     * Updates an existing membership plan. Admin only.
+     * Updates an existing membership plan. Admin only (enforced by MembershipPlanPolicy + Gate::before).
      *
      * @param  UpdateMembershipPlanRequest  $request
      * @param  int                          $id
@@ -86,12 +93,14 @@ class MembershipPlanController extends Controller
      */
     public function update(UpdateMembershipPlanRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update membership plan.'];
 
         try {
-            $plan        = MembershipPlan::findOrFail($id);
-            $result      = $plan->update($request->validated());
+            $plan = MembershipPlan::findOrFail($id);
+            $this->authorize('update', $plan);
+
+            $result       = $plan->update($request->validated());
             $messageArray = ['general' => 'Membership plan updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -101,19 +110,22 @@ class MembershipPlanController extends Controller
     }
 
     /**
-     * Deletes a membership plan. Admin only.
+     * Deletes a membership plan. Admin only (enforced by MembershipPlanPolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete membership plan.'];
 
         try {
-            MembershipPlan::findOrFail($id)->delete();
-            $result      = true;
+            $plan = MembershipPlan::findOrFail($id);
+            $this->authorize('delete', $plan);
+
+            $plan->delete();
+            $result       = true;
             $messageArray = ['general' => 'Membership plan deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
  * Handles CRUD operations for activity types.
  *
  * SRP: Solely responsible for handling HTTP requests related to activities.
+ * DIP: Delegates authorization decisions to ActivityPolicy via the Gate contract.
  */
 class ActivityController extends Controller
 {
@@ -21,11 +22,11 @@ class ActivityController extends Controller
      */
     public function index(): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve activities.'];
 
         try {
-            $result      = Activity::paginate(10)->withQueryString();
+            $result       = Activity::paginate(10)->withQueryString();
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -42,11 +43,14 @@ class ActivityController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not retrieve activity.'];
 
         try {
-            $result      = Activity::findOrFail($id);
+            $activity = Activity::findOrFail($id);
+            $this->authorize('view', $activity);
+
+            $result       = $activity;
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -56,18 +60,20 @@ class ActivityController extends Controller
     }
 
     /**
-     * Creates a new activity. Admin only.
+     * Creates a new activity. Admin only (enforced by ActivityPolicy + Gate::before).
      *
      * @param  StoreActivityRequest  $request
      * @return JsonResponse
      */
     public function store(StoreActivityRequest $request): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not create activity.'];
 
         try {
-            $result      = Activity::create($request->validated());
+            $this->authorize('create', Activity::class);
+
+            $result       = Activity::create($request->validated());
             $messageArray = ['general' => 'Activity created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -77,7 +83,7 @@ class ActivityController extends Controller
     }
 
     /**
-     * Updates an existing activity. Admin only.
+     * Updates an existing activity. Admin only (enforced by ActivityPolicy + Gate::before).
      *
      * @param  UpdateActivityRequest  $request
      * @param  int                    $id
@@ -85,12 +91,14 @@ class ActivityController extends Controller
      */
     public function update(UpdateActivityRequest $request, int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not update activity.'];
 
         try {
-            $activity    = Activity::findOrFail($id);
-            $result      = $activity->update($request->validated());
+            $activity = Activity::findOrFail($id);
+            $this->authorize('update', $activity);
+
+            $result       = $activity->update($request->validated());
             $messageArray = ['general' => 'Activity updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -100,19 +108,22 @@ class ActivityController extends Controller
     }
 
     /**
-     * Deletes an activity. Admin only.
+     * Deletes an activity. Admin only (enforced by ActivityPolicy + Gate::before).
      *
      * @param  int  $id
      * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
-        $result      = false;
+        $result       = false;
         $messageArray = ['general' => 'Could not delete activity.'];
 
         try {
-            Activity::findOrFail($id)->delete();
-            $result      = true;
+            $activity = Activity::findOrFail($id);
+            $this->authorize('delete', $activity);
+
+            $activity->delete();
+            $result       = true;
             $messageArray = ['general' => 'Activity deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
