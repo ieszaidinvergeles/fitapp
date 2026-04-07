@@ -2,24 +2,10 @@
 
 **Date:** 2026-04-07 (Release: `v0.9.0-policies-security`) &nbsp;|&nbsp; **Updated:** 2026-04-07 (Release: `v0.10.0-resources`)
 
----
+# 1. Terminology Reference
 
-# 1. Overview and Purpose
 
-This document covers two phases of the FitApp backend hardening:
-
-- **v0.9.0** — Authorization layer: Policies, `Gate::before` global admin bypass, and base `Controller.php` fix.
-- **v0.10.0** — Data contract layer: 18 API Resources connected to all 18 controllers.
-
-The goal of both phases is to eliminate insecure, scattered authorization logic from controllers and to prevent raw Eloquent models from leaking internal database fields into the HTTP responses consumed by the WordPress frontend.
-
----
-
-# 2. Terminology Reference
-
-This section defines every technical term used in this document. Terms are listed in order of concept dependency — each definition builds on the previous.
-
-## 2.1. Authentication vs Authorization
+## 1.1. Authentication vs Authorization
 
 | Concept | Definition | Where It Lives in FitApp |
 |---|---|---|
@@ -28,7 +14,7 @@ This section defines every technical term used in this document. Terms are liste
 
 These are always separate concerns. Authentication runs first (via middleware). Authorization runs inside the controller method (via `$this->authorize()`).
 
-## 2.2. Laravel Gate
+## 1.2. Laravel Gate
 
 The **Gate** is the central authorization broker in Laravel. Every `$this->authorize()` call passes through the Gate. The Gate:
 
@@ -39,13 +25,13 @@ The **Gate** is the central authorization broker in Laravel. Every `$this->autho
 
 > `Gate::before()` runs *before* any Policy method is evaluated. Returning `true` from it short-circuits all further evaluation. Returning `null` tells the Gate to continue. Returning `false` would deny unconditionally, regardless of the policy.
 
-## 2.3. Laravel Policy
+## 1.3. Laravel Policy
 
 A **Policy** is a PHP class that groups all authorization logic for a single Eloquent model. Instead of checking permissions inside controllers, the controller delegates to the policy via `$this->authorize('action', $model)`.
 
 Laravel resolves policies automatically by naming convention: `UserPolicy` handles the `User` model, `BookingPolicy` handles `Booking`, and so on. All 18 policies are registered automatically via the `#[Policy]` convention in Laravel 11 (no manual registration needed).
 
-## 2.4. `$this->authorize()`
+## 1.4. `$this->authorize()`
 
 This is a controller helper method that:
 
@@ -56,19 +42,19 @@ This is a controller helper method that:
 
 > `$this->authorize()` is provided by the `AuthorizesRequests` trait from `Illuminate\Foundation\Auth\Access`. It is **not** available on a plain PHP class — the controller must extend `Illuminate\Routing\Controller` and use this trait.
 
-## 2.5. API Resource
+## 1.5. API Resource
 
 An **API Resource** (class extending `Illuminate\Http\Resources\Json\JsonResource`) acts as a transformation layer between an Eloquent model and the JSON response sent to the client.
 
 Without a Resource, returning a model directly serializes every database column, including sensitive fields like `password_hash` or `remember_token`. A Resource defines an explicit whitelist of fields that are safe to expose.
 
-## 2.6. `whenLoaded()`
+## 1.6. `whenLoaded()`
 
 `whenLoaded('relationName')` is a guard method used inside `toArray()` in a Resource. It serializes a related model only if it was eagerly loaded via `->with('relation')` in the query. If the relation was not loaded, the field is simply omitted from the JSON output.
 
 **Why this matters:** Without this guard, accessing `$this->gymClass` inside a Resource would trigger an additional database query for every item in a paginated list. This is the **N+1 query problem**. With `whenLoaded()`, the caller decides whether to pay the cost of loading relations, making it opt-in.
 
-## 2.7. Multi-Tenancy
+## 1.7. Multi-Tenancy
 
 FitApp hosts multiple gyms (tenants) in a single shared database. Each `User` with role `manager` or `staff` has a `current_gym_id` column indicating which gym they belong to. Multi-tenancy enforcement means that these users must only be able to create, read, update, or delete records that belong to their own gym.
 
@@ -78,7 +64,7 @@ This is enforced throughout the Policies using the pattern:
 $user->isAdvanced() && $user->current_gym_id === $resource->gym_id
 ```
 
-## 2.8. User Roles
+## 1.8. User Roles
 
 | Role | `isAdmin()` | `isAdvanced()` | Description |
 |---|---|---|---|
@@ -92,7 +78,7 @@ $user->isAdvanced() && $user->current_gym_id === $resource->gym_id
 
 ---
 
-# 3. Architecture and Request Lifecycle
+# 2. Architecture and Request Lifecycle
 
 Every authorized request follows this path:
 
@@ -110,9 +96,9 @@ HTTP Request
 
 ---
 
-# 4. Phase v0.9.0 — Security Layer
+# 3. Phase v0.9.0 — Security Layer
 
-## 4.1. Base `Controller.php` Fix
+## 3.1. Base `Controller.php` Fix
 
 **Location:** `app/Http/Controllers/Controller.php`
 
@@ -134,7 +120,7 @@ abstract class Controller extends BaseController
 
 > Without this fix, all `$this->authorize()` calls throw `BadMethodCallException: Call to undefined method` at runtime on the first request.
 
-## 4.2. Global Admin Bypass — `AppServiceProvider`
+## 3.2. Global Admin Bypass — `AppServiceProvider`
 
 **Location:** `app/Providers/AppServiceProvider.php`
 
@@ -151,7 +137,7 @@ Gate::before(function (User $user, string $ability) {
 
 **Why return `null` instead of `false`:** Returning `null` tells the gate to proceed to the Policy. Returning `false` would deny access completely, including for admins. Only `true` (grant) and `null` (continue) are valid returns from `Gate::before` in this context.
 
-## 4.3. Policy Design Patterns
+## 3.3. Policy Design Patterns
 
 All 18 Policies follow one of four patterns based on the resource type:
 
@@ -217,7 +203,7 @@ public function create(User $user): bool
 
 **Why:** These are global catalogue entities that define what FitApp offers. Only the global admin should be able to create, update, or delete them. Because `Gate::before` grants admins access before any policy runs, it is correct to return `false` here — non-admins are denied, admins bypass the policy entirely.
 
-## 4.4. Manual Checks Eliminated from Controllers
+## 3.4. Manual Checks Eliminated from Controllers
 
 Before v0.9.0, authorization was done inline inside controller methods:
 
@@ -239,9 +225,9 @@ The grep search `if.*isAdmin()` across all controllers returns zero results afte
 
 ---
 
-# 5. Phase v0.10.0 — API Resources
+# 4. Phase v0.10.0 — API Resources
 
-## 5.1. Why Resources Instead of Raw Models
+## 4.1. Why Resources Instead of Raw Models
 
 | Problem with raw models | Solution with Resources |
 |---|---|
@@ -251,7 +237,7 @@ The grep search `if.*isAdmin()` across all controllers returns zero results afte
 | Relations trigger N+1 queries if auto-serialized | `whenLoaded()` makes relations opt-in |
 | Internal column names exposed (e.g. `macros_json`) | Renamed to `macros` in the API contract |
 
-## 5.2. Date Formatting Convention
+## 4.2. Date Formatting Convention
 
 All date and datetime fields in Resources follow this rule:
 
@@ -262,7 +248,7 @@ All date and datetime fields in Resources follow this rule:
 
 > This prevents inconsistent timestamp formats from reaching the WordPress frontend, where date parsing can fail silently.
 
-## 5.3. Sensitive Field Exclusion
+## 4.3. Sensitive Field Exclusion
 
 The following fields are **never** included in any Resource response:
 
@@ -272,7 +258,7 @@ The following fields are **never** included in any Resource response:
 
 No other model stores credentials or tokens. All other excluded fields are simply omitted by not listing them in `toArray()` (e.g., internal pivot join columns, `created_at`/`updated_at` where not relevant).
 
-## 5.4. `whenLoaded()` Usage Map
+## 4.4. `whenLoaded()` Usage Map
 
 Relations are conditionally loaded. The controller must call `->with('relation')` explicitly to include a nested Resource in the response.
 
@@ -288,7 +274,7 @@ Relations are conditionally loaded. The controller must call `->with('relation')
 | `NotificationResource` | `sender` (UserResource) |
 | `UserMealScheduleResource` | `recipe` (RecipeResource) |
 
-## 5.5. Resource–Controller Pairing
+## 4.5. Resource–Controller Pairing
 
 All 18 controllers were updated to return Resource instances on reads and Resource collections on paginated lists.
 
@@ -315,30 +301,30 @@ All 18 controllers were updated to return Resource instances on reads and Resour
 
 ---
 
-# 6. Fix Report
+# 5. Fix Report
 
-## 6.1. Base Controller Missing `AuthorizesRequests` Trait
+## 5.1. Base Controller Missing `AuthorizesRequests` Trait
 
 - **Error:** `BadMethodCallException: Call to undefined method App\Http\Controllers\UserController::authorize()` on every policy-protected endpoint.
 - **Root cause:** The default `Controller.php` in Laravel 11 does not extend `Illuminate\Routing\Controller`, which is required to access the `AuthorizesRequests` trait.
 - **Fix:** Extended `Controller.php` from `Illuminate\Routing\Controller` and applied `use AuthorizesRequests;`.
 - **Scope:** This single fix resolves authorization for all 18 controllers simultaneously.
 
-## 6.2. Hardcoded Role Checks in Controllers
+## 5.2. Hardcoded Role Checks in Controllers
 
 - **Error:** Authorization logic duplicated inside multiple controller methods (`UserController`, `BookingController`, `StaffAttendanceController`, `UserMealScheduleController`, `UserFavoriteController`).
 - **Root cause:** Policies were not yet in place during initial scaffolding.
 - **Fix:** All `if (!$user->isAdmin())` and `if ($user->id !== $record->user_id)` guards replaced with `$this->authorize()` delegates.
 - **Verification:** `grep -r "if.*isAdmin()" app/Http/Controllers/` returns zero results.
 
-## 6.3. Raw Model Returns in Controllers
+## 5.3. Raw Model Returns in Controllers
 
 - **Error:** All 18 controllers returned raw Eloquent models, exposing all database columns including `password_hash`.
 - **Fix:** Wrapping all single-record returns in `new XxxResource($model)` and all paginated returns in `XxxResource::collection($paginator)`.
 
 ---
 
-# 7. What Was Intentionally Deferred
+# 6. What Was Intentionally Deferred
 
 The following improvements are technically correct but do not block frontend integration. They are deferred to avoid scope creep:
 
