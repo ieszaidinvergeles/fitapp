@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
+use App\Http\Resources\EquipmentResource;
 use App\Models\Equipment;
 use Illuminate\Http\JsonResponse;
 
@@ -26,7 +27,7 @@ class EquipmentController extends Controller
         $messageArray = ['general' => 'Could not retrieve equipment.'];
 
         try {
-            $result       = Equipment::paginate(10)->withQueryString();
+            $result       = EquipmentResource::collection(Equipment::paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -50,7 +51,7 @@ class EquipmentController extends Controller
             $equipment = Equipment::findOrFail($id);
             $this->authorize('view', $equipment);
 
-            $result       = $equipment;
+            $result       = new EquipmentResource($equipment);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -73,7 +74,7 @@ class EquipmentController extends Controller
         try {
             $this->authorize('create', Equipment::class);
 
-            $result       = Equipment::create($request->validated());
+            $result       = new EquipmentResource(Equipment::create($request->validated()));
             $messageArray = ['general' => 'Equipment created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

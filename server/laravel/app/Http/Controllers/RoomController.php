@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRoomRequest;
 use App\Http\Requests\UpdateRoomRequest;
+use App\Http\Resources\RoomResource;
 use App\Models\Room;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class RoomController extends Controller
                 $query->where('gym_id', (int) $request->input('gym_id'));
             }
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = RoomResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -58,7 +59,7 @@ class RoomController extends Controller
             $room = Room::findOrFail($id);
             $this->authorize('view', $room);
 
-            $result       = $room;
+            $result       = new RoomResource($room);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -81,7 +82,7 @@ class RoomController extends Controller
         try {
             $this->authorize('create', Room::class);
 
-            $result       = Room::create($request->validated());
+            $result       = new RoomResource(Room::create($request->validated()));
             $messageArray = ['general' => 'Room created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

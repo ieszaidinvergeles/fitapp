@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreGymClassRequest;
 use App\Http\Requests\UpdateGymClassRequest;
+use App\Http\Resources\GymClassResource;
 use App\Models\GymClass;
 use App\Models\Room;
 use Illuminate\Http\JsonResponse;
@@ -40,7 +41,7 @@ class GymClassController extends Controller
                 $query->where('start_time', 'like', $request->input('date') . '%');
             }
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = GymClassResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -64,7 +65,7 @@ class GymClassController extends Controller
             $gymClass = GymClass::findOrFail($id);
             $this->authorize('view', $gymClass);
 
-            $result       = $gymClass;
+            $result       = new GymClassResource($gymClass);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -106,7 +107,7 @@ class GymClassController extends Controller
                 }
             }
 
-            $result       = GymClass::create($data);
+            $result       = new GymClassResource(GymClass::create($data));
             $messageArray = ['general' => 'Class created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

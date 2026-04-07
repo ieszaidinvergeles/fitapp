@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRecipeRequest;
 use App\Http\Requests\UpdateRecipeRequest;
+use App\Http\Resources\RecipeResource;
 use App\Models\Recipe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class RecipeController extends Controller
                 $query->byCalorieRange(0, (int) $request->input('max_calories'));
             }
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = RecipeResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -62,7 +63,7 @@ class RecipeController extends Controller
             $recipe = Recipe::findOrFail($id);
             $this->authorize('view', $recipe);
 
-            $result       = $recipe;
+            $result       = new RecipeResource($recipe);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -85,7 +86,7 @@ class RecipeController extends Controller
         try {
             $this->authorize('create', Recipe::class);
 
-            $result       = Recipe::create($request->validated());
+            $result       = new RecipeResource(Recipe::create($request->validated()));
             $messageArray = ['general' => 'Recipe created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

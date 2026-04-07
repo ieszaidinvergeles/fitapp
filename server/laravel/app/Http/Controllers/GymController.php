@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreGymRequest;
 use App\Http\Requests\UpdateGymRequest;
+use App\Http\Resources\GymResource;
 use App\Models\Gym;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class GymController extends Controller
         $messageArray = ['general' => 'Could not retrieve gyms.'];
 
         try {
-            $result       = Gym::paginate(10)->withQueryString();
+            $result       = GymResource::collection(Gym::paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -51,7 +52,7 @@ class GymController extends Controller
             $gym = Gym::findOrFail($id);
             $this->authorize('view', $gym);
 
-            $result       = $gym;
+            $result       = new GymResource($gym);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -74,7 +75,7 @@ class GymController extends Controller
         try {
             $this->authorize('create', Gym::class);
 
-            $result       = Gym::create($request->validated());
+            $result       = new GymResource(Gym::create($request->validated()));
             $messageArray = ['general' => 'Gym created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

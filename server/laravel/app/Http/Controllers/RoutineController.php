@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRoutineRequest;
 use App\Http\Requests\UpdateRoutineRequest;
+use App\Http\Resources\RoutineResource;
 use App\Models\Routine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,7 @@ class RoutineController extends Controller
         $messageArray = ['general' => 'Could not retrieve routines.'];
 
         try {
-            $result      = Routine::paginate(10)->withQueryString();
+            $result      = RoutineResource::collection(Routine::paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -48,7 +49,7 @@ class RoutineController extends Controller
         $messageArray = ['general' => 'Could not retrieve routine.'];
 
         try {
-            $result      = Routine::with('orderedExercises')->findOrFail($id);
+            $result      = new RoutineResource(Routine::with('orderedExercises')->findOrFail($id));
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -69,7 +70,7 @@ class RoutineController extends Controller
         $messageArray = ['general' => 'Could not create routine.'];
 
         try {
-            $result      = Routine::create($request->validated());
+            $result      = new RoutineResource(Routine::create($request->validated()));
             $messageArray = ['general' => 'Routine created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

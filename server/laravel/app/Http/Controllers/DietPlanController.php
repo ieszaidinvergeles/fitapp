@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDietPlanRequest;
 use App\Http\Requests\UpdateDietPlanRequest;
+use App\Http\Resources\DietPlanResource;
 use App\Models\DietPlan;
 use Illuminate\Http\JsonResponse;
 
@@ -29,7 +30,7 @@ class DietPlanController extends Controller
         try {
             $this->authorize('viewAny', DietPlan::class);
 
-            $result       = DietPlan::paginate(10)->withQueryString();
+            $result       = DietPlanResource::collection(DietPlan::paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -54,7 +55,7 @@ class DietPlanController extends Controller
             $plan = DietPlan::findOrFail($id);
             $this->authorize('view', $plan);
 
-            $result       = $plan;
+            $result       = new DietPlanResource($plan);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -77,7 +78,7 @@ class DietPlanController extends Controller
         try {
             $this->authorize('create', DietPlan::class);
 
-            $result       = DietPlan::create($request->validated());
+            $result       = new DietPlanResource(DietPlan::create($request->validated()));
             $messageArray = ['general' => 'Diet plan created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

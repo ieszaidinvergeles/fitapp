@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBodyMetricRequest;
+use App\Http\Resources\BodyMetricResource;
 use App\Models\BodyMetric;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class BodyMetricController extends Controller
                 ? BodyMetric::query()
                 : BodyMetric::where('user_id', $request->user()->id);
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = BodyMetricResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -60,7 +61,7 @@ class BodyMetricController extends Controller
             $metric = BodyMetric::findOrFail($id);
             $this->authorize('view', $metric);
 
-            $result       = $metric;
+            $result       = new BodyMetricResource($metric);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -85,7 +86,7 @@ class BodyMetricController extends Controller
 
             $data            = $request->validated();
             $data['user_id'] = $request->user()->id;
-            $result          = BodyMetric::create($data);
+            $result          = new BodyMetricResource(BodyMetric::create($data));
             $messageArray    = ['general' => 'Body metric recorded.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,7 +38,7 @@ class UserController extends Controller
                 $query->where('role', $request->input('role'));
             }
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = UserResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -63,7 +64,7 @@ class UserController extends Controller
             $user = User::findOrFail($id);
             $this->authorize('view', $user);
 
-            $result       = $user;
+            $result       = new UserResource($user);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -87,7 +88,7 @@ class UserController extends Controller
         try {
             $this->authorize('create', User::class);
 
-            $result       = User::create($request->validated());
+            $result       = new UserResource(User::create($request->validated()));
             $messageArray = ['general' => 'User created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

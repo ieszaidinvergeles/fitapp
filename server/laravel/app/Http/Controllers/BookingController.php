@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Models\GymClass;
 use App\Models\logs\BookingHistory;
@@ -36,7 +37,7 @@ class BookingController extends Controller
                 ? Booking::query()
                 : Booking::where('user_id', $request->user()->id);
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = BookingResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -62,7 +63,7 @@ class BookingController extends Controller
             $booking = Booking::findOrFail($id);
             $this->authorize('view', $booking);
 
-            $result       = $booking;
+            $result       = new BookingResource($booking);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -123,7 +124,7 @@ class BookingController extends Controller
                 'reason'        => 'Booking created',
             ]);
 
-            $result       = $booking;
+            $result       = new BookingResource($booking);
             $messageArray = ['general' => 'Booking created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

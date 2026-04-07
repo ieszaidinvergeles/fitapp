@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExerciseRequest;
 use App\Http\Requests\UpdateExerciseRequest;
+use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class ExerciseController extends Controller
                 $query->byMuscleGroup($request->input('muscle_group'));
             }
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = ExerciseResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -58,7 +59,7 @@ class ExerciseController extends Controller
             $exercise = Exercise::findOrFail($id);
             $this->authorize('view', $exercise);
 
-            $result       = $exercise;
+            $result       = new ExerciseResource($exercise);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -81,7 +82,7 @@ class ExerciseController extends Controller
         try {
             $this->authorize('create', Exercise::class);
 
-            $result       = Exercise::create($request->validated());
+            $result       = new ExerciseResource(Exercise::create($request->validated()));
             $messageArray = ['general' => 'Exercise created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

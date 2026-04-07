@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\StaffAttendanceResource;
 use App\Models\StaffAttendance;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -37,7 +38,7 @@ class StaffAttendanceController extends Controller
                     ? StaffAttendance::where('gym_id', $user->current_gym_id)
                     : StaffAttendance::forStaff($user->id));
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = StaffAttendanceResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -63,7 +64,7 @@ class StaffAttendanceController extends Controller
             $record = StaffAttendance::findOrFail($id);
             $this->authorize('view', $record);
 
-            $result       = $record;
+            $result       = new StaffAttendanceResource($record);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -86,12 +87,12 @@ class StaffAttendanceController extends Controller
         try {
             $this->authorize('create', StaffAttendance::class);
 
-            $result = StaffAttendance::create([
+            $result = new StaffAttendanceResource(StaffAttendance::create([
                 'staff_id' => $request->user()->id,
                 'gym_id'   => $request->user()->current_gym_id,
                 'clock_in' => Carbon::now(),
                 'date'     => Carbon::today()->toDateString(),
-            ]);
+            ]));
             $messageArray = ['general' => 'Clocked in.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

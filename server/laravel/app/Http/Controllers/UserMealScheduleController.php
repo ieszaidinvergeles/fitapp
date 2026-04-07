@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserMealScheduleRequest;
 use App\Http\Requests\UpdateUserMealScheduleRequest;
+use App\Http\Resources\UserMealScheduleResource;
 use App\Models\UserMealSchedule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,7 +37,7 @@ class UserMealScheduleController extends Controller
                 $query->forDate($request->input('date'));
             }
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = UserMealScheduleResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -62,7 +63,7 @@ class UserMealScheduleController extends Controller
             $entry = UserMealSchedule::findOrFail($id);
             $this->authorize('view', $entry);
 
-            $result       = $entry;
+            $result       = new UserMealScheduleResource($entry);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -87,7 +88,7 @@ class UserMealScheduleController extends Controller
 
             $data            = $request->validated();
             $data['user_id'] = $request->user()->id;
-            $result          = UserMealSchedule::create($data);
+            $result          = new UserMealScheduleResource(UserMealSchedule::create($data));
             $messageArray    = ['general' => 'Meal entry created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreActivityRequest;
 use App\Http\Requests\UpdateActivityRequest;
+use App\Http\Resources\ActivityResource;
 use App\Models\Activity;
 use Illuminate\Http\JsonResponse;
 
@@ -26,7 +27,7 @@ class ActivityController extends Controller
         $messageArray = ['general' => 'Could not retrieve activities.'];
 
         try {
-            $result       = Activity::paginate(10)->withQueryString();
+            $result       = ActivityResource::collection(Activity::paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -50,7 +51,7 @@ class ActivityController extends Controller
             $activity = Activity::findOrFail($id);
             $this->authorize('view', $activity);
 
-            $result       = $activity;
+            $result       = new ActivityResource($activity);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -73,7 +74,7 @@ class ActivityController extends Controller
         try {
             $this->authorize('create', Activity::class);
 
-            $result       = Activity::create($request->validated());
+            $result       = new ActivityResource(Activity::create($request->validated()));
             $messageArray = ['general' => 'Activity created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

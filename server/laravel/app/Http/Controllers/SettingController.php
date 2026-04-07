@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateSettingRequest;
+use App\Http\Resources\SettingResource;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class SettingController extends Controller
             $setting = Setting::where('user_id', $request->user()->id)->firstOrFail();
             $this->authorize('view', $setting);
 
-            $result       = $setting;
+            $result       = new SettingResource($setting);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

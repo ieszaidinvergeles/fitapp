@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserFavoriteRequest;
+use App\Http\Resources\UserFavoriteResource;
 use App\Models\UserFavorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,7 +36,7 @@ class UserFavoriteController extends Controller
                 $query->ofType($request->input('entity_type'));
             }
 
-            $result       = $query->paginate(10)->withQueryString();
+            $result       = UserFavoriteResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -66,11 +67,11 @@ class UserFavoriteController extends Controller
                 return response()->json(['result' => false, 'message' => ['general' => 'Already in favourites.']], 422);
             }
 
-            $result       = UserFavorite::create([
+            $result       = new UserFavoriteResource(UserFavorite::create([
                 'user_id'     => $userId,
                 'entity_type' => $entityType,
                 'entity_id'   => $entityId,
-            ]);
+            ]));
             $messageArray = ['general' => 'Added to favourites.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

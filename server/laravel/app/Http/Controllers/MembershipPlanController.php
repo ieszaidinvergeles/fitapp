@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMembershipPlanRequest;
 use App\Http\Requests\UpdateMembershipPlanRequest;
+use App\Http\Resources\MembershipPlanResource;
 use App\Models\MembershipPlan;
 use Illuminate\Http\JsonResponse;
 
@@ -28,7 +29,7 @@ class MembershipPlanController extends Controller
         $messageArray = ['general' => 'Could not retrieve membership plans.'];
 
         try {
-            $result       = MembershipPlan::paginate(10)->withQueryString();
+            $result       = MembershipPlanResource::collection(MembershipPlan::paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -52,7 +53,7 @@ class MembershipPlanController extends Controller
             $plan = MembershipPlan::findOrFail($id);
             $this->authorize('view', $plan);
 
-            $result       = $plan;
+            $result       = new MembershipPlanResource($plan);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -75,7 +76,7 @@ class MembershipPlanController extends Controller
         try {
             $this->authorize('create', MembershipPlan::class);
 
-            $result       = MembershipPlan::create($request->validated());
+            $result       = new MembershipPlanResource(MembershipPlan::create($request->validated()));
             $messageArray = ['general' => 'Membership plan created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

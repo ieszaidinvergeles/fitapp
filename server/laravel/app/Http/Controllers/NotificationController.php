@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreNotificationRequest;
+use App\Http\Resources\NotificationResource;
 use App\Models\Notification;
 use App\Models\logs\NotificationDeliveryLog;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +33,7 @@ class NotificationController extends Controller
         try {
             $this->authorize('viewAny', Notification::class);
 
-            $result       = Notification::paginate(10)->withQueryString();
+            $result       = NotificationResource::collection(Notification::paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -57,7 +58,7 @@ class NotificationController extends Controller
             $notification = Notification::findOrFail($id);
             $this->authorize('view', $notification);
 
-            $result       = $notification;
+            $result       = new NotificationResource($notification);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -99,7 +100,7 @@ class NotificationController extends Controller
                 ]);
             }
 
-            $result       = $notification;
+            $result       = new NotificationResource($notification);
             $messageArray = ['general' => 'Notification sent to ' . $recipients->count() . ' recipients.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
