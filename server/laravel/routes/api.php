@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BodyMetricController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DietPlanController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\ExerciseController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoutineController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\StaffAttendanceController;
+use App\Http\Controllers\StaffDashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserFavoriteController;
 use App\Http\Controllers\UserMealScheduleController;
@@ -85,6 +87,10 @@ Route::prefix('v1')->group(function (): void {
     // ─── Authenticated endpoints ─────────────────────────────────────────────
 
     Route::middleware('auth:sanctum')->group(function (): void {
+
+        // Aggregate Dashboards
+        Route::get('/dashboard',        [DashboardController::class,      'index']);
+        Route::middleware('advanced')->get('/staff/dashboard', [StaffDashboardController::class, 'index']);
 
         // Bookings
         Route::get('/bookings',             [BookingController::class, 'index']);
