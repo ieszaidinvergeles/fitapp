@@ -26,13 +26,13 @@ class UserResource extends JsonResource
     {
         return [
             'id'                       => $this->id,
+            'username'                 => $this->username,
             'full_name'                => $this->full_name,
             'email'                    => $this->email,
             'role'                     => $this->role,
             'dni'                      => $this->dni,
-            'phone'                    => $this->phone,
             'birth_date'               => $this->birth_date?->toDateString(),
-            'profile_image_url'        => $this->profile_image_url,
+            'profile_photo_url'        => $this->profile_photo_url,
             'membership_status'        => $this->membership_status,
             'cancellation_strikes'     => $this->cancellation_strikes,
             'is_blocked_from_booking'  => $this->is_blocked_from_booking,
