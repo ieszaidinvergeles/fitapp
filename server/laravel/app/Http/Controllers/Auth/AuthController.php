@@ -295,7 +295,12 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        return response()->json(['user' => $request->user()], Response::HTTP_OK);
+        $user = $request->user()->load(['membershipPlan', 'currentGym']);
+
+        return response()->json(
+            ['user' => new \App\Http\Resources\UserResource($user)],
+            Response::HTTP_OK
+        );
     }
 
     /**

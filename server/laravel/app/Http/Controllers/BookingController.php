@@ -87,6 +87,8 @@ class BookingController extends Controller
         try {
             $this->authorize('create', Booking::class);
 
+            $request->validate(['class_id' => ['required', 'integer', 'exists:classes,id']]);
+
             $classId  = (int) $request->input('class_id');
             $user     = $request->user();
             $gymClass = GymClass::findOrFail($classId);
