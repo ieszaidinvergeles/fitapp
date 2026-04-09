@@ -6,10 +6,12 @@ use App\Models\Gym;
 use Illuminate\Database\Seeder;
 
 /**
- * Seeds the gyms table.
+ * Seeds the gyms table with two fixed demo gyms.
  *
  * SRP: Solely responsible for populating gym records.
- * NOTE: manager_id is assigned by DatabaseSeeder after users are created
+ *
+ * NOTE: manager_id is intentionally null here.
+ *       DatabaseSeeder assigns it after users are created
  *       to resolve the circular gyms <-> users FK dependency.
  */
 class GymSeeder extends Seeder
@@ -18,21 +20,26 @@ class GymSeeder extends Seeder
     public function run(): void
     {
         $fixed = [
-            ['name' => 'FitZone Madrid Centro',   'address' => 'Calle Gran Vía 45',          'city' => 'Madrid',    'phone' => '+34 910 000 001'],
-            ['name' => 'FitZone Madrid Norte',    'address' => 'Calle Bravo Murillo 120',    'city' => 'Madrid',    'phone' => '+34 910 000 002'],
-            ['name' => 'FitZone Barcelona',       'address' => 'Avinguda Diagonal 160',      'city' => 'Barcelona', 'phone' => '+34 930 000 001'],
-            ['name' => 'FitZone Valencia',        'address' => 'Carrer de Colom 18',         'city' => 'Valencia',  'phone' => '+34 960 000 001'],
-            ['name' => 'FitZone Sevilla',         'address' => 'Avenida de la Constitución 5','city' => 'Sevilla',  'phone' => '+34 950 000 001'],
-            ['name' => 'FitZone Bilbao',          'address' => 'Calle Autonomía 30',         'city' => 'Bilbao',    'phone' => '+34 940 000 001'],
+            [
+                'name'            => 'FitApp Madrid Centro',
+                'address'         => 'Calle Gran Vía 45',
+                'city'            => 'Madrid',
+                'phone'           => '+34 910 000 001',
+                'location_coords' => '40.4200,-3.7050',
+                'manager_id'      => null,
+            ],
+            [
+                'name'            => 'FitApp Barcelona',
+                'address'         => 'Avinguda Diagonal 160',
+                'city'            => 'Barcelona',
+                'phone'           => '+34 930 000 002',
+                'location_coords' => '41.3951,2.1620',
+                'manager_id'      => null,
+            ],
         ];
 
         foreach ($fixed as $data) {
-            Gym::create(array_merge($data, [
-                'manager_id'      => null,
-                'location_coords' => '40.416775,-3.703790',
-            ]));
+            Gym::create($data);
         }
-
-        Gym::factory()->count(4)->create();
     }
 }
