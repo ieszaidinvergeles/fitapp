@@ -46,7 +46,7 @@ class AuthController extends Controller
             $user = User::create([
                 'username'                => $request->username,
                 'email'                   => $request->email,
-                'password_hash'           => $request->password,
+                'password_hash'           => Hash::make($request->password),
                 'role'                    => 'client',
                 'full_name'               => $request->full_name,
                 'dni'                     => $request->dni,
@@ -113,6 +113,7 @@ class AuthController extends Controller
                 ],
             ];
         } catch (\Throwable $e) {
+            \Log::error('Login error: ' . $e->getMessage(), ['exception' => $e]);
             $this->writeAuthLog($request, null, 'login_failed', false);
         }
 

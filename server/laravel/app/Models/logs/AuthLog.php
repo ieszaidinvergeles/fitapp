@@ -32,16 +32,15 @@ class AuthLog extends Model
     /** @var list<string> */
     protected $fillable = [
         'user_id',
-        'event_type',
+        'email_attempt',
+        'event',
         'ip_address',
         'user_agent',
-        'success',
         'created_at',
     ];
 
     /** @var array<string, string> */
     protected $casts = [
-        'success'    => 'boolean',
         'created_at' => 'datetime',
     ];
 }
