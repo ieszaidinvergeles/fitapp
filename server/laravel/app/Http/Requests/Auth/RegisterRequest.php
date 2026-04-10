@@ -74,7 +74,7 @@ class RegisterRequest extends FormRequest
         return [
             'username'   => ['required', 'string', 'max:20', 'unique:users,username'],
             'email'      => ['required', 'email', 'max:160', 'unique:users,email'],
-            'password'   => ['required', 'string', 'confirmed', Password::min(8)->letters()->numbers()],
+            'password'   => ['required', 'string', 'min:8'],
             'full_name'  => ['nullable', 'string', 'max:160'],
             'dni'        => ['required', 'string', 'max:9'],
             'birth_date' => ['required', 'date', 'before:' . now()->subYears(16)->toDateString()],

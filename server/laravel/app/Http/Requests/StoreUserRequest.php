@@ -22,7 +22,7 @@ class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'username' => 'required|string|max:20',
+            'username' => 'required|string|max:20|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password_hash' => 'required|string|min:8',
             'role' => 'required|in:admin,manager,staff,client,user_online',
@@ -32,9 +32,9 @@ class StoreUserRequest extends FormRequest
             'profile_photo_url' => 'nullable|url|max:500',
             'current_gym_id' => 'nullable|exists:gyms,id',
             'membership_plan_id' => 'nullable|exists:membership_plans,id',
-            'membership_status' => 'required|in:active,paused,expired',
-            'cancellation_strikes' => 'required|integer|min:0',
-            'is_blocked_from_booking' => 'required|boolean',
+            'membership_status' => 'nullable|in:active,paused,expired',
+            'cancellation_strikes' => 'nullable|integer|min:0',
+            'is_blocked_from_booking' => 'nullable|boolean',
         ];
     }
 }
