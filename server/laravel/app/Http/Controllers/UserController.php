@@ -88,7 +88,19 @@ class UserController extends Controller
         try {
             $this->authorize('create', User::class);
 
-            $result       = new UserResource(User::create($request->validated()));
+            $data = $request->validated();
+            
+            // Explicitly hash the password since the 'hashed' cast is removed
+            $data['password_hash'] = \Hash::make($data['password_hash']);
+            
+            // Ensure administrative defaults if not provided
+            $data['membership_status']       = $data['membership_status'] ?? 'expired';
+            $data['cancellation_strikes']    = $data['cancellation_strikes'] ?? 0;
+            $data['is_blocked_from_booking'] = $data['is_blocked_from_booking'] ?? false;
+
+            $user = User::create($data);
+            
+            $result       = new UserResource($user);
             $messageArray = ['general' => 'User created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
