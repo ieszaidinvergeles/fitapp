@@ -78,7 +78,6 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at'       => 'datetime',
         'cancellation_strikes'    => 'integer',
         'is_blocked_from_booking' => 'boolean',
-        'password_hash'           => 'hashed',
     ];
 
     /** @var list<string> */
