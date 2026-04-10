@@ -36,6 +36,5 @@ class ActivitySeeder extends Seeder
             Activity::create($data);
         }
 
-        Activity::factory()->count(8)->create();
     }
 }

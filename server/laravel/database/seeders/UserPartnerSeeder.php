@@ -4,53 +4,42 @@ namespace Database\Seeders;
 
 use App\Models\MembershipPlan;
 use App\Models\User;
-use App\Models\UserPartner;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Seeds the user_partners table.
  *
- * SRP: Solely responsible for populating user partner link records.
- * NOTE: Only links users who have a duo membership plan to keep
- *       data coherent with allow_partner_link business rule.
+ * SRP: Solely responsible for populating partner link records.
+ * NOTE: Identifies users with a "duo" type membership plan and links
+ *       them together as testing pairs.
  */
 class UserPartnerSeeder extends Seeder
 {
     /** @inheritdoc */
     public function run(): void
     {
-        $duoPlanIds = MembershipPlan::where('allow_partner_link', true)->pluck('id');
-
+        $duoPlanIds = MembershipPlan::where('type', 'duo')->pluck('id')->toArray();
         $eligible = User::whereIn('membership_plan_id', $duoPlanIds)->get();
 
         if ($eligible->count() < 2) {
-            UserPartner::factory()->count(10)->create();
             return;
         }
 
-        $paired = collect();
+        $chunks = $eligible->chunk(2);
+        foreach ($chunks as $pair) {
+            if ($pair->count() === 2) {
+                $primary = $pair->first();
+                $secondary = $pair->last();
 
-        $eligible->each(function (User $user) use ($eligible, $paired): void {
-            if ($paired->contains($user->id)) {
-                return;
+                DB::table('user_partners')->insert([
+                    'primary_user_id'   => $primary->id,
+                    'secondary_user_id' => $secondary->id,
+                    'status'            => 'active',
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
+                ]);
             }
-
-            $partner = $eligible
-                ->where('id', '!=', $user->id)
-                ->whereNotIn('id', $paired->toArray())
-                ->first();
-
-            if (!$partner) {
-                return;
-            }
-
-            UserPartner::firstOrCreate(
-                ['primary_user_id' => $user->id, 'partner_user_id' => $partner->id],
-                ['linked_at' => now()->subDays(rand(1, 180))]
-            );
-
-            $paired->push($user->id);
-            $paired->push($partner->id);
-        });
+        }
     }
 }

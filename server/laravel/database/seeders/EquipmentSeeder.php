@@ -38,6 +38,5 @@ class EquipmentSeeder extends Seeder
             Equipment::create($data);
         }
 
-        Equipment::factory()->count(5)->create();
     }
 }

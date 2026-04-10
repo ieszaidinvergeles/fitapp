@@ -30,6 +30,5 @@ class DietPlanSeeder extends Seeder
             DietPlan::create($data);
         }
 
-        DietPlan::factory()->count(4)->create();
     }
 }

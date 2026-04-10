@@ -4,15 +4,15 @@ namespace Database\Seeders;
 
 use App\Models\Exercise;
 use App\Models\Routine;
-use App\Models\RoutineExercise;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Seeds the routine_exercises pivot table.
  *
  * SRP: Solely responsible for populating routine exercise records.
  * NOTE: Each routine gets a unique set of 5 to 8 exercises in order.
- *       firstOrCreate prevents composite-key violations on re-seed.
+ *       updateOrInsert prevents composite-key violations on re-seed.
  */
 class RoutineExerciseSeeder extends Seeder
 {
@@ -27,7 +27,7 @@ class RoutineExerciseSeeder extends Seeder
             $selected = array_unique(array_slice($exerciseIds, 0, $count));
 
             foreach (array_values($selected) as $index => $exerciseId) {
-                RoutineExercise::firstOrCreate(
+                DB::table('routine_exercises')->updateOrInsert(
                     ['routine_id' => $routine->id, 'exercise_id' => $exerciseId],
                     [
                         'order_index'      => $index + 1,

@@ -42,6 +42,5 @@ class UserMealScheduleSeeder extends Seeder
                 }
             });
 
-        UserMealSchedule::factory()->count(60)->create();
     }
 }

@@ -32,6 +32,5 @@ class BodyMetricSeeder extends Seeder
                 }
             });
 
-        BodyMetric::factory()->count(80)->create();
     }
 }

@@ -61,6 +61,5 @@ class ExerciseSeeder extends Seeder
             ]));
         }
 
-        Exercise::factory()->count(10)->create();
     }
 }

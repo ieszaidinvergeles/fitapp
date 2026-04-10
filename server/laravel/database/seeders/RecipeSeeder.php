@@ -47,6 +47,5 @@ class RecipeSeeder extends Seeder
             ]));
         }
 
-        Recipe::factory()->count(12)->create();
     }
 }

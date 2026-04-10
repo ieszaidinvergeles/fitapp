@@ -67,6 +67,5 @@ class MembershipPlanSeeder extends Seeder
             'price'              => 49.99,
         ]);
 
-        MembershipPlan::factory()->count(3)->create();
     }
 }

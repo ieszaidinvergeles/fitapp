@@ -42,6 +42,5 @@ class RoutineSeeder extends Seeder
             ]));
         }
 
-        Routine::factory()->count(11)->create();
     }
 }

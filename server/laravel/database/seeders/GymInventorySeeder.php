@@ -29,7 +29,7 @@ class GymInventorySeeder extends Seeder
             $selected = array_slice($equipmentIds, 0, min(count($equipmentIds), 12));
 
             foreach (array_unique($selected) as $index => $equipmentId) {
-                GymInventory::firstOrCreate(
+                \Illuminate\Support\Facades\DB::table('gym_inventory')->updateOrInsert(
                     ['gym_id' => $gym->id, 'equipment_id' => $equipmentId],
                     [
                         'quantity' => rand(1, 15),
