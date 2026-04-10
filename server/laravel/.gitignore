@@ -18,3 +18,5 @@ auth.json
 .DS_Store
 /.idea
 /.vscode
+/storage/logs/*.log
+/storage/debugbar/
