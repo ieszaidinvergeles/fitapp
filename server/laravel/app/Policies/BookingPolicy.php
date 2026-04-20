@@ -39,7 +39,7 @@ class BookingPolicy
      */
     public function view(User $user, Booking $booking): bool
     {
-        if ($user->isAdvanced()) {
+        if ($user->canManageOperations()) {
             return true;
         }
 
@@ -68,7 +68,7 @@ class BookingPolicy
      */
     public function update(User $user, Booking $booking): bool
     {
-        if ($user->isAdvanced()) {
+        if ($user->canManageOperations()) {
             return true;
         }
 
@@ -85,6 +85,6 @@ class BookingPolicy
      */
     public function delete(User $user, Booking $booking): bool
     {
-        return $user->isAdvanced();
+        return $user->canManageOperations();
     }
 }

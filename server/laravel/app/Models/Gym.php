@@ -155,13 +155,13 @@ class Gym extends Model
     }
 
     /**
-     * Returns all staff and manager users currently assigned to this gym.
+     * Returns all assistant, staff, and manager users currently assigned to this gym.
      *
      * @return HasMany
      */
     public function staffMembers(): HasMany
     {
         return $this->users()
-                    ->whereIn('role', ['staff', 'manager']);
+                    ->whereIn('role', ['assistant', 'staff', 'manager']);
     }
 }

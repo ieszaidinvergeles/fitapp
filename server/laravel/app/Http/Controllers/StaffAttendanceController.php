@@ -18,7 +18,7 @@ class StaffAttendanceController extends Controller
 {
     /**
      * Returns attendance records.
-     * Admins see all; managers see records from their gym; staff members see their own.
+     * Admins see all; managers and assistants see records from their gym; staff members see their own.
      *
      * @param  Request  $request
      * @return JsonResponse
@@ -34,7 +34,7 @@ class StaffAttendanceController extends Controller
             $user  = $request->user();
             $query = $user->isAdmin()
                 ? StaffAttendance::query()
-                : ($user->isManager()
+                : (($user->isManager() || $user->isAssistant())
                     ? StaffAttendance::where('gym_id', $user->current_gym_id)
                     : StaffAttendance::forStaff($user->id));
 

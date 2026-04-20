@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('username', 20);
             $table->string('email', 160)->unique();
             $table->string('password_hash', 255)->nullable();
-            $table->enum('role', ['admin', 'manager', 'staff', 'client', 'user_online']);
+            $table->enum('role', ['admin', 'manager', 'assistant', 'staff', 'client', 'user_online']);
             $table->string('full_name', 160)->nullable(); 
             $table->string('dni', 9);
             $table->date('birth_date');

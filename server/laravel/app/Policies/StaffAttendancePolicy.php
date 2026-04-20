@@ -26,7 +26,7 @@ class StaffAttendancePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isAdvanced();
+        return $user->canManageOperations();
     }
 
     /**
@@ -39,7 +39,7 @@ class StaffAttendancePolicy
      */
     public function view(User $user, StaffAttendance $attendance): bool
     {
-        if ($user->isManager()) {
+        if ($user->isManager() || $user->isAssistant()) {
             return $user->current_gym_id === $attendance->gym_id;
         }
 
@@ -55,7 +55,7 @@ class StaffAttendancePolicy
      */
     public function create(User $user): bool
     {
-        return $user->isAdvanced();
+        return $user->canManageOperations();
     }
 
     /**

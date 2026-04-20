@@ -118,6 +118,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Returns whether the user holds the assistant role.
+     *
+     * @return bool
+     */
+    public function isAssistant(): bool
+    {
+        return $this->role === 'assistant';
+    }
+
+    /**
      * Returns whether the user holds the manager role.
      *
      * @return bool
@@ -135,6 +145,36 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isStaff(): bool
     {
         return $this->role === 'staff';
+    }
+
+    /**
+     * Returns whether the user may access the staff portal.
+     *
+     * @return bool
+     */
+    public function canAccessStaffPortal(): bool
+    {
+        return in_array($this->role, ['admin', 'manager', 'assistant', 'staff'], true);
+    }
+
+    /**
+     * Returns whether the user may perform front-desk member operations.
+     *
+     * @return bool
+     */
+    public function canManageMembers(): bool
+    {
+        return in_array($this->role, ['admin', 'manager', 'assistant'], true);
+    }
+
+    /**
+     * Returns whether the user may operate booking and attendance flows.
+     *
+     * @return bool
+     */
+    public function canManageOperations(): bool
+    {
+        return in_array($this->role, ['admin', 'manager', 'assistant', 'staff'], true);
     }
 
     /**

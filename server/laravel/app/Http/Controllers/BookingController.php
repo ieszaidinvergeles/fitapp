@@ -33,7 +33,7 @@ class BookingController extends Controller
         try {
             $this->authorize('viewAny', Booking::class);
 
-            $query = $request->user()->isAdvanced()
+            $query = $request->user()->canManageOperations()
                 ? Booking::query()
                 : Booking::where('user_id', $request->user()->id);
 

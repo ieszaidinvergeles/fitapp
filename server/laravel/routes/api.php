@@ -32,6 +32,8 @@ use Illuminate\Support\Facades\Route;
  * Middleware aliases:
  *   admin    → AdminMiddleware (role = admin)
  *   advanced → AdvancedMiddleware (role ∈ {admin, manager, staff})
+ *   staff_portal → StaffPortalMiddleware (role ∈ {admin, manager, assistant, staff})
+ *   user_management → UserManagementMiddleware (role ∈ {admin, manager, assistant})
  */
 
 Route::prefix('v1')->group(function (): void {
@@ -90,7 +92,7 @@ Route::prefix('v1')->group(function (): void {
 
         // Aggregate Dashboards
         Route::get('/dashboard',        [DashboardController::class,      'index']);
-        Route::middleware('advanced')->get('/staff/dashboard', [StaffDashboardController::class, 'index']);
+        Route::middleware('staff_portal')->get('/staff/dashboard', [StaffDashboardController::class, 'index']);
 
         // Bookings
         Route::get('/bookings',             [BookingController::class, 'index']);
@@ -129,6 +131,13 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/attendance/{id}/clock-out',[StaffAttendanceController::class, 'clockOut']);
         Route::get('/attendance',               [StaffAttendanceController::class, 'index']);
         Route::get('/attendance/{id}',          [StaffAttendanceController::class, 'show']);
+
+        Route::middleware('user_management')->group(function (): void {
+            Route::get('/users',                     [UserController::class, 'index']);
+            Route::get('/users/{id}',                [UserController::class, 'show']);
+            Route::post('/users',                    [UserController::class, 'store']);
+            Route::put('/users/{id}',                [UserController::class, 'update']);
+        });
 
         // ─── Advanced (admin | manager | staff) ──────────────────────────────
 
@@ -206,10 +215,6 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/gyms/{id}/assign-manager',   [GymController::class, 'assignManager']);
 
             // Users
-            Route::get('/users',                       [UserController::class, 'index']);
-            Route::get('/users/{id}',                  [UserController::class, 'show']);
-            Route::post('/users',                      [UserController::class, 'store']);
-            Route::put('/users/{id}',                  [UserController::class, 'update']);
             Route::delete('/users/{id}',               [UserController::class, 'destroy']);
             Route::post('/users/{id}/block',           [UserController::class, 'block']);
             Route::post('/users/{id}/unblock',         [UserController::class, 'unblock']);

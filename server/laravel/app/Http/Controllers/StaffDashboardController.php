@@ -17,7 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * Provides aggregate dashboard data for authenticated staff, manager, and admin users.
+ * Provides aggregate dashboard data for authenticated staff, assistant, manager, and admin users.
  *
  * SRP: Solely responsible for aggregating and returning the staff-dashboard payload.
  * DIP: Scopes queries to the authenticated user's gym and delegates formatting
@@ -29,7 +29,7 @@ class StaffDashboardController extends Controller
      * Returns all data required to render the staff management dashboard in one call.
      *
      * Admin users receive metrics across all gyms.
-     * Manager and staff users receive metrics scoped to their assigned gym only.
+     * Manager, assistant, and staff users receive metrics scoped to their assigned gym only.
      *
      * Payload includes:
      *   - Gym(s) overview

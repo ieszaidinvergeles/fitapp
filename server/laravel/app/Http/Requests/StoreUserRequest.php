@@ -25,7 +25,7 @@ class StoreUserRequest extends FormRequest
             'username' => 'required|string|max:20|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'password_hash' => 'required|string|min:8',
-            'role' => 'required|in:admin,manager,staff,client,user_online',
+            'role' => 'required|in:admin,manager,assistant,staff,client,user_online',
             'full_name' => 'nullable|string|max:160',
             'dni' => 'required|string|size:9',
             'birth_date' => 'required|date',

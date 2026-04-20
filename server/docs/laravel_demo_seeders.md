@@ -1,7 +1,7 @@
 # Demo Seeders — v0.12.0
 
 **Version:** `v0.12.0-demo-ready`
-**Date:** 2026-04-09
+**Date:** 2026-04-20
 **Scope:** Coherent demo data for MySQL, fixed credentials, and bug fixes applied before seeding.
 
 ---
@@ -22,7 +22,7 @@ Ensure `.env` is configured for MySQL before seeding:
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=fitapp
+DB_DATABASE=gymapp
 DB_USERNAME=root
 DB_PASSWORD=your_password
 ```
@@ -46,6 +46,7 @@ All accounts use the password: **`password`**
 |---|---|---|---|
 | `admin@fitapp.com` | `admin` | FitApp Madrid Centro | Basic Physical |
 | `manager@fitapp.com` | `manager` | FitApp Madrid Centro (manager) | Basic Physical |
+| `assistant@fitapp.com` | `assistant` | FitApp Madrid Centro | Reception desk / no destructive powers |
 | `staff1@fitapp.com` | `staff` | FitApp Madrid Centro | — |
 | `staff2@fitapp.com` | `staff` | FitApp Madrid Centro | — |
 | `client1@fitapp.com` | `client` | FitApp Madrid Centro | Basic Physical (active) |
@@ -72,6 +73,7 @@ Step 2: GymSeeder               — no FK to users yet (manager_id = null)
 Step 3: [circular FK resolved]
         - gym1.manager_id       ← manager user
         - manager.current_gym_id ← gym1
+        - assistant.current_gym_id ← gym1
         - staff1/staff2.current_gym_id ← gym1
         - client1/client2.current_gym_id ← gym1
         - client1/client2.membership_plan_id ← Basic Physical

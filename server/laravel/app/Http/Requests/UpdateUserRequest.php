@@ -21,11 +21,13 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        $userId = $this->route('id') ?? $this->route('user')?->id;
+
         return [
             'username' => 'sometimes|required|string|max:20',
-            'email' => 'sometimes|required|email|unique:users,email,' . $this->route('user')->id,
+            'email' => 'sometimes|required|email|unique:users,email,' . $userId,
             'password_hash' => 'sometimes|nullable|string|min:8',
-            'role' => 'sometimes|required|in:admin,manager,staff,client,user_online',
+            'role' => 'sometimes|required|in:admin,manager,assistant,staff,client,user_online',
             'full_name' => 'sometimes|nullable|string|max:160',
             'dni' => 'sometimes|required|string|size:9',
             'birth_date' => 'sometimes|required|date',

@@ -1,65 +1,67 @@
-# Gym — Architectural Logic and Entity Roles
+# FitApp: Gym Logic & Role Management
 
-**Date:** 2026-04-06 &nbsp;|&nbsp; **Core Logic Reference**
+This document provides a natural language overview of the business logic, user roles, application interfaces, and specific data structures like Custom Post Types (CPT) used within the FitApp platform.
 
+## Application Interfaces
 
-# 1. Architectural Patterns
+The platform is divided into two main interfaces, each tailored to a specific target audience to avoid UI clutter and improve security:
 
-## 1.1. Fat Models (Domain Logic)
+1. **Client Interface (App / Frontend):** Designed for end-users (Gym Members). Focuses on booking classes, viewing routines, metrics, meal schedules, and accessing the product catalog.
+2. **Staff Interface (Dashboard / Backend):** Designed for employees. Focuses on attendance, user management, scheduling, and overall gym administration.
 
-### 1.1.1. What are Fat Models?
-A design pattern where Eloquent models handle data validation, relationships, and complex business calculations. In this architecture, the model is "intelligent" and knows how to manage its own state and side effects (such as updating counters or cascading deletions).
+---
 
-### 1.1.2. Domain Encapsulation
-The practice of hiding internal record states and requiring all interactions to be performed through dedicated model methods. This ensures that business rules (like member blocking or booking capacity) are always enforced, regardless of which controller or command triggers the action.
+## User Roles and Permissions Matrix
 
-## 1.2. Thin Controllers (Coordination)
+The system utilizes a hierarchical Role-Based Access Control (RBAC) model.
 
-### 1.2.1. What are Thin Controllers?
-Controllers that only handle HTTP request parsing and response formatting. In this pattern, the controller is a "mediator" that doesn't perform calculations or business logic; it merely collects input, calls its corresponding domain model, and returns the result.
+*Term Definition:* **RBAC (Role-Based Access Control)** is a method of restricting network or system access based on the roles of individual users within an enterprise.
 
-### 1.2.2. Coordination and Separation
-The controller acts as a conductor, delegating the "how" (logic) to the models. This separation of concerns ensures that if a gym rule changes (e.g., how the strike counter works), we only modify the model, keeping the web infrastructure untouched.
-
-# 2. Detailed Business Logic Catalog
-
-This catalog details the responsibilities for each entity, including visibility constraints and internal system logic.
-
-## 2.1. Identity and Membership
-
-| Entity | Role / Responsibility | Editable (Write) | Protected / System-Logic |
+| Role | App Interface | Description & Capabilities | Destructive Permissions |
 | :--- | :--- | :--- | :--- |
-| **User** | System identity. Manages strikes and membership status. | Profile data, DNI, name, current gym. | `strikes`, `is_blocked`, `role`, `password`. |
-| **Gym** | Physical facility. Controls room availability. | Name, coordinates, address. | `manager_id` (via assignment), ID. |
-| **MembershipPlan** | Pricing and feature tier. Sets partner limits. | Price, benefits, duration. | Linked active memberships. |
-| **Setting** | Personal privacy and UI preferences. | Theme, lang, metric sharing permissions. | `user_id`. |
+| **Admin** | Staff | Total control over the platform. Can manage other staff members, alter core settings, and delete any record. | **High** |
+| **Manager** | Staff | Oversees daily gym operations. Manages schedules, routines, rooms, and notifications. Cannot alter core system users (Admin users). | **Medium** |
+| **Assistant** | Staff | *Receptionist / Secretary role.* Sits between regular staff and management. Responsible for registering new members, querying client data, and cancelling classes (only when authorized by superiors). Can view a wide range of administrative data but lacks the destructive permissions of a Manager. | **Low** |
+| **Staff** | Staff | Trainers and instructors. Focuses solely on operational tasks like marking attendance, viewing assigned classes, and checking their personal dashboard. | **None** |
+| **Client** | Client | Physical gym members. Can access full physical gym features (class bookings, gym entry, routines). | **None** |
+| **User Online**| Client | Digital-only members. Uses the same Client interface but is restricted from booking physical rooms or physical attendance. | **None** |
 
-## 2.2. Training and Operations
+### Deep Dive: The `Assistant` Role
 
-| Entity | Role / Responsibility | Editable (Write) | Protected / System-Logic |
-| :--- | :--- | :--- | :--- |
-| **Activity** | Catalog of exercise types (Yoga, HIIT). | Name, description, intensity. | None. |
-| **Room** | Physical space in a gym. Tracks capacity. | Name, room-specific capacity. | `gym_id`, conflict detection. |
-| **Routine** | Multi-exercise training plan. | Name, difficulty, instructions. | `duplicate()` logic, creator identity. |
-| **Exercise** | Atomic movement with video instructions. | Muscle group, video/image URLs. | None. |
-| **GymClass** | Scheduled instance of an activity. | Start/End time, instructor, room. | `is_cancelled`, capacity validation. |
-| **Booking** | Session reservation. Links user to class. | None (Created via store). | `status`, cancellation logic (2h limit). |
-| **Equipment** | Physical gym assets. | Maintenance status, home-use. | `local_gym_id`. |
+The `assistant` role was introduced to handle front-desk operations without exposing sensitive structural functions to receptionists.
 
-## 2.3. Nutrition and Health
+*   **Why it was used:** A standard `staff` role doesn't have enough permissions to register new users or cancel bookings globally, but a `manager` role has too much power (e.g., deleting schedules entirely). The `assistant` bridges this gap, providing read-heavy access with limited, specific write access (like client onboarding).
+*   **Database Note:** Ensure this user is explicitly seeded in the SQL database during local setup and WordPress initialization.
 
-| Entity | Role / Responsibility | Editable (Write) | Protected / System-Logic |
-| :--- | :--- | :--- | :--- |
-| **DietPlan** | Nutritional objective (Bulk, Cut). | General goals, duration. | None. |
-| **Recipe** | High-protein dish with macros. | Ingredients, preparation, image. | `macros_json` cast, calories. |
-| **MealSchedule** | Daily food calendar. | `is_consumed` (Mark as done). | `user_id`, `date`. |
-| **BodyMetric** | Physical progress snapshot. | Weight, height, fat percentage. | `bmi` calculation, delta tracking. |
+---
 
-## 2.4. Utilities and Logs
+## Content Structures & Custom Post Types
 
-| Entity | Role / Responsibility | Editable (Write) | Protected / System-Logic |
-| :--- | :--- | :--- | :--- |
-| **UserFavorite** | Bookmark for gyms, routines, or activities. | Add/Remove entries. | Validation of entity type. |
-| **StaffAttendance**| Work session tracking. | Clock-out timestamp. | `staff_id`, `gym_id`, Date. |
-| **Notification** | Audience-targeted broadcasts. | Title, message, audience. | Recipient resolution logic. |
-| **Logs (Audit, Auth, etc.)** | Immutable history of changes. | **None** (Read-only). | All data is immutable. |
+To integrate seamlessly with WordPress on the frontend, certain data is handled as a Custom Post Type.
+
+*Term Definition:* **Custom Post Type (CPT)** is a WordPress feature that allows developers to create custom data structures beyond the default "Posts" and "Pages". It acts like a new table or collection for specific content.
+
+### CPT: `Volt GYM`
+
+*   **Nature:** It serves as a visual **product catalog**.
+*   **Purpose:** To showcase gym products, supplements, or merchandise directly to clients. 
+*   **Current Limitations:** It acts strictly as a catalog. There is **no e-commerce checkout integrated** at this phase. 
+*   **Target Audience:** It is exclusively designed to be consumed by the Client App interface, allowing members to browse offerings without making direct digital purchases.
+
+---
+
+## Internal Screens
+
+### Client Screens
+*   `Dashboard`: Overview of upcoming classes and daily metrics.
+*   `Classes & Bookings`: Interfaces for scheduling physical attendance.
+*   `Routines & Exercises`: Details on workout plans.
+*   `Metrics, Meal Schedule & Recipes`: Nutrition and tracking interfaces.
+*   `Settings`: User profile configuration.
+
+### Staff Screens
+*   `Dashboard`: Operational overview.
+*   `Attendance`: Front-desk check-in interface.
+*   `Manage Classes & Routines`: Creation and scheduling of gym offerings.
+*   `Rooms & Notifications`: Logistics and broadcast messaging.
+*   `Admin Users`: (Admin only) Platform user management.

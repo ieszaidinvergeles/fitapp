@@ -26,7 +26,7 @@ class UserFactory extends Factory
             'username'                => substr(fake()->unique()->userName(), 0, 20),
             'email'                   => fake()->unique()->safeEmail(),
             'password_hash'           => Hash::make('password'),
-            'role'                    => fake()->randomElement(['client', 'client', 'client', 'staff', 'manager', 'user_online']),
+            'role'                    => fake()->randomElement(['client', 'client', 'client', 'assistant', 'staff', 'manager', 'user_online']),
             'full_name'               => fake()->name(),
             'dni'                     => strtoupper(fake()->bothify('########?')),
             'birth_date'              => fake()->dateTimeBetween('-55 years', '-18 years')->format('Y-m-d'),
@@ -57,6 +57,16 @@ class UserFactory extends Factory
     public function staff(): static
     {
         return $this->state(['role' => 'staff']);
+    }
+
+    /**
+     * State for an assistant user.
+     *
+     * @return static
+     */
+    public function assistant(): static
+    {
+        return $this->state(['role' => 'assistant']);
     }
 
     /**

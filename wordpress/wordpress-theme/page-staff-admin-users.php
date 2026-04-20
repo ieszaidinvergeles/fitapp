@@ -1,10 +1,10 @@
 <?php
 require_once 'functions.php';
-require_admin();
+require_user_management();
 $page = max(1, (int)($_GET['page'] ?? 1));
 $response = api_get('/users?page=' . $page, auth: true);
 $users = $response['result']['data'] ?? [];
-wp_app_page_start('Admin Users', true);
+wp_app_page_start('Manage Users', true);
 ?>
     <?php if (($response['result'] ?? null) === false) { show_error(api_message($response)); } ?>
     <div class="space-y-3">

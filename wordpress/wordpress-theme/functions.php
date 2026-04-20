@@ -323,7 +323,7 @@ function require_login(): void
 }
 
 /**
- * Require an advanced role (admin, manager, staff).
+ * Require a staff-portal role (admin, manager, assistant, staff).
  * Redirects to the client dashboard if the user does not qualify.
  *
  * @return void
@@ -332,6 +332,21 @@ function require_advanced(): void
 {
     require_login();
     if (!is_advanced()) {
+        header('Location: ' . get_role_home_path());
+        exit;
+    }
+}
+
+/**
+ * Require a user-management role (admin, manager, assistant).
+ * Redirects to the staff dashboard for other logged-in staff users.
+ *
+ * @return void
+ */
+function require_user_management(): void
+{
+    require_login();
+    if (!can_manage_members()) {
         header('Location: ' . get_role_home_path());
         exit;
     }
@@ -363,13 +378,13 @@ function get_user_role(): string
 }
 
 /**
- * Check whether the current user has an advanced role.
+ * Check whether the current user belongs to the staff portal.
  *
  * @return bool
  */
 function is_advanced(): bool
 {
-    return in_array(get_user_role(), ['admin', 'manager', 'staff'], true);
+    return in_array(get_user_role(), ['admin', 'manager', 'assistant', 'staff'], true);
 }
 
 /**
@@ -393,6 +408,16 @@ function is_manager(): bool
 }
 
 /**
+ * Check whether the current user is an assistant.
+ *
+ * @return bool
+ */
+function is_assistant(): bool
+{
+    return get_user_role() === 'assistant';
+}
+
+/**
  * Check whether the current user is staff.
  *
  * @return bool
@@ -400,6 +425,16 @@ function is_manager(): bool
 function is_staff(): bool
 {
     return get_user_role() === 'staff';
+}
+
+/**
+ * Check whether the current user can manage member accounts.
+ *
+ * @return bool
+ */
+function can_manage_members(): bool
+{
+    return in_array(get_user_role(), ['admin', 'manager', 'assistant'], true);
 }
 
 /**
@@ -414,7 +449,7 @@ function is_client_role(): bool
 
 /**
  * Resolve the default home page path for current role.
- * Advanced roles go to staff dashboard; client-facing roles go to client dashboard.
+ * Staff-portal roles go to staff dashboard; client-facing roles go to client dashboard.
  *
  * @return string
  */
@@ -531,7 +566,7 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
                     <a href="page-staff-manage-classes.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Classes</a>
                     <a href="page-staff-manage-routines.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Routines</a>
                     <a href="page-staff-rooms.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Rooms</a>
-                    <?php if (is_admin()): ?>
+                    <?php if (can_manage_members()): ?>
                         <a href="page-staff-admin-users.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Users</a>
                     <?php endif; ?>
                 <?php else: ?>

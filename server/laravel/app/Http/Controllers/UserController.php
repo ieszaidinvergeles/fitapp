@@ -8,6 +8,8 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 /**
  * Handles CRUD and administrative operations for users.
@@ -28,6 +30,7 @@ class UserController extends Controller
     {
         $result       = false;
         $messageArray = ['general' => 'Could not retrieve users.'];
+        $statusCode   = 200;
 
         try {
             $this->authorize('viewAny', User::class);
@@ -40,11 +43,14 @@ class UserController extends Controller
 
             $result       = UserResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
     }
 
     /**
@@ -59,6 +65,7 @@ class UserController extends Controller
     {
         $result       = false;
         $messageArray = ['general' => 'Could not retrieve user.'];
+        $statusCode   = 200;
 
         try {
             $user = User::findOrFail($id);
@@ -66,11 +73,14 @@ class UserController extends Controller
 
             $result       = new UserResource($user);
             $messageArray = ['general' => 'OK'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
     }
 
     /**
@@ -84,11 +94,13 @@ class UserController extends Controller
     {
         $result       = false;
         $messageArray = ['general' => 'Could not create user.'];
+        $statusCode   = 200;
 
         try {
             $this->authorize('create', User::class);
 
             $data = $request->validated();
+            $this->guardRoleAssignment($request->user(), $data);
             
             // Explicitly hash the password since the 'hashed' cast is removed
             $data['password_hash'] = \Hash::make($data['password_hash']);
@@ -102,11 +114,14 @@ class UserController extends Controller
             
             $result       = new UserResource($user);
             $messageArray = ['general' => 'User created.'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
     }
 
     /**
@@ -121,18 +136,29 @@ class UserController extends Controller
     {
         $result       = false;
         $messageArray = ['general' => 'Could not update user.'];
+        $statusCode   = 200;
 
         try {
             $user = User::findOrFail($id);
             $this->authorize('update', $user);
 
-            $result       = $user->update($request->validated());
+            $data = $request->validated();
+            $this->guardRoleAssignment($request->user(), $data, $user);
+
+            if (array_key_exists('password_hash', $data) && $data['password_hash']) {
+                $data['password_hash'] = \Hash::make($data['password_hash']);
+            }
+
+            $result       = $user->update($data);
             $messageArray = ['general' => 'User updated.'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
     }
 
     /**
@@ -145,6 +171,7 @@ class UserController extends Controller
     {
         $result       = false;
         $messageArray = ['general' => 'Could not delete user.'];
+        $statusCode   = 200;
 
         try {
             $user = User::findOrFail($id);
@@ -153,11 +180,14 @@ class UserController extends Controller
             $user->delete();
             $result       = true;
             $messageArray = ['general' => 'User deleted.'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
     }
 
     /**
@@ -170,16 +200,20 @@ class UserController extends Controller
     {
         $result       = false;
         $messageArray = ['general' => 'Could not block user.'];
+        $statusCode   = 200;
 
         try {
             $user         = User::findOrFail($id);
             $result       = $user->update(['is_blocked_from_booking' => true]);
             $messageArray = ['general' => 'User blocked from booking.'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
     }
 
     /**
@@ -192,16 +226,20 @@ class UserController extends Controller
     {
         $result       = false;
         $messageArray = ['general' => 'Could not unblock user.'];
+        $statusCode   = 200;
 
         try {
             $user         = User::findOrFail($id);
             $result       = $user->update(['is_blocked_from_booking' => false]);
             $messageArray = ['general' => 'User unblocked.'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
     }
 
     /**
@@ -214,15 +252,57 @@ class UserController extends Controller
     {
         $result       = false;
         $messageArray = ['general' => 'Could not reset strikes.'];
+        $statusCode   = 200;
 
         try {
             $user         = User::findOrFail($id);
             $result       = $user->update(['cancellation_strikes' => 0]);
             $messageArray = ['general' => 'Strikes reset.'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
+    }
+
+    /**
+     * Prevents non-admin roles from assigning or mutating privileged roles.
+     *
+     * Assistants may only create or update client-facing users.
+     * Managers may not create or promote admins.
+     *
+     * @param  User  $actor
+     * @param  array<string, mixed>  $data
+     * @param  User|null  $target
+     * @return void
+     */
+    private function guardRoleAssignment(User $actor, array $data, ?User $target = null): void
+    {
+        $targetRole = $target?->role;
+        $requestedRole = $data['role'] ?? $targetRole;
+
+        if ($actor->isAdmin()) {
+            return;
+        }
+
+        if ($actor->isAssistant()) {
+            $allowedRoles = ['client', 'user_online'];
+
+            if (($targetRole !== null && !in_array($targetRole, $allowedRoles, true))
+                || ($requestedRole !== null && !in_array($requestedRole, $allowedRoles, true))) {
+                throw new HttpException(403, 'Assistant users may only manage client-facing accounts.');
+            }
+
+            return;
+        }
+
+        if ($actor->isManager()) {
+            if ($targetRole === 'admin' || $requestedRole === 'admin') {
+                throw new HttpException(403, 'Managers may not create or modify admin accounts.');
+            }
+        }
     }
 }

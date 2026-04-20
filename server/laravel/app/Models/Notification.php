@@ -75,7 +75,7 @@ class Notification extends Model
     {
         return match ($this->target_audience) {
             'global'       => User::all(),
-            'staff_only'   => User::whereIn('role', ['admin', 'manager', 'staff'])->get(),
+            'staff_only'   => User::whereIn('role', ['admin', 'manager', 'assistant', 'staff'])->get(),
             'specific_gym' => User::where('current_gym_id', $this->related_gym_id)->get(),
             default        => collect(),
         };

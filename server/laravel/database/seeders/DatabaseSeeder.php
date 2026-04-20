@@ -41,6 +41,7 @@ class DatabaseSeeder extends Seeder
         $gym2 = Gym::skip(1)->first() ?? $gym1;
 
         $manager = User::where('email', 'manager@fitapp.com')->first();
+        $assistant = User::where('email', 'assistant@fitapp.com')->first();
         $staff1  = User::where('email', 'staff1@fitapp.com')->first();
         $staff2  = User::where('email', 'staff2@fitapp.com')->first();
 
@@ -61,6 +62,10 @@ class DatabaseSeeder extends Seeder
 
         if ($staff2) {
             $staff2->update(['current_gym_id' => $staffGymId]);
+        }
+
+        if ($assistant) {
+            $assistant->update(['current_gym_id' => $staffGymId]);
         }
 
         $gymForClients = $gym1?->id;

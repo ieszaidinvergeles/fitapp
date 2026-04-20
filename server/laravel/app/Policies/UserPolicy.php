@@ -25,7 +25,7 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isAdvanced();
+        return $user->canManageMembers();
     }
 
     /**
@@ -38,7 +38,7 @@ class UserPolicy
      */
     public function view(User $user, User $model): bool
     {
-        if ($user->isAdvanced()) {
+        if ($user->canManageMembers()) {
             return true;
         }
 
@@ -54,7 +54,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isAdvanced();
+        return $user->canManageMembers();
     }
 
     /**
@@ -67,7 +67,7 @@ class UserPolicy
      */
     public function update(User $user, User $model): bool
     {
-        if ($user->isAdvanced()) {
+        if ($user->canManageMembers()) {
             return true;
         }
 

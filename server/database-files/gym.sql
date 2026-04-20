@@ -460,7 +460,7 @@ CREATE TABLE `users` (
   `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(160) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `role` enum('admin','manager','staff','client','user_online') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role` enum('admin','manager','assistant','staff','client','user_online') COLLATE utf8mb4_unicode_ci NOT NULL,
   `full_name` varchar(160) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `dni` varchar(9) COLLATE utf8mb4_unicode_ci NOT NULL,
   `birth_date` date NOT NULL,

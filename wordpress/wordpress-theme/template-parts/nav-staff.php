@@ -20,8 +20,8 @@ $active = $active ?? '';
         ['page-staff-manage-classes.php', 'event_note',    'Schedule', 'classes'],
         ['page-staff-attendance.php','how_to_reg',         'Check-in', 'attendance'],
     ];
-    if (is_admin()) {
-        $items[] = ['page-staff-admin-users.php', 'admin_panel_settings', 'Admin', 'admin'];
+    if (can_manage_members()) {
+        $items[] = ['page-staff-admin-users.php', 'admin_panel_settings', 'Users', 'admin'];
     }
     foreach ($items as [$href, $icon, $label, $key]):
         $isActive = ($active === $key);
