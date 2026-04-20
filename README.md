@@ -1,121 +1,65 @@
-# Gym
+# FitApp
 
-## 1. Project Structure
+## Project Structure
 
-```
+```text
 fitapp/
-  server/        — Laravel backend (REST API)
-    docs/        — Backend documentation
-  wordpress/     — WordPress frontend
-    docs/        — Frontend documentation
-  docs/          — General project documentation
+  server/        - Laravel backend (REST API)
+    docs/        - Backend documentation
+      test/      - Backend test documentation
+  wordpress/     - WordPress frontend
+    docs/        - Frontend documentation
+      test/      - Frontend test documentation
+  docs/          - General project documentation
 ```
 
-## 2. Documentation
+## Documentation Map
 
-Each part of the project maintains its own `docs/` folder covering the decisions, conventions and architecture specific to that layer.
+Each area keeps its documentation close to the code it describes.
 
-### 2.1. Backend — `server/docs/`
+- `server/docs/`: backend architecture, database, API, logic, and security notes
+- `server/docs/test/`: backend testing guides and execution notes
+- `wordpress/docs/`: frontend implementation and WordPress integration notes
+- `wordpress/docs/test/`: frontend QA and integration testing notes
+- `docs/`: cross-cutting project documentation shared by backend and frontend
 
-| Document | Description |
-|---|---|
-| `database.md` | Database schema, migration conventions, FK behaviors, fixes applied |
-| `logs.md` | Log system architecture, why logs have no FK constraints, table conventions |
+Start with:
 
-### 2.2. Frontend — `wordpress/docs/`
+- `server/docs/README.md`
+- `wordpress/docs/README.md`
+- `docs/README.md`
 
-| Document | Description |
-|---|---|
-| Coming soon | Plugin architecture, HTTP client, token management, shortcode conventions |
+## Commit Convention
 
-### 2.3. General — `docs/` 
+All commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/):
 
-Will cover cross-cutting concerns shared between backend and frontend — API contract, authentication flow, deployment, environment setup, and onboarding guide for new contributors.
-
-## 3. Commit Convention
-
-All commits follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification with project-specific scopes.
-
-The pattern is:
-```
+```text
 type(scope): short description
 ```
-
-**Types:**
-
-**Types:**
 
 | Type | When to use |
 |---|---|
 | `feat` | New feature or file added |
 | `update` | Modification or fix to existing code |
-| `docs` | Documentation only changes |
+| `docs` | Documentation-only changes |
 | `fix` | Bug fix |
 | `refactor` | Code restructure without changing behavior |
-| `chore` | Maintenance tasks, dependency updates |
+| `chore` | Maintenance tasks and dependency updates |
 
-**Scopes — backend:**
+### Suggested scopes
 
 | Scope | What it covers |
 |---|---|
-| `database` | SQL schema, raw database changes |
+| `database` | SQL schema and raw database changes |
 | `database-laravel` | Migrations, models, factories, seeders |
-| `docs-logs` | Log system documentation |
 | `api` | Controllers, routes, FormRequests |
 | `auth` | Authentication, Sanctum, middleware |
-
-**Scopes — frontend:**
-
-| Scope | What it covers |
-|---|---|
-| `plugin` | WordPress plugin base |
-| `shortcodes` | Shortcodes and Gutenberg blocks |
-| `templates` | HTML templates and views |
+| `plugin` | WordPress plugin work |
+| `templates` | WordPress theme templates and views |
+| `docs-backend` | Backend documentation |
 | `docs-wp` | Frontend documentation |
+| `docs-project` | Root or cross-project documentation |
 
+## Versioning
 
-## 4. Versioning
-
-Tags follow [Semantic Versioning](https://semver.org/) `vMAJOR.MINOR.PATCH`:
-
-| Segment | When it increments |
-|---|---|
-| `MAJOR` | Breaking change — incompatible with previous version |
-| `MINOR` | New functionality added in a backward-compatible way |
-| `PATCH` | Small fix or correction that does not add functionality |
-
-A single tag can group multiple related commits that together complete a logical milestone.
-
-### 4.1. How to choose the right tag
-
-**Use `PATCH` (e.g. `v0.3.0` → `v0.3.1`) when:**
-- Fixing a typo or error in documentation
-- Correcting a column length or constraint in a migration without changing the schema structure
-- Fixing a bug in an existing feature without adding new functionality
-- Updating a config value or environment variable
-
-**Use `MINOR` (e.g. `v0.3.0` → `v0.4.0`) when:**
-- A new functional block is completed — a controller, a seeder set, a new module
-- New documentation is added covering a completed feature
-- A new table or group of migrations is added without breaking existing ones
-- A new section of the plugin or frontend is implemented
-
-**Use `MAJOR` (e.g. `v0.3.0` → `v1.0.0`) when:**
-- The API contract changes in a way that breaks existing consumers
-- A table is renamed or a column is removed from the schema
-- Authentication method changes
-- The project reaches a fully deployable and stable state for the first time (`v1.0.0`)
-
-> While the project is in active development (versions `v0.x.x`), `MAJOR` stays at `0`.
-> `v1.0.0` is reserved for the first production-ready release.
-
-### 4.2 Version history
-
-| Tag | Date | Scope | Commits included |
-|---|---|---|---|
-| `v0.1.0-project-setup` | 2026-01-13 | Project setup & SQL DB | Initial commit, `.env.example`, `gym.sql` (SQL DB) |
-| `v0.2.0-database` | 2026-03-05 | Database with Laravel | SQL schema translated to Laravel Migrations & Models |
-| `v0.3.0-log-system` | 2026-03-06 | Log system | Log system documentation, 6 log migrations approved |
-| `v0.4.0-docs-and-patches` | 2026-03-10 | Patches | DB Review schema fixes, constraint adjustments |
-| `v0.5.0-validators` | 2026-03-23 | Request Validators | Centralization of FormRequests and validation rules |
-| `v0.6.0-auth-system` | 2026-03-27 | Auth System | Sanctum integration, protected routes, AuthControllers |
+Tags follow [Semantic Versioning](https://semver.org/) as `vMAJOR.MINOR.PATCH`.
