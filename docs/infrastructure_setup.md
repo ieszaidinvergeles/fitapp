@@ -57,10 +57,33 @@ The core of the orchestration relies on `docker-compose.yml`. Each service defin
 - The internal database schema navigator exposed on port `8080`.
 - Offers immediate visibility into the Laravel Models mapping and WordPress schema tables.
 
+### Exposed Port Mappings (Firewall Target Settings)
+For cloud systems like Azure or AWS, the following Network Security Group (NSG) Inbound Rules correspond directly to the exposed Docker ports:
+- **Port 80 (HTTP):** WordPress Public Web
+- **Port 8000 (HTTP):** Laravel API Services
+- **Port 8080 (HTTP):** Adminer Visual DB GUI
+- **Port 3306 (TCP - Optional):** Exposes MySQL directly for desktop tools like DBeaver or DataGrip.
+*Note: Ports without an explicit binding in Compose (like Redis 6379) are securely isolated within the `voltgym_net` stack.*
+
 ### Background Runners 
 - **Queue Work:** Continuously loops listening to the Redis cache interface.
 - **Scheduler:** Manages continuous cron task dispatches directly defined within Laravel's kernel structure.
 
-## Remote Maintenance
+## Remote Maintenance & Automation (Zero-Downtime Updates)
 
 A system daemon operates via Cron linking against `scripts/auto-update.sh`. It evaluates standard git hashes against `origin/main` automatically, securing rolling updates directly to the application without manual intervention while preserving absolute data sovereignty across stateful containers.
+
+**How the update operates:**
+1. Triggers Git Pull overriding any stale cache on standard bind mounts (Theme Files magically sync natively).
+2. Executes `composer install` inside the Laravel container explicitly parsing new APIs.
+3. Automatically fires `php artisan migrate --force`. This handles new tables and columns perfectly **without** dropping existing data, protecting WordPress rows and user tables.
+
+**Implementation Script (Linux Host):**
+To ensure the application dynamically updates every two hours natively, instantiate the following command into your `crontab -e`:
+```bash
+0 */2 * * * cd /home/voltgym/fitapp/voltgym-infra && ./scripts/auto-update.sh >> /var/log/voltgym-auto-update.log 2>&1
+```
+
+## System Resilience
+
+Under normal circumstances involving server reboots, scaling downs, or hardware resets, absolutely **no manual intervention is required**. All Compose services explicitly depend on the `restart: unless-stopped` directive. Docker's Engine automatically boots the final live state of the containers asynchronously immediately after Host OS initialization.
