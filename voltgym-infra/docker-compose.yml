@@ -1,0 +1,199 @@
+services:
+
+  # ─── NGINX ────────────────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: voltgym_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - laravel_app:/var/www/laravel:ro
+      - wordpress_app:/var/www/wordpress:ro
+    depends_on:
+      - laravel
+      - wordpress
+    networks:
+      - voltgym_net
+
+  # ─── LARAVEL (PHP-FPM) ────────────────────────────────────────────────────
+  laravel:
+    build:
+      context: ./docker/laravel
+      dockerfile: Dockerfile
+    container_name: voltgym_laravel
+    restart: unless-stopped
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - APP_URL=${APP_URL}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
+    volumes:
+      - laravel_app:/var/www/laravel
+      - laravel_storage:/var/www/laravel/storage
+      - ./docker/laravel/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - voltgym_net
+
+  # ─── LARAVEL QUEUE WORKER ─────────────────────────────────────────────────
+  queue:
+    build:
+      context: ./docker/laravel
+      dockerfile: Dockerfile
+    container_name: voltgym_queue
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - QUEUE_CONNECTION=redis
+    volumes:
+      - laravel_app:/var/www/laravel
+      - laravel_storage:/var/www/laravel/storage
+    depends_on:
+      - laravel
+      - redis
+    networks:
+      - voltgym_net
+
+  # ─── LARAVEL SCHEDULER ────────────────────────────────────────────────────
+  scheduler:
+    build:
+      context: ./docker/laravel
+      dockerfile: Dockerfile
+    container_name: voltgym_scheduler
+    restart: unless-stopped
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction;
+        sleep 60;
+      done"
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - QUEUE_CONNECTION=redis
+    volumes:
+      - laravel_app:/var/www/laravel
+      - laravel_storage:/var/www/laravel/storage
+    depends_on:
+      - laravel
+    networks:
+      - voltgym_net
+
+  # ─── WORDPRESS (PHP-FPM) ──────────────────────────────────────────────────
+  wordpress:
+    build:
+      context: ./docker/wordpress
+      dockerfile: Dockerfile
+    container_name: voltgym_wordpress
+    restart: unless-stopped
+    environment:
+      - WORDPRESS_DB_HOST=mysql
+      - WORDPRESS_DB_NAME=${WP_DB_NAME}
+      - WORDPRESS_DB_USER=${DB_USERNAME}
+      - WORDPRESS_DB_PASSWORD=${DB_PASSWORD}
+      - WORDPRESS_TABLE_PREFIX=wp_
+      - LARAVEL_API_URL=${APP_URL}/api/v1
+    volumes:
+      - wordpress_app:/var/www/wordpress
+      - wordpress_uploads:/var/www/wordpress/wp-content/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - voltgym_net
+
+  # ─── MYSQL ────────────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: voltgym_mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - voltgym_net
+
+  # ─── ADMINER ──────────────────────────────────────────────────────────────
+  adminer:
+    image: adminer:4.8.1
+    container_name: voltgym_adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=mysql
+      - ADMINER_DESIGN=dracula
+    depends_on:
+      - mysql
+    networks:
+      - voltgym_net
+
+  # ─── REDIS ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: voltgym_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - voltgym_net
+
+# ─── VOLUMES ──────────────────────────────────────────────────────────────────
+volumes:
+  laravel_app:
+    driver: local
+  laravel_storage:
+    driver: local
+  wordpress_app:
+    driver: local
+  wordpress_uploads:
+    driver: local
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ─── NETWORKS ─────────────────────────────────────────────────────────────────
+networks:
+  voltgym_net:
+    driver: bridge
