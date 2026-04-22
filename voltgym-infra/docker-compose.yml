@@ -9,8 +9,8 @@ services:
       - "80:80"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - laravel_app:/var/www/laravel:ro
-      - wordpress_app:/var/www/wordpress:ro
+      - ../server:/var/www/laravel:ro
+      - ../wordpress:/var/www/wordpress:ro
     depends_on:
       - laravel
       - wordpress
@@ -39,7 +39,7 @@ services:
       - QUEUE_CONNECTION=redis
       - SESSION_DRIVER=redis
     volumes:
-      - laravel_app:/var/www/laravel
+      - ../server:/var/www/laravel
       - laravel_storage:/var/www/laravel/storage
       - ./docker/laravel/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
     depends_on:
@@ -69,7 +69,7 @@ services:
       - REDIS_HOST=redis
       - QUEUE_CONNECTION=redis
     volumes:
-      - laravel_app:/var/www/laravel
+      - ../server:/var/www/laravel
       - laravel_storage:/var/www/laravel/storage
     depends_on:
       - laravel
@@ -100,7 +100,7 @@ services:
       - REDIS_HOST=redis
       - QUEUE_CONNECTION=redis
     volumes:
-      - laravel_app:/var/www/laravel
+      - ../server:/var/www/laravel
       - laravel_storage:/var/www/laravel/storage
     depends_on:
       - laravel
@@ -122,7 +122,7 @@ services:
       - WORDPRESS_TABLE_PREFIX=wp_
       - LARAVEL_API_URL=${APP_URL}/api/v1
     volumes:
-      - wordpress_app:/var/www/wordpress
+      - ../wordpress:/var/www/wordpress
       - wordpress_uploads:/var/www/wordpress/wp-content/uploads
     depends_on:
       mysql:
@@ -180,11 +180,7 @@ services:
 
 # ─── VOLUMES ──────────────────────────────────────────────────────────────────
 volumes:
-  laravel_app:
-    driver: local
   laravel_storage:
-    driver: local
-  wordpress_app:
     driver: local
   wordpress_uploads:
     driver: local
