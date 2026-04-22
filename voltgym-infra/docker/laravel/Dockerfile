@@ -39,11 +39,15 @@ COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/laravel
 
 # ─── Copy application code ────────────────────────────────────────────────────
-# Code is cloned by the deploy script into the named volume.
-# This layer just sets up the runtime environment.
+# Code is now mounted from the host.
+# We copy an entrypoint that ensures dependencies and DB migrations are complete.
 RUN chown -R www-data:www-data /var/www/laravel
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 USER www-data
 
 EXPOSE 9000
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm"]
