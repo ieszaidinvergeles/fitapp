@@ -42,7 +42,6 @@ services:
       - SESSION_DRIVER=redis
     volumes:
       - ../server/laravel:/var/www/laravel
-      - laravel_storage:/var/www/laravel/storage
       - ./docker/laravel/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
     depends_on:
       mysql:
@@ -72,7 +71,6 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - ../server/laravel:/var/www/laravel
-      - laravel_storage:/var/www/laravel/storage
     depends_on:
       - laravel
       - redis
@@ -103,7 +101,6 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - ../server/laravel:/var/www/laravel
-      - laravel_storage:/var/www/laravel/storage
     depends_on:
       - laravel
     networks:
@@ -185,8 +182,6 @@ services:
 
 # ─── VOLUMES ──────────────────────────────────────────────────────────────────
 volumes:
-  laravel_storage:
-    driver: local
   wordpress_app:
     driver: local
   wordpress_uploads:
