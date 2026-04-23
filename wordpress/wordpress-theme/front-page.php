@@ -51,7 +51,7 @@ get_header();
         <div class="mb-12 text-center md:text-left">
             <span class="text-primary-container font-headline font-bold uppercase tracking-[0.2em] text-xs mb-2 block">Performance Portal</span>
             <h1 class="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter leading-none uppercase italic">
-                DESPIERTA <br/>
+                DESPIERTA<br/>
                 <span class="text-primary-container">EL TRUENO.</span>
             </h1>
         </div>
@@ -78,7 +78,7 @@ get_header();
                             <label class="text-[10px] font-label font-black uppercase tracking-widest text-on-surface-variant">Password</label>
                             <a class="text-[10px] font-label font-black uppercase tracking-widest text-primary-fixed-dim hover:text-primary transition-colors" href="page-forgot-password.php">Forgot?</a>
                         </div>
-                        <input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:ring-2 focus:ring-primary-container text-on-surface placeholder:text-outline font-medium transition-all" name="password" placeholder="" type="password"/>
+                        <input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:ring-2 focus:ring-primary-container text-on-surface placeholder:text-outline font-medium transition-all" name="password" placeholder="" type="password"/>
                     </div>
                     <button class="w-full kinetic-gradient py-5 rounded-full font-headline font-black uppercase tracking-[0.15em] text-on-primary-container text-sm shadow-[0_10px_30px_rgba(212,251,0,0.2)] active:scale-95 transition-all duration-300 flex items-center justify-center gap-3" type="submit">
                         Enter Workspace
@@ -94,7 +94,7 @@ get_header();
                     </div>
                     <div class="space-y-2">
                         <label class="text-[10px] font-label font-black uppercase tracking-widest text-on-surface-variant px-1">Access Code</label>
-                        <input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:ring-2 focus:ring-primary-container text-on-surface placeholder:text-outline font-medium transition-all" name="staff_password" placeholder="" type="password"/>
+                        <input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:ring-2 focus:ring-primary-container text-on-surface placeholder:text-outline font-medium transition-all" name="staff_password" placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" type="password"/>
                     </div>
                     <button class="w-full kinetic-gradient py-5 rounded-full font-headline font-black uppercase tracking-[0.15em] text-on-primary-container text-sm shadow-[0_10px_30px_rgba(212,251,0,0.2)] active:scale-95 transition-all duration-300 flex items-center justify-center gap-3" type="submit">
                         Staff Access
