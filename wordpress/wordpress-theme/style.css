@@ -79,8 +79,16 @@ body {
     backdrop-filter: blur(12px);
 }
 
+.glow-button:hover {
+    box-shadow: 0 0 20px rgba(212, 251, 0, 0.3);
+}
+
 .text-glow {
     text-shadow: 0 0 15px rgba(212, 251, 0, 0.4);
+}
+
+.text-shadow-strong {
+    text-shadow: 0 4px 8px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
 }
 
 /* ──────────────────────────────────────────────
