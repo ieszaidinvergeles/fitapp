@@ -59,4 +59,9 @@ echo "$LOG_PREFIX Queue worker restarted."
 # Since WordPress code is now a local bind mount, git pull automatically syncs it!
 echo "$LOG_PREFIX WordPress theme naturally synced via bind mount."
 
+# ─── Restart all services to pick up changes ─────────────────────────────────
+echo "$LOG_PREFIX Restarting all services to pick up changes..."
+docker compose up -d
+echo "$LOG_PREFIX All services restarted."
+
 echo "$LOG_PREFIX ✓ Auto-update finished successfully. New commit: $REMOTE_HASH"

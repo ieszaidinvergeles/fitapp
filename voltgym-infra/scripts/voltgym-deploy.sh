@@ -33,10 +33,23 @@ fi
 # Load variables
 source .env
 
+# ─── Check if Docker images already exist ──────────────────────────────────────
+if docker images | grep -q voltgym; then
+    echo "  Docker images already exist. Skipping build to preserve WordPress data."
+    SKIP_BUILD=true
+else
+    SKIP_BUILD=false
+fi
+
 # ─── 2. Build and start Docker services ──────────────────────────────────────
-echo "[2/4] Building Docker images and starting services..."
-docker compose build --no-cache
-docker compose up -d
+if [ "$SKIP_BUILD" = false ]; then
+    echo "[2/4] Building Docker images and starting services..."
+    docker compose build --no-cache
+    docker compose up -d
+else
+    echo "[2/4] Starting services (skipping build)..."
+    docker compose up -d
+fi
 
 # ─── 3. Wait for MySQL to be healthy ─────────────────────────────────────────
 echo "[3/4] Waiting for MySQL to be ready..."
