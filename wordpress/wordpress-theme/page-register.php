@@ -14,6 +14,7 @@ $error = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $response = api_post('/auth/register', [
+        'username'              => $_POST['username']              ?? '',
         'full_name'             => $_POST['full_name']             ?? '',
         'email'                 => $_POST['email']                 ?? '',
         'password'              => $_POST['password']              ?? '',
@@ -78,7 +79,14 @@ get_header();
                         <input class="w-full bg-surface-container-highest border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-600 focus:ring-1 focus:ring-primary/30 transition-all" name="full_name" placeholder="Max Power" type="text" value="<?= h($_POST['full_name'] ?? '', '') ?>"/>
                     </div>
                 </div>
+
                 <div class="space-y-2">
+                    <label class="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Username</label>
+                    <div class="relative group">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors">alternate_email</span>
+                        <input class="w-full bg-surface-container-highest border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-600 focus:ring-1 focus:ring-primary/30 transition-all" name="username" placeholder="maxpower" maxlength="20" required type="text" value="<?= h($_POST['username'] ?? '', '') ?>"/>
+                    </div>
+                </div>                <div class="space-y-2">
                     <label class="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Email Address</label>
                     <div class="relative group">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors">mail</span>
@@ -106,14 +114,14 @@ get_header();
                         <label class="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Password</label>
                         <div class="relative group">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors">lock</span>
-                            <input class="w-full bg-surface-container-highest border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-600 focus:ring-1 focus:ring-primary/30 transition-all" name="password" placeholder="" type="password"/>
+                            <input class="w-full bg-surface-container-highest border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-600 focus:ring-1 focus:ring-primary/30 transition-all" name="password" placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" type="password"/>
                         </div>
                     </div>
                     <div class="space-y-2">
                         <label class="font-label text-[10px] font-bold uppercase tracking-widest text-on-surface-variant ml-1">Confirm</label>
                         <div class="relative group">
                             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-primary transition-colors">verified_user</span>
-                            <input class="w-full bg-surface-container-highest border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-600 focus:ring-1 focus:ring-primary/30 transition-all" name="password_confirmation" placeholder="" type="password"/>
+                            <input class="w-full bg-surface-container-highest border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-600 focus:ring-1 focus:ring-primary/30 transition-all" name="password_confirmation" placeholder="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" type="password"/>
                         </div>
                     </div>
                 </div>
