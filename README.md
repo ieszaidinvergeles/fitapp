@@ -65,7 +65,7 @@ Tags follow [Semantic Versioning](https://semver.org/) as `vMAJOR.MINOR.PATCH`.
 
 ## Installation Guide
 
-The infrastructure follows SOLID and KISS principles, orchestrated using Relative Bind Mounts. 
+The infrastructure follows SOLID and KISS principles, orchestrated using Relative Bind Mounts.
 
 ### Option A: Hosting on Linux (Production Server)
 
@@ -74,13 +74,17 @@ The infrastructure follows SOLID and KISS principles, orchestrated using Relativ
    git clone https://github.com/ieszaidinvergeles/fitapp.git
    cd fitapp/voltgym-infra
    ```
-2. **Execute Deployment Script:**
+2. **Create the environment file if needed:**
    ```bash
-   chmod +x ./scripts/voltgym-deploy.sh ./docker/laravel/entrypoint.sh 
+   cp .env.example .env
+   ```
+3. **Execute Deployment Script:**
+   ```bash
+   chmod +x ./scripts/voltgym-deploy.sh ./docker/laravel/entrypoint.sh
    ./scripts/voltgym-deploy.sh
    ```
 
-*Containers are configured with "restart: unless-stopped" and will persist across host reboots.*
+*Containers are configured with `restart: unless-stopped`, so they will restart automatically after a host reboot unless explicitly stopped.*
 
 ### Option B: Hosting on Windows (Local Development)
 
@@ -89,14 +93,96 @@ The infrastructure follows SOLID and KISS principles, orchestrated using Relativ
    git clone https://github.com/ieszaidinvergeles/fitapp.git
    cd fitapp/voltgym-infra
    ```
-2. **Create the Environment File:**
+2. **Create the environment file:**
    ```powershell
    copy .env.example .env
    ```
-3. **Execute Docker Compose Build:**
+3. **Launch the application:**
    ```powershell
    docker compose up -d --build
    ```
+
+### Updating an existing installation
+
+Use these commands when the app is already installed and you want to apply new repository changes.
+
+#### On Linux
+
+1. Pull the latest repository changes:
+   ```bash
+   cd fitapp/voltgym-infra
+   git pull origin main
+   ```
+2. Recreate services without rebuilding unless needed:
+   ```bash
+   docker compose up -d
+   ```
+3. If Dockerfile or image changes are required, rebuild first:
+   ```bash
+   docker compose build --no-cache
+   docker compose up -d
+   ```
+
+#### On Windows
+
+1. Update the repository:
+   ```powershell
+   cd fitapp/voltgym-infra
+   git pull origin main
+   ```
+2. Start services with the latest code:
+   ```powershell
+   docker compose up -d
+   ```
+3. If image rebuild is needed:
+   ```powershell
+   docker compose build --no-cache
+   docker compose up -d
+   ```
+
+### Stopping, starting, and restarting the deployed host
+
+These commands work from the `fitapp/voltgym-infra` folder after installation.
+
+#### Linux host
+
+- **Stop all services:**
+  ```bash
+  docker compose down
+  ```
+- **Start services again:**
+  ```bash
+  docker compose up -d
+  ```
+- **Restart running services:**
+  ```bash
+  docker compose restart
+  ```
+
+Because the containers use `restart: unless-stopped`, they will return automatically after a system reboot unless you stop them with `docker compose down`.
+
+#### Windows host
+
+- **Stop all services:**
+  ```powershell
+  docker compose down
+  ```
+- **Start services again:**
+  ```powershell
+  docker compose up -d
+  ```
+- **Restart running services:**
+  ```powershell
+  docker compose restart
+  ```
+
+If Docker Desktop is stopped, start Docker Desktop first, then run `docker compose up -d` in the `voltgym-infra` folder.
+
+### Notes for managed deployments
+
+- If the host was shut down completely, start the VM/container host first.
+- After boot, run `docker compose up -d` from `fitapp/voltgym-infra` to ensure all services come up.
+- Use `docker compose ps` to verify service status.
 
 ## Cloud Firewall Settings (Azure / AWS)
 
