@@ -1,8 +1,7 @@
 <?php
-/**
- * page-staff-dashboard.php  Staff Portal
- * GET /api/v1/staff/dashboard
- */
+/*
+Template Name: Client Dashboard
+*/
 require_once 'functions.php';
 require_advanced();
 
@@ -26,7 +25,7 @@ $page_title = 'Staff Portal';
 $active = 'staff';
 $GLOBALS['hide_global_header'] = true;
 $GLOBALS['hide_global_footer'] = true;
-get_header();
+voltgym_get_header();
 ?>
 <header class="bg-[#0d0f08] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50 border-b border-surface-container-high border-opacity-50">
     <div class="flex items-center gap-4">
@@ -40,7 +39,7 @@ get_header();
         <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary-container bg-surface-container-high text-primary-container font-headline font-bold">
             <?= strtoupper(substr(h($user['full_name'] ?? $user['username'] ?? 'S'), 0, 1)) ?>
         </div>
-        <a href="page-logout.php" class="text-zinc-500 hover:text-error transition-colors ml-2">
+        <a href="<?= esc_url(home_url('/?pagename=logout')) ?>" class="text-zinc-500 hover:text-error transition-colors ml-2">
             <span class="material-symbols-outlined">logout</span>
         </a>
     </div>
@@ -156,8 +155,8 @@ get_header();
 </main>
 
 <?php
-get_template_part('template-parts/nav', 'staff');
-get_footer();
+voltgym_get_template_part('template-parts/nav', 'staff');
+voltgym_get_footer();
 unset($GLOBALS['hide_global_header']);
 unset($GLOBALS['hide_global_footer']);
 ?>

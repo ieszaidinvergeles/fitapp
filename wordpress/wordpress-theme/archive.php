@@ -3,7 +3,7 @@
  * archive.php — Archive Template
  * Displays archive pages (categories, tags, dates, authors)
  */
-get_header();
+voltgym_get_header();
 ?>
 <main class="min-h-screen pt-10 pb-32 px-6 max-w-7xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8">
@@ -36,7 +36,7 @@ get_header();
                 <p class="text-on-surface-variant">No posts found.</p>
             <?php endif; ?>
         </section>
-        <?php get_sidebar(); ?>
+        <?php voltgym_get_sidebarbar(); ?>
     </div>
 </main>
-<?php get_footer(); ?>
+<?php voltgym_get_footer(); ?>

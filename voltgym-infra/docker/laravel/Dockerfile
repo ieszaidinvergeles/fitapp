@@ -28,7 +28,7 @@ RUN apk add --no-cache \
 
 # ─── Redis extension ──────────────────────────────────────────────────────────
 RUN apk add --no-cache $PHPIZE_DEPS \
-    && pecl install redis \
+    && pecl install redis-6.0.2 \
     && docker-php-ext-enable redis \
     && apk del $PHPIZE_DEPS
 

@@ -3,7 +3,7 @@
  * single.php — Single Post Template
  * Displays individual posts
  */
-get_header();
+voltgym_get_header();
 ?>
 <main class="min-h-screen pt-10 pb-32 px-6 max-w-7xl mx-auto">
     <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-8">
@@ -38,4 +38,4 @@ get_header();
         <?php get_sidebar(); ?>
     </div>
 </main>
-<?php get_footer(); ?>
+<?php voltgym_get_footer(); ?>

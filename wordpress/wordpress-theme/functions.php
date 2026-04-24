@@ -11,7 +11,7 @@
  *      superglobals or cURL directly.
  */
 
-define('API_BASE',  'http://127.0.0.1:8000/api/v1');
+define('API_BASE', 'http://nginx:8000/api/v1');
 define('THEME_DIR', __DIR__);
 define('THEME_NAME', 'Volt Gym');
 
@@ -32,7 +32,7 @@ if (session_status() === PHP_SESSION_NONE) {
  * @param string|null $name Optional template suffix (e.g. 'staff' loads header-staff.php).
  * @return void
  */
-function get_header(?string $name = null): void
+function voltgym_get_header(?string $name = null): void
 {
     $file = THEME_DIR . '/header' . ($name ? "-{$name}" : '') . '.php';
     if (file_exists($file)) {
@@ -47,7 +47,7 @@ function get_header(?string $name = null): void
  * @param string|null $name Optional template suffix (e.g. 'staff' loads footer-staff.php).
  * @return void
  */
-function get_footer(?string $name = null): void
+function voltgym_get_footer(?string $name = null): void
 {
     $file = THEME_DIR . '/footer' . ($name ? "-{$name}" : '') . '.php';
     if (file_exists($file)) {
@@ -62,7 +62,7 @@ function get_footer(?string $name = null): void
  * @param string|null $name Optional template suffix.
  * @return void
  */
-function get_sidebar(?string $name = null): void
+function voltgym_get_sidebar(?string $name = null): void
 {
     $file = THEME_DIR . '/sidebar' . ($name ? "-{$name}" : '') . '.php';
     if (file_exists($file)) {
@@ -78,7 +78,7 @@ function get_sidebar(?string $name = null): void
  * @param string|null $name Optional name suffix (e.g. 'client' loads template-parts/nav-client.php).
  * @return void
  */
-function get_template_part(string $slug, ?string $name = null): void
+function voltgym_get_template_part(string $slug, ?string $name = null): void
 {
     $file = THEME_DIR . '/' . $slug . ($name ? "-{$name}" : '') . '.php';
     if (file_exists($file)) {
@@ -97,98 +97,98 @@ function get_template_part(string $slug, ?string $name = null): void
  * @param string $show The information key to retrieve.
  * @return void
  */
-function bloginfo(string $show): void
-{
-    $info = [
-        'name'        => THEME_NAME,
-        'description' => 'Cliente WordPress para Volt Gym - despierta el trueno',
-        'version'     => '1.0.0',
-        'charset'     => 'UTF-8',
-        'language'    => 'en',
-    ];
-    echo htmlspecialchars($info[$show] ?? '');
-}
+// function bloginfo(string $show): void
+// {
+//     $info = [
+//         'name'        => THEME_NAME,
+//         'description' => 'Cliente WordPress para Volt Gym - despierta el trueno',
+//         'version'     => '1.0.0',
+//         'charset'     => 'UTF-8',
+//         'language'    => 'en',
+//     ];
+//     echo htmlspecialchars($info[$show] ?? '');
+// }
 
-/**
- * Output the page title with optional blog name suffix.
- * Mimics WordPress wp_title().
- *
- * @param string $sep       Separator between page title and blog name.
- * @param bool   $display   Whether to echo or return.
- * @param string $seplocation Direction of the separator ('left' or 'right').
- * @return string|void
- */
-function wp_title(string $sep = '|', bool $display = true, string $seplocation = 'right')
-{
-    global $page_title;
-    $title = !empty($page_title) ? $page_title : THEME_NAME;
-    $full  = ($seplocation === 'right')
-        ? THEME_NAME . ' ' . $sep . ' ' . $title
-        : $title . ' ' . $sep . ' ' . THEME_NAME;
+// /**
+//  * Output the page title with optional blog name suffix.
+//  * Mimics WordPress wp_title().
+//  *
+//  * @param string $sep       Separator between page title and blog name.
+//  * @param bool   $display   Whether to echo or return.
+//  * @param string $seplocation Direction of the separator ('left' or 'right').
+//  * @return string|void
+//  */
+// function wp_title(string $sep = '|', bool $display = true, string $seplocation = 'right')
+// {
+//     global $page_title;
+//     $title = !empty($page_title) ? $page_title : THEME_NAME;
+//     $full  = ($seplocation === 'right')
+//         ? THEME_NAME . ' ' . $sep . ' ' . $title
+//         : $title . ' ' . $sep . ' ' . THEME_NAME;
 
-    if (!empty($page_title)) {
-        if ($display) {
-            echo htmlspecialchars($full);
-        } else {
-            return htmlspecialchars($full);
-        }
-    } else {
-        if ($display) {
-            echo htmlspecialchars(THEME_NAME);
-        } else {
-            return htmlspecialchars(THEME_NAME);
-        }
-    }
-}
+//     if (!empty($page_title)) {
+//         if ($display) {
+//             echo htmlspecialchars($full);
+//         } else {
+//             return htmlspecialchars($full);
+//         }
+//     } else {
+//         if ($display) {
+//             echo htmlspecialchars(THEME_NAME);
+//         } else {
+//             return htmlspecialchars(THEME_NAME);
+//         }
+//     }
+// }
 
-/**
- * Output the current user's display name.
- * Mimics WordPress the_author().
- *
- * @return void
- */
-function the_author(): void
-{
-    echo h($_SESSION['user']['full_name'] ?? $_SESSION['user']['username'] ?? 'User');
-}
+// /**
+//  * Output the current user's display name.
+//  * Mimics WordPress the_author().
+//  *
+//  * @return void
+//  */
+// function the_author(): void
+// {
+//     echo h($_SESSION['user']['full_name'] ?? $_SESSION['user']['username'] ?? 'User');
+// }
 
-/**
- * Return the current user's display name.
- * Mimics WordPress get_the_author().
- *
- * @return string
- */
-function get_the_author(): string
-{
-    return h($_SESSION['user']['full_name'] ?? $_SESSION['user']['username'] ?? 'User');
-}
+// /**
+//  * Return the current user's display name.
+//  * Mimics WordPress get_the_author().
+//  *
+//  * @return string
+//  */
+// function get_the_author(): string
+// {
+//     return h($_SESSION['user']['full_name'] ?? $_SESSION['user']['username'] ?? 'User');
+// }
 
-/**
- * Enqueue a CSS stylesheet link into the page head.
- * Mimics WordPress wp_enqueue_style() — in standalone mode it just echoes the link.
- *
- * @param string $handle Unique handle identifier.
- * @param string $src    URL to the stylesheet.
- * @return void
- */
-function wp_enqueue_style(string $handle, string $src): void
-{
-    echo '<link rel="stylesheet" id="' . htmlspecialchars($handle) . '-css" href="' . htmlspecialchars($src) . '">' . PHP_EOL;
-}
+// /**
+//  * Enqueue a CSS stylesheet link into the page head.
+//  * Mimics WordPress wp_enqueue_style() — in standalone mode it just echoes the link.
+//  *
+//  * @param string $handle Unique handle identifier.
+//  * @param string $src    URL to the stylesheet.
+//  * @return void
+//  */
+// function wp_enqueue_style(string $handle, string $src): void
+// {
+//     echo '<link rel="stylesheet" id="' . htmlspecialchars($handle) . '-css" href="' . htmlspecialchars($src) . '">' . PHP_EOL;
+// }
 
-/**
- * Returns the stylesheet directory URI (root of the theme).
- * Mimics WordPress get_stylesheet_directory_uri().
- *
- * @return string
- */
-function get_stylesheet_directory_uri(): string
-{
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $dir      = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-    return $protocol . '://' . $host . $dir;
-}
+// /**
+//  * Returns the stylesheet directory URI (root of the theme).
+//  * Mimics WordPress get_stylesheet_directory_uri().
+//  *
+//  * @return string
+//  */
+// function get_stylesheet_directory_uri(): string
+// {
+//     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+//     $host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
+//     $dir      = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+//     return $protocol . '://' . $host . $dir;
+// }
 
 // ─────────────────────────────────────────────────────────────────
 // API COMMUNICATION FUNCTIONS
@@ -317,7 +317,7 @@ function is_logged_in(): bool
 function require_login(): void
 {
     if (!is_logged_in()) {
-        header('Location: front-page.php');
+        header('Location: ' . home_url('/'));
         exit;
     }
 }
@@ -392,7 +392,7 @@ function is_advanced(): bool
  *
  * @return bool
  */
-function is_admin(): bool
+function is_fitapp_admin(): bool
 {
     return get_user_role() === 'admin';
 }
@@ -455,7 +455,9 @@ function is_client_role(): bool
  */
 function get_role_home_path(): string
 {
-    return is_advanced() ? 'page-staff-dashboard.php' : 'page-client-dashboard.php';
+    return is_advanced()
+        ? home_url('/?pagename=staff-dashboard')
+        : home_url('/?pagename=client-dashboard');
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -506,7 +508,7 @@ function render_wp_placeholder_page(string $title, string $description, string $
 
     $GLOBALS['hide_global_header'] = true;
     $GLOBALS['hide_global_footer'] = true;
-    get_header();
+    voltgym_get_header();
     ?>
     <main class="pt-24 pb-32 px-6 max-w-5xl mx-auto min-h-screen">
         <section class="mb-10">
@@ -519,18 +521,18 @@ function render_wp_placeholder_page(string $title, string $description, string $
                 La logica principal del flujo queda dentro de este cliente.
             </p>
             <div class="mt-6 flex gap-3">
-                <a href="<?= $staffNav ? 'page-staff-dashboard.php' : 'page-client-dashboard.php' ?>" class="kinetic-gradient text-on-primary-container px-5 py-3 rounded-full text-xs font-black uppercase tracking-widest">
+                <a href="<?= esc_url(get_role_home_path()) ?>" class="kinetic-gradient text-on-primary-container px-5 py-3 rounded-full text-xs font-black uppercase tracking-widest">
                     Volver al panel
                 </a>
-                <a href="front-page.php" class="px-5 py-3 rounded-full border border-outline-variant/40 text-xs font-black uppercase tracking-widest">
+                <a href="<?= esc_url(home_url('/')) ?>" class="px-5 py-3 rounded-full border border-outline-variant/40 text-xs font-black uppercase tracking-widest">
                     Inicio
                 </a>
             </div>
         </section>
     </main>
     <?php
-    get_template_part('template-parts/nav', $staffNav ? 'staff' : 'client');
-    get_footer();
+    voltgym_get_template_part('template-parts/nav', $staffNav ? 'staff' : 'client');
+    voltgym_get_footer();
     unset($GLOBALS['hide_global_header'], $GLOBALS['hide_global_footer']);
 }
 
@@ -547,7 +549,7 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
     $page_title = $title;
     $GLOBALS['hide_global_header'] = true;
     $GLOBALS['hide_global_footer'] = true;
-    get_header();
+    voltgym_get_header();
     ?>
     <header class="fixed top-0 z-40 w-full bg-[#0d0f08] border-b border-outline-variant/20 px-6 py-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -555,27 +557,27 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
             <span class="font-headline font-black uppercase tracking-tight text-primary-container">Volt Gym</span>
             <span class="text-[10px] px-2 py-1 rounded-full bg-surface-container text-on-surface-variant uppercase tracking-widest font-black"><?= h(get_user_role(), 'guest') ?></span>
         </div>
-        <a href="page-logout.php" class="text-xs font-black uppercase tracking-widest text-on-surface-variant hover:text-primary-container transition-colors">Logout</a>
+        <a href="<?= esc_url(home_url('/?pagename=logout')) ?>" class="text-xs font-black uppercase tracking-widest text-on-surface-variant hover:text-primary-container transition-colors">Logout</a>
     </header>
     <main class="pt-24 pb-32 px-6 max-w-6xl mx-auto min-h-screen">
         <nav class="mb-6 overflow-x-auto no-scrollbar">
             <div class="flex gap-2 min-w-max">
                 <?php if ($staffNav): ?>
-                    <a href="page-staff-dashboard.php" class="px-4 py-2 rounded-full bg-surface-container-high text-xs font-black uppercase tracking-wider">Dashboard</a>
-                    <a href="page-staff-attendance.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Attendance</a>
-                    <a href="page-staff-manage-classes.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Classes</a>
-                    <a href="page-staff-manage-routines.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Routines</a>
-                    <a href="page-staff-rooms.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Rooms</a>
+                    <a href="<?= esc_url(home_url('/?pagename=staff-dashboard')) ?>" class="px-4 py-2 rounded-full bg-surface-container-high text-xs font-black uppercase tracking-wider">Dashboard</a>
+                    <a href="<?= esc_url(home_url('/?pagename=staff-attendance')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Attendance</a>
+                    <a href="<?= esc_url(home_url('/?pagename=staff-manage-classes')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Classes</a>
+                    <a href="<?= esc_url(home_url('/?pagename=staff-manage-routines')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Routines</a>
+                    <a href="<?= esc_url(home_url('/?pagename=staff-rooms')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Rooms</a>
                     <?php if (can_manage_members()): ?>
-                        <a href="page-staff-admin-users.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Users</a>
+                        <a href="<?= esc_url(home_url('/?pagename=staff-admin-users')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Users</a>
                     <?php endif; ?>
                 <?php else: ?>
-                    <a href="page-client-dashboard.php" class="px-4 py-2 rounded-full bg-surface-container-high text-xs font-black uppercase tracking-wider">Dashboard</a>
-                    <a href="page-client-classes.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Classes</a>
-                    <a href="page-client-bookings.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Bookings</a>
-                    <a href="page-client-routines.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Routines</a>
-                    <a href="page-client-meal-schedule.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Meals</a>
-                    <a href="page-client-settings.php" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Settings</a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-dashboard')) ?>" class="px-4 py-2 rounded-full bg-surface-container-high text-xs font-black uppercase tracking-wider">Dashboard</a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-classes')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Classes</a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-bookings')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Bookings</a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-routines')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Routines</a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-meal-schedule')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Meals</a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-settings')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Settings</a>
                 <?php endif; ?>
             </div>
         </nav>
@@ -594,8 +596,8 @@ function wp_app_page_end(bool $staffNav = false): void
     ?>
     </main>
     <?php
-    get_template_part('template-parts/nav', $staffNav ? 'staff' : 'client');
-    get_footer();
+    voltgym_get_template_part('template-parts/nav', $staffNav ? 'staff' : 'client');
+    voltgym_get_footer();
     unset($GLOBALS['hide_global_header'], $GLOBALS['hide_global_footer']);
 }
 
@@ -651,71 +653,71 @@ function h($value, string $default = '—'): string
  * @param string $url Raw URL.
  * @return string
  */
-function esc_url(string $url): string
-{
-    return htmlspecialchars(filter_var($url, FILTER_SANITIZE_URL));
-}
+// function esc_url(string $url): string
+// {
+//     return htmlspecialchars(filter_var($url, FILTER_SANITIZE_URL));
+// }
 
-// ─────────────────────────────────────────────────────────────────
-// CACHE FUNCTIONS (Transient-like for standalone)
-// ─────────────────────────────────────────────────────────────────
+// // ─────────────────────────────────────────────────────────────────
+// // CACHE FUNCTIONS (Transient-like for standalone)
+// // ─────────────────────────────────────────────────────────────────
 
-/**
- * Set a transient cache value.
- * Mimics WordPress set_transient().
- *
- * @param string $key        Cache key.
- * @param mixed  $value      Value to cache.
- * @param int    $expiration Expiration time in seconds (default 1 hour).
- * @return bool
- */
-function set_transient(string $key, $value, int $expiration = 3600): bool
-{
-    $cache_dir = THEME_DIR . '/cache';
-    if (!is_dir($cache_dir)) {
-        mkdir($cache_dir, 0755, true);
-    }
-    $cache_file = $cache_dir . '/' . md5($key) . '.cache';
-    $data = [
-        'value' => $value,
-        'expires' => time() + $expiration,
-    ];
-    return file_put_contents($cache_file, serialize($data)) !== false;
-}
+// /**
+//  * Set a transient cache value.
+//  * Mimics WordPress set_transient().
+//  *
+//  * @param string $key        Cache key.
+//  * @param mixed  $value      Value to cache.
+//  * @param int    $expiration Expiration time in seconds (default 1 hour).
+//  * @return bool
+//  */
+// function set_transient(string $key, $value, int $expiration = 3600): bool
+// {
+//     $cache_dir = THEME_DIR . '/cache';
+//     if (!is_dir($cache_dir)) {
+//         mkdir($cache_dir, 0755, true);
+//     }
+//     $cache_file = $cache_dir . '/' . md5($key) . '.cache';
+//     $data = [
+//         'value' => $value,
+//         'expires' => time() + $expiration,
+//     ];
+//     return file_put_contents($cache_file, serialize($data)) !== false;
+// }
 
-/**
- * Get a transient cache value.
- * Mimics WordPress get_transient().
- *
- * @param string $key Cache key.
- * @return mixed|false
- */
-function get_transient(string $key)
-{
-    $cache_file = THEME_DIR . '/cache/' . md5($key) . '.cache';
-    if (file_exists($cache_file)) {
-        $data = unserialize(file_get_contents($cache_file));
-        if ($data['expires'] > time()) {
-            return $data['value'];
-        } else {
-            unlink($cache_file);
-        }
-    }
-    return false;
-}
+// /**
+//  * Get a transient cache value.
+//  * Mimics WordPress get_transient().
+//  *
+//  * @param string $key Cache key.
+//  * @return mixed|false
+//  */
+// function get_transient(string $key)
+// {
+//     $cache_file = THEME_DIR . '/cache/' . md5($key) . '.cache';
+//     if (file_exists($cache_file)) {
+//         $data = unserialize(file_get_contents($cache_file));
+//         if ($data['expires'] > time()) {
+//             return $data['value'];
+//         } else {
+//             unlink($cache_file);
+//         }
+//     }
+//     return false;
+// }
 
-/**
- * Delete a transient cache value.
- * Mimics WordPress delete_transient().
- *
- * @param string $key Cache key.
- * @return bool
- */
-function delete_transient(string $key): bool
-{
-    $cache_file = THEME_DIR . '/cache/' . md5($key) . '.cache';
-    if (file_exists($cache_file)) {
-        return unlink($cache_file);
-    }
-    return true;
-}
+// /**
+//  * Delete a transient cache value.
+//  * Mimics WordPress delete_transient().
+//  *
+//  * @param string $key Cache key.
+//  * @return bool
+//  */
+// function delete_transient(string $key): bool
+// {
+//     $cache_file = THEME_DIR . '/cache/' . md5($key) . '.cache';
+//     if (file_exists($cache_file)) {
+//         return unlink($cache_file);
+//     }
+//     return true;
+// }

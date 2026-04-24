@@ -3,7 +3,7 @@
  * 404.php — 404 Error Template
  * Displays when a page is not found
  */
-get_header();
+voltgym_get_header();
 ?>
 <main class="min-h-screen flex items-center justify-center px-6">
     <div class="text-center">
@@ -20,4 +20,4 @@ get_header();
         </a>
     </div>
 </main>
-<?php get_footer(); ?>
+<?php voltgym_get_footer(); ?>

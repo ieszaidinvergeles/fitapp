@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error = api_message($response) ?? 'Login failed.';
 }
 
-get_header();
+voltgym_get_header();
 ?>
 <div class="fixed inset-0 z-0">
     <div class="absolute inset-0 bg-gradient-to-b from-surface-dim/40 via-surface-dim/80 to-surface-dim z-10"></div>
@@ -66,7 +66,7 @@ get_header();
                 <button type="button" class="relative z-10 flex-1 py-3 text-sm font-headline font-bold uppercase tracking-wider text-on-surface-variant transition-colors duration-300" id="employee-tab" onclick="switchTab('staff')">Staff</button>
             </div>
 
-            <form method="POST" action="front-page.php">
+            <form method="POST" action="<?php echo esc_url(home_url('/')); ?>">
                 <div id="user-fields" class="space-y-6">
                     <input type="hidden" name="tab" value="user"/>
                     <div class="space-y-2">
@@ -76,7 +76,7 @@ get_header();
                     <div class="space-y-2">
                         <div class="flex justify-between items-center px-1">
                             <label class="text-[10px] font-label font-black uppercase tracking-widest text-on-surface-variant">Password</label>
-                            <a class="text-[10px] font-label font-black uppercase tracking-widest text-primary-fixed-dim hover:text-primary transition-colors" href="page-forgot-password.php">Forgot?</a>
+                            <a class="text-[10px] font-label font-black uppercase tracking-widest text-primary-fixed-dim hover:text-primary transition-colors" href="<?php echo home_url('/?pagename=forgot-password'); ?>">Forgot?</a>
                         </div>
                         <input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:ring-2 focus:ring-primary-container text-on-surface placeholder:text-outline font-medium transition-all" name="password" placeholder="" type="password"/>
                     </div>
@@ -148,7 +148,7 @@ switchTab('staff');
 <?php endif; ?>
 </script>
 <?php
-get_footer();
+voltgym_get_footer();
 unset($GLOBALS['hide_global_header']);
 unset($GLOBALS['hide_global_footer']);
 ?>

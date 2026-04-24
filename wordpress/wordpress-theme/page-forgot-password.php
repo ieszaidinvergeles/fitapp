@@ -1,4 +1,7 @@
 <?php
+/*
+Template Name: Forgot Password
+*/
 require_once 'functions.php';
 
 $page_title                     = 'Forgot Password';
@@ -19,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-get_header();
+voltgym_get_header();
 ?>
 
 <!-- ── Fixed top bar ─────────────────────────────────────── -->
@@ -28,7 +31,7 @@ get_header();
         VOLT GYM
     </div>
     <a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors duration-200"
-       href="front-page.php">
+       href="<?php echo home_url('/'); ?>">
         <span class="material-symbols-outlined text-sm">arrow_back</span>
         <span class="font-label text-xs font-bold tracking-widest uppercase">Login</span>
     </a>
@@ -57,7 +60,7 @@ get_header();
         <?php show_success($success); ?>
 
         <!-- Reset form -->
-        <form method="POST" action="page-forgot-password.php" class="space-y-6">
+        <form method="POST" action="<?php echo esc_url(get_permalink()); ?>" class="space-y-6">
 
             <div class="group relative">
                 <label class="block font-label text-[10px] font-extrabold uppercase tracking-widest text-primary-fixed-dim mb-2 ml-1"
@@ -95,7 +98,7 @@ get_header();
         <!-- Support link -->
         <div class="mt-12 flex flex-col items-center gap-6">
             <a class="text-on-surface-variant hover:text-on-surface font-label text-sm font-bold uppercase tracking-widest flex items-center gap-2 transition-colors"
-               href="front-page.php">
+               href="<?php echo home_url('/'); ?>">
                 <span class="material-symbols-outlined text-base">support_agent</span>
                 Contact Support
             </a>
@@ -125,6 +128,6 @@ get_header();
 </div>
 
 <?php
-get_footer();
+voltgym_get_footer();
 unset($GLOBALS['hide_global_header'], $GLOBALS['hide_global_footer']);
 ?>

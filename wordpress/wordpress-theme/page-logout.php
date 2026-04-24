@@ -1,4 +1,8 @@
 <?php
+/*
+Template Name: Logout
+*/
+require_once 'functions.php';
 if (session_status() === PHP_SESSION_NONE) {
     session_name('VOLTGYM_WPSESSID');
     session_start();
@@ -11,6 +15,6 @@ if (ini_get('session.use_cookies')) {
 }
 session_destroy();
 
-header('Location: front-page.php');
+header('Location: ' . home_url('/'));
 exit;
 

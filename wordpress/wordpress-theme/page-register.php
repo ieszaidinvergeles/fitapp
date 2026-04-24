@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error = $msg ?? 'Registration failed.';
 }
 
-get_header();
+voltgym_get_header();
 ?>
 <header class="bg-[#0d0f08] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
     <div class="flex items-center gap-4">
@@ -143,7 +143,7 @@ get_header();
     </div>
 </div>
 <?php
-get_footer();
+voltgym_get_footer();
 unset($GLOBALS['hide_global_header']);
 unset($GLOBALS['hide_global_footer']);
 ?>

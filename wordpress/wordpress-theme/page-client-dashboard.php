@@ -1,8 +1,7 @@
 <?php
-/**
- * page-client-dashboard.php  Member Portal
- * GET /api/v1/dashboard
- */
+/*
+Template Name: Staff Dashboard
+*/
 require_once 'functions.php';
 require_login();
 
@@ -23,7 +22,7 @@ $active     = 'dashboard';
 $GLOBALS['hide_global_header'] = true;
 $GLOBALS['hide_global_footer'] = true;
 
-get_header();
+voltgym_get_header();
 ?>
 <header class="fixed top-0 z-40 w-full bg-[#0d0f08] flex justify-between items-center px-6 py-4 border-b border-surface-container-high border-opacity-50">
     <div class="flex items-center gap-4">
@@ -194,8 +193,8 @@ get_header();
 </main>
 
 <?php
-get_template_part('template-parts/nav', 'client');
-get_footer();
+voltgym_get_template_part('template-parts/nav', 'client');
+voltgym_get_footer();
 unset($GLOBALS['hide_global_header']);
 unset($GLOBALS['hide_global_footer']);
 ?>
