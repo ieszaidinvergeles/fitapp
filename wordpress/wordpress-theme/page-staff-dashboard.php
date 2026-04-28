@@ -85,15 +85,15 @@ voltgym_get_header();
 
         <!-- Quick Actions -->
         <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <a href="page-staff-attendance.php" class="bg-primary-container text-on-primary-container p-6 rounded-3xl flex flex-col items-center justify-center gap-4 group hover:bg-primary transition-all active:scale-95 shadow-[0_0_15px_rgba(212,251,0,0.2)]">
+            <a href="<?= esc_url(home_url('/?pagename=staff-attendance')) ?>" class="bg-primary-container text-on-primary-container p-6 rounded-3xl flex flex-col items-center justify-center gap-4 group hover:bg-primary transition-all active:scale-95 shadow-[0_0_15px_rgba(212,251,0,0.2)]">
                 <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">fingerprint</span>
                 <span class="font-headline font-black uppercase text-sm tracking-widest text-center">Clock In/Out</span>
             </a>
-            <a href="page-staff-manage-classes.php" class="bg-surface-container-high text-on-surface p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-surface-bright transition-all active:scale-95 border border-outline-variant/10">
+            <a href="<?= esc_url(home_url('/?pagename=staff-manage-classes')) ?>" class="bg-surface-container-high text-on-surface p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-surface-bright transition-all active:scale-95 border border-outline-variant/10">
                 <span class="material-symbols-outlined text-4xl text-secondary">event</span>
                 <span class="font-headline font-black uppercase text-sm tracking-widest text-center">Manage Classes</span>
             </a>
-            <a href="page-staff-admin-users.php" class="bg-surface-container-high text-on-surface p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-surface-bright transition-all active:scale-95 border border-outline-variant/10">
+            <a href="<?= esc_url(home_url('/?pagename=staff-admin-users')) ?>" class="bg-surface-container-high text-on-surface p-6 rounded-3xl flex flex-col items-center justify-center gap-4 hover:bg-surface-bright transition-all active:scale-95 border border-outline-variant/10">
                 <span class="material-symbols-outlined text-4xl text-tertiary">how_to_reg</span>
                 <span class="font-headline font-black uppercase text-sm tracking-widest text-center">Manage Users</span>
             </a>
