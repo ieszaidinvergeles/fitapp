@@ -76,7 +76,7 @@ voltgym_get_header();
                     <div class="space-y-2">
                         <div class="flex justify-between items-center px-1">
                             <label class="text-[10px] font-label font-black uppercase tracking-widest text-on-surface-variant">Password</label>
-                            <a class="text-[10px] font-label font-black uppercase tracking-widest text-primary-fixed-dim hover:text-primary transition-colors" href="<?php echo home_url('/?pagename=forgot-password'); ?>">Forgot?</a>
+                            <a class="text-[10px] font-label font-black uppercase tracking-widest text-primary-fixed-dim hover:text-primary transition-colors" href="<?php echo esc_url(home_url('/?pagename=forgot-password')); ?>">Forgot?</a>
                         </div>
                         <input class="w-full bg-surface-container-highest border-none rounded-xl px-4 py-4 focus:ring-2 focus:ring-primary-container text-on-surface placeholder:text-outline font-medium transition-all" name="password" placeholder="" type="password"/>
                     </div>
@@ -104,7 +104,7 @@ voltgym_get_header();
             </form>
 
             <p class="mt-10 text-center text-[10px] font-label font-bold uppercase tracking-widest text-on-surface-variant">
-                Not a member? <a class="text-primary-container hover:underline underline-offset-4 decoration-2" href="page-register.php">Join the Elite</a>
+                Not a member? <a class="text-primary-container hover:underline underline-offset-4 decoration-2" href="<?php echo esc_url(home_url('/?pagename=register')); ?>">Join the Elite</a>
             </p>
         </div>
     </div>

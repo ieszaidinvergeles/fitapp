@@ -22,6 +22,113 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// WORDPRESS PAGE AUTO-PROVISIONING
+// Creates all required pages in the WP database if they don't exist.
+// ─────────────────────────────────────────────────────────────────
+
+/**
+ * All slugs that need a WordPress page entry.
+ * Each slug maps to a page-{slug}.php template automatically.
+ */
+function voltgym_required_pages(): array
+{
+    return [
+        'register'               => 'Register',
+        'forgot-password'        => 'Forgot Password',
+        'logout'                 => 'Logout',
+        'client-dashboard'       => 'Client Dashboard',
+        'client-classes'         => 'Classes',
+        'client-bookings'        => 'My Bookings',
+        'client-routines'        => 'My Routines',
+        'client-routine'         => 'Routine Detail',
+        'client-meal-schedule'   => 'Meal Schedule',
+        'client-settings'        => 'Settings',
+        'client-metrics'         => 'My Metrics',
+        'client-diet-plans'      => 'Diet Plans',
+        'client-exercises'       => 'Exercises',
+        'client-recipes'         => 'Recipes',
+        'staff-dashboard'        => 'Staff Dashboard',
+        'staff-attendance'       => 'Attendance',
+        'staff-manage-classes'   => 'Manage Classes',
+        'staff-create-class'     => 'Create Class',
+        'staff-edit-class'       => 'Edit Class',
+        'staff-cancel-class'     => 'Cancel Class',
+        'staff-class-bookings'   => 'Class Bookings',
+        'staff-manage-routines'  => 'Manage Routines',
+        'staff-create-routine'   => 'Create Routine',
+        'staff-rooms'            => 'Rooms',
+        'staff-notifications'    => 'Notifications',
+        'staff-admin-users'      => 'Users',
+        'staff-admin-user-create'=> 'Create User',
+        'staff-admin-user-edit'  => 'Edit User',
+    ];
+}
+
+/**
+ * Create any missing required pages in the WordPress database.
+ */
+function voltgym_create_required_pages(): void
+{
+    foreach (voltgym_required_pages() as $slug => $title) {
+        $existing = get_page_by_path($slug, OBJECT, 'page');
+        if (!$existing) {
+            wp_insert_post([
+                'post_title'   => $title,
+                'post_name'    => $slug,
+                'post_status'  => 'publish',
+                'post_type'    => 'page',
+                'post_content' => '',
+            ]);
+        }
+    }
+}
+
+// Run automatically when the theme is activated.
+add_action('after_switch_theme', 'voltgym_create_required_pages');
+
+// Also allow a manual trigger via ?voltgym_setup=1 (admin only).
+add_action('init', function () {
+    if (
+        isset($_GET['voltgym_setup']) &&
+        $_GET['voltgym_setup'] === '1' &&
+        current_user_can('manage_options')
+    ) {
+        voltgym_create_required_pages();
+        wp_redirect(admin_url('?voltgym_pages_created=1'));
+        exit;
+    }
+});
+
+// Show an admin notice if pages are missing.
+add_action('admin_notices', function () {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    if (isset($_GET['voltgym_pages_created'])) {
+        echo '<div class="notice notice-success is-dismissible"><p><strong>Volt Gym:</strong> Todas las páginas del tema han sido creadas correctamente.</p></div>';
+        return;
+    }
+
+    $missing = false;
+    foreach (array_keys(voltgym_required_pages()) as $slug) {
+        if (!get_page_by_path($slug, OBJECT, 'page')) {
+            $missing = true;
+            break;
+        }
+    }
+
+    if ($missing) {
+        $url = admin_url('?voltgym_setup=1');
+        echo '<div class="notice notice-warning is-dismissible">';
+        echo '<p><strong>Volt Gym:</strong> Hay páginas del tema que no existen aún en WordPress. ';
+        echo '<a href="' . esc_url($url) . '" class="button button-primary">Crear páginas ahora</a></p>';
+        echo '</div>';
+    }
+});
+
+
+// ─────────────────────────────────────────────────────────────────
 // WORDPRESS-STYLE TEMPLATE INCLUDE TAGS
 // ─────────────────────────────────────────────────────────────────
 
@@ -649,14 +756,71 @@ function h($value, string $default = '—'): string
 /**
  * Return a sanitized URL for use in href attributes.
  * Equivalent to WordPress esc_url().
+ * Guard: only defined when running outside WordPress (standalone PHP server).
  *
  * @param string $url Raw URL.
  * @return string
  */
-// function esc_url(string $url): string
-// {
-//     return htmlspecialchars(filter_var($url, FILTER_SANITIZE_URL));
-// }
+if (!function_exists('esc_url')) {
+    function esc_url(string $url): string
+    {
+        return htmlspecialchars(filter_var($url, FILTER_SANITIZE_URL));
+    }
+}
+
+/**
+ * Return the base URL of the standalone PHP client.
+ * Equivalent to WordPress home_url().
+ * Guard: only defined when running outside WordPress (standalone PHP server).
+ *
+ * @param string $path Optional path to append.
+ * @return string
+ */
+if (!function_exists('home_url')) {
+    function home_url(string $path = ''): string
+    {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $base   = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+
+        if ($path !== '' && $path !== '/') {
+            $parsed = parse_url($path);
+            $qs     = [];
+            if (!empty($parsed['query'])) {
+                parse_str($parsed['query'], $qs);
+            }
+
+            if (!empty($qs['pagename'])) {
+                $slug     = $qs['pagename'];
+                $filename = 'page-' . $slug . '.php';
+                unset($qs['pagename']);
+                $extra = !empty($qs) ? '?' . http_build_query($qs) : '';
+                return $scheme . '://' . $host . $base . '/' . $filename . $extra;
+            }
+
+            return $scheme . '://' . $host . $base . $path;
+        }
+
+        return $scheme . '://' . $host . $base . '/';
+    }
+}
+
+/**
+ * Perform an HTTP redirect and stop execution.
+ * Equivalent to WordPress wp_redirect() + exit.
+ * Guard: only defined when running outside WordPress (standalone PHP server).
+ *
+ * @param string $location Target URL.
+ * @param int    $status   HTTP status code (default 302).
+ * @return void
+ */
+if (!function_exists('wp_redirect')) {
+    function wp_redirect(string $location, int $status = 302): void
+    {
+        header('Location: ' . $location, true, $status);
+        exit;
+    }
+}
 
 // // ─────────────────────────────────────────────────────────────────
 // // CACHE FUNCTIONS (Transient-like for standalone)
