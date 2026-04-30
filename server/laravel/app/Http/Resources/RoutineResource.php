@@ -29,6 +29,9 @@ class RoutineResource extends JsonResource
             'description'              => $this->description,
             'difficulty_level'         => $this->difficulty_level,
             'estimated_duration_min'   => $this->estimated_duration_min,
+            'cover_image_url'          => $this->cover_image_url
+                                            ? route('routines.image', ['id' => $this->id])
+                                            : null,
             'creator_id'               => $this->creator_id,
             'associated_diet_plan_id'  => $this->associated_diet_plan_id,
             'creator'                  => new UserResource($this->whenLoaded('creator')),

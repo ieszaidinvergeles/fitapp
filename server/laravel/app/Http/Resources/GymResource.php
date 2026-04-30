@@ -30,6 +30,9 @@ class GymResource extends JsonResource
             'city'            => $this->city,
             'location_coords' => $this->location_coords,
             'phone'           => $this->phone,
+            'logo_url'        => $this->logo_url
+                                    ? route('gyms.logo', ['id' => $this->id])
+                                    : null,
             'manager_id'      => $this->manager_id,
             'manager'         => new UserResource($this->whenLoaded('manager')),
         ];

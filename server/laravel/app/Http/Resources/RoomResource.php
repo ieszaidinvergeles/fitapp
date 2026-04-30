@@ -24,11 +24,14 @@ class RoomResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'       => $this->id,
-            'gym_id'   => $this->gym_id,
-            'name'     => $this->name,
-            'capacity' => $this->capacity,
-            'gym'      => new GymResource($this->whenLoaded('gym')),
+            'id'        => $this->id,
+            'gym_id'    => $this->gym_id,
+            'name'      => $this->name,
+            'capacity'  => $this->capacity,
+            'image_url' => $this->image_url
+                            ? route('rooms.image', ['id' => $this->id])
+                            : null,
+            'gym'       => new GymResource($this->whenLoaded('gym')),
         ];
     }
 }

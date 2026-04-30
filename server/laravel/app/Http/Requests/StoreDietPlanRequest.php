@@ -14,8 +14,9 @@ class StoreDietPlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:80',
+            'name'             => 'required|string|max:80',
             'goal_description' => 'nullable|string',
+            'image'            => 'nullable|image|mimes:jpeg,png,webp,gif|max:2048',
         ];
     }
 }

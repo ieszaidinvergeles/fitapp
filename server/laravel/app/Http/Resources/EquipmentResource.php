@@ -25,7 +25,9 @@ class EquipmentResource extends JsonResource
             'id'                  => $this->id,
             'name'                => $this->name,
             'description'         => $this->description,
-            'image_url'           => $this->image_url,
+            'image_url'           => $this->image_url
+                                        ? route('equipment.image', ['id' => $this->id])
+                                        : null,
             'is_home_accessible'  => $this->is_home_accessible,
         ];
     }

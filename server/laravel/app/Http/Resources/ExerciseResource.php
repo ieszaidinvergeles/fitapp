@@ -26,7 +26,9 @@ class ExerciseResource extends JsonResource
             'name'                => $this->name,
             'description'         => $this->description,
             'target_muscle_group' => $this->target_muscle_group,
-            'image_url'           => $this->image_url,
+            'image_url'           => $this->image_url
+                                        ? route('exercises.image', ['id' => $this->id])
+                                        : null,
             'video_url'           => $this->video_url,
         ];
     }
