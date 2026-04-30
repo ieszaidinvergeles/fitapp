@@ -45,5 +45,16 @@ echo "Fixing permissions on storage and bootstrap/cache..."
 chmod -R 775 storage bootstrap/cache 2>/dev/null || true
 chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
 
+# Ensure the private image subdirectories exist inside the named volume.
+# Docker named volumes may be empty on first mount, so we create the required
+# folder structure here. This runs on every boot and is idempotent.
+echo "Bootstrapping private image storage directories..."
+PRIVATE_IMAGES_BASE="storage/app/private/images"
+for DIR in users exercises equipment recipes routines diet_plans rooms activities membership_plans gyms; do
+    mkdir -p "${PRIVATE_IMAGES_BASE}/${DIR}"
+done
+chmod -R 775 storage/app/private 2>/dev/null || true
+chown -R www-data:www-data storage/app/private 2>/dev/null || true
+
 echo "Starting PHP-FPM..."
 exec "$@"
