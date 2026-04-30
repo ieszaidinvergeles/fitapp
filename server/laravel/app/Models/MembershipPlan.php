@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string      $type
  * @property bool        $allow_partner_link
  * @property string      $price
+ * @property string|null $badge_image_url
  *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $activeUsers
@@ -32,6 +33,7 @@ class MembershipPlan extends Model
         'type',
         'allow_partner_link',
         'price',
+        'badge_image_url',
     ];
 
     /** @var array<string, string> */

@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string      $name
  * @property string|null $description
  * @property string      $intensity_level
+ * @property string|null $image_url
  *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\GymClass> $gymClasses
  */
@@ -29,6 +30,7 @@ class Activity extends Model
         'name',
         'description',
         'intensity_level',
+        'image_url',
     ];
 
     /**

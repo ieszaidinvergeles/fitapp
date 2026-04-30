@@ -1,13 +1,12 @@
-# Security Layer and API Resources — Laravel 11 FitApp Backend
+# Security Layer and API Resources — Laravel 11 Voltgym Backend
 
 **Date:** 2026-04-07 (Release: `v0.9.0-policies-security`) &nbsp;|&nbsp; **Updated:** 2026-04-07 (Release: `v0.10.0-resources`)
 
 # 1. Terminology Reference
 
-
 ## 1.1. Authentication vs Authorization
 
-| Concept | Definition | Where It Lives in FitApp |
+| Concept | Definition | Where It Lives in Voltgym |
 |---|---|---|
 | **Authentication** | Verifying *who* the user is | `auth:sanctum` middleware in `routes/api.php` |
 | **Authorization** | Verifying *what* the user is allowed to do | Laravel Policies evaluated per controller action |
@@ -56,7 +55,7 @@ Without a Resource, returning a model directly serializes every database column,
 
 ## 1.7. Multi-Tenancy
 
-FitApp hosts multiple gyms (tenants) in a single shared database. Each `User` with role `manager` or `staff` has a `current_gym_id` column indicating which gym they belong to. Multi-tenancy enforcement means that these users must only be able to create, read, update, or delete records that belong to their own gym.
+Voltgym hosts multiple gyms (tenants) in a single shared database. Each `User` with role `manager` or `staff` has a `current_gym_id` column indicating which gym they belong to. Multi-tenancy enforcement means that these users must only be able to create, read, update, or delete records that belong to their own gym.
 
 This is enforced throughout the Policies using the pattern:
 
@@ -201,7 +200,7 @@ public function create(User $user): bool
 }
 ```
 
-**Why:** These are global catalogue entities that define what FitApp offers. Only the global admin should be able to create, update, or delete them. Because `Gate::before` grants admins access before any policy runs, it is correct to return `false` here — non-admins are denied, admins bypass the policy entirely.
+**Why:** These are global catalogue entities that define what Voltgym offers. Only the global admin should be able to create, update, or delete them. Because `Gate::before` grants admins access before any policy runs, it is correct to return `false` here — non-admins are denied, admins bypass the policy entirely.
 
 ## 3.4. Manual Checks Eliminated from Controllers
 

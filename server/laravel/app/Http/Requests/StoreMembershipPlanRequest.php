@@ -14,10 +14,11 @@ class StoreMembershipPlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:80',
-            'type' => 'required|in:physical,online,duo',
+            'name'               => 'required|string|max:80',
+            'type'               => 'required|in:physical,online,duo',
             'allow_partner_link' => 'required|boolean',
-            'price' => 'required|numeric|min:0|max:9999.99',
+            'price'              => 'required|numeric|min:0|max:9999.99',
+            'image'              => 'nullable|image|mimes:jpeg,png,webp,gif|max:2048',
         ];
     }
 }

@@ -14,9 +14,10 @@ class StoreRoomRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'gym_id' => 'required|exists:gyms,id',
-            'name' => 'required|string|max:80',
+            'gym_id'   => 'required|exists:gyms,id',
+            'name'     => 'required|string|max:80',
             'capacity' => 'required|integer|min:1',
+            'image'    => 'nullable|image|mimes:jpeg,png,webp,gif|max:2048',
         ];
     }
 }

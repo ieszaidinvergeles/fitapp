@@ -14,12 +14,13 @@ class UpdateRoutineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'sometimes|required|string|max:80',
-            'description' => 'sometimes|required|string|max:280',
-            'creator_id' => 'sometimes|nullable|exists:users,id',
-            'difficulty_level' => 'sometimes|required|in:beginner,intermediate,advanced,expert',
-            'estimated_duration_min' => 'sometimes|required|integer|min:1',
+            'name'                    => 'sometimes|required|string|max:80',
+            'description'             => 'sometimes|required|string|max:280',
+            'creator_id'              => 'sometimes|nullable|exists:users,id',
+            'difficulty_level'        => 'sometimes|required|in:beginner,intermediate,advanced,expert',
+            'estimated_duration_min'  => 'sometimes|required|integer|min:1',
             'associated_diet_plan_id' => 'sometimes|nullable|exists:diet_plans,id',
+            'image'                   => 'sometimes|nullable|image|mimes:jpeg,png,webp,gif|max:2048',
         ];
     }
 }

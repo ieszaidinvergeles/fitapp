@@ -27,6 +27,7 @@ CREATE TABLE `activities` (
   `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `intensity_level` enum('low','medium','high','extreme') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -114,6 +115,7 @@ CREATE TABLE `diet_plans` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `goal_description` text COLLATE utf8mb4_unicode_ci,
+  `cover_image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -130,6 +132,7 @@ CREATE TABLE `equipment` (
   `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `is_home_accessible` tinyint(1) NOT NULL DEFAULT '0',
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -186,6 +189,7 @@ CREATE TABLE `gyms` (
   `city` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `location_coords` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `phone` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `logo_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `gyms_manager_id_foreign` (`manager_id`),
   CONSTRAINT `gyms_manager_id_foreign` FOREIGN KEY (`manager_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
@@ -205,6 +209,7 @@ CREATE TABLE `membership_plans` (
   `type` enum('physical','online','duo') COLLATE utf8mb4_unicode_ci NOT NULL,
   `allow_partner_link` tinyint(1) NOT NULL DEFAULT '0',
   `price` decimal(6,2) NOT NULL,
+  `badge_image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -280,6 +285,7 @@ CREATE TABLE `rooms` (
   `gym_id` bigint unsigned NOT NULL,
   `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
   `capacity` int NOT NULL,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `rooms_gym_id_foreign` (`gym_id`),
   CONSTRAINT `rooms_gym_id_foreign` FOREIGN KEY (`gym_id`) REFERENCES `gyms` (`id`) ON DELETE CASCADE
@@ -322,6 +328,7 @@ CREATE TABLE `routines` (
   `difficulty_level` enum('beginner','intermediate','advanced','expert') COLLATE utf8mb4_unicode_ci NOT NULL,
   `estimated_duration_min` int NOT NULL,
   `associated_diet_plan_id` bigint unsigned DEFAULT NULL,
+  `cover_image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `routines_creator_id_foreign` (`creator_id`),
   KEY `routines_associated_diet_plan_id_foreign` (`associated_diet_plan_id`),

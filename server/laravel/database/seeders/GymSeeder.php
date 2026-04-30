@@ -21,20 +21,20 @@ class GymSeeder extends Seeder
     {
         $fixed = [
             [
-                'name'            => 'FitApp Madrid Centro',
-                'address'         => 'Calle Gran Vía 45',
-                'city'            => 'Madrid',
-                'phone'           => '+34 910 000 001',
+                'name' => 'Voltgym Madrid Centro',
+                'address' => 'Calle Gran Vía 45',
+                'city' => 'Madrid',
+                'phone' => '+34 910 000 001',
                 'location_coords' => '40.4200,-3.7050',
-                'manager_id'      => null,
+                'manager_id' => null,
             ],
             [
-                'name'            => 'FitApp Barcelona',
-                'address'         => 'Avinguda Diagonal 160',
-                'city'            => 'Barcelona',
-                'phone'           => '+34 930 000 002',
+                'name' => 'Voltgym Barcelona',
+                'address' => 'Avinguda Diagonal 160',
+                'city' => 'Barcelona',
+                'phone' => '+34 930 000 002',
                 'location_coords' => '41.3951,2.1620',
-                'manager_id'      => null,
+                'manager_id' => null,
             ],
         ];
 

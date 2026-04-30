@@ -23,12 +23,13 @@ return new class extends Migration
     {
         Schema::create('gyms', function (Blueprint $table) {
             $table->id();
-            $table->string('name',80);
+            $table->string('name', 80);
             $table->unsignedBigInteger('manager_id')->nullable();
             $table->string('address', 160);
             $table->string('city', 80);
             $table->string('location_coords', 100)->nullable();
             $table->string('phone', 20);
+            $table->string('logo_url', 500)->nullable();
         });
     }
 

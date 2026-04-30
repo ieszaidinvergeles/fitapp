@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string      $name
  * @property string|null $description
  * @property bool        $is_home_accessible
+ * @property string|null $image_url
  *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Gym> $gyms
  */
@@ -29,6 +30,7 @@ class Equipment extends Model
         'name',
         'description',
         'is_home_accessible',
+        'image_url',
     ];
 
     /** @var array<string, string> */

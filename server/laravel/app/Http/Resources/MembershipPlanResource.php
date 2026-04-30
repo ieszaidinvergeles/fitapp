@@ -22,13 +22,14 @@ class MembershipPlanResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'                   => $this->id,
-            'name'                 => $this->name,
-            'description'          => $this->description,
-            'type'                 => $this->type,
-            'price'                => $this->price,
-            'duration_months'      => $this->duration_months,
-            'allow_partner_link'   => $this->allow_partner_link,
+            'id'                 => $this->id,
+            'name'               => $this->name,
+            'type'               => $this->type,
+            'price'              => $this->price,
+            'allow_partner_link' => $this->allow_partner_link,
+            'badge_image_url'    => $this->badge_image_url
+                                        ? route('membership-plans.image', ['id' => $this->id])
+                                        : null,
         ];
     }
 }

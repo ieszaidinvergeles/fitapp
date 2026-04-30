@@ -14,9 +14,10 @@ class StoreActivityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:80',
-            'description' => 'nullable|string|max:280',
+            'name'            => 'required|string|max:80',
+            'description'     => 'nullable|string|max:280',
             'intensity_level' => 'required|in:low,medium,high,extreme',
+            'image'           => 'nullable|image|mimes:jpeg,png,webp,gif|max:2048',
         ];
     }
 }

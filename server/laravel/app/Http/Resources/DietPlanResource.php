@@ -22,10 +22,12 @@ class DietPlanResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'          => $this->id,
-            'name'        => $this->name,
-            'description' => $this->description,
-            'goal'        => $this->goal,
+            'id'               => $this->id,
+            'name'             => $this->name,
+            'goal_description' => $this->goal_description,
+            'cover_image_url'  => $this->cover_image_url
+                                    ? route('diet-plans.image', ['id' => $this->id])
+                                    : null,
         ];
     }
 }

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('name', 80);
             $table->text('description')->nullable();
             $table->enum('intensity_level', ['low', 'medium', 'high', 'extreme']);
+            $table->string('image_url', 500)->nullable();
         });
     }
 

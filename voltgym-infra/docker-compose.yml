@@ -1,15 +1,19 @@
 services:
 
-  # ─── NGINX ────────────────────────────────────────────────────────────────
+  # â”€â”€â”€ NGINX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   nginx:
     image: nginx:1.25-alpine
     container_name: voltgym_nginx
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
       - "8000:8000"
+      - "8443:8443"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/ssl-init.sh:/docker-entrypoint.d/99-ssl-init.sh:ro
+      - ./ssl_certs:/etc/nginx/ssl:rw
       - ../server/laravel:/var/www/laravel:ro
       - wordpress_app:/var/www/wordpress:ro
       - ../wordpress/wordpress-theme:/var/www/wordpress/wp-content/themes/voltgym:ro
@@ -19,7 +23,7 @@ services:
     networks:
       - voltgym_net
 
-  # ─── LARAVEL (PHP-FPM) ────────────────────────────────────────────────────
+  # â”€â”€â”€ LARAVEL (PHP-FPM) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   laravel:
     build:
       context: ./docker/laravel
@@ -43,6 +47,7 @@ services:
     volumes:
       - ../server/laravel:/var/www/laravel
       - ./docker/laravel/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+      - laravel_images:/var/www/laravel/storage/app/private/images
     depends_on:
       mysql:
         condition: service_healthy
@@ -51,7 +56,7 @@ services:
     networks:
       - voltgym_net
 
-  # ─── LARAVEL QUEUE WORKER ─────────────────────────────────────────────────
+  # â”€â”€â”€ LARAVEL QUEUE WORKER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   queue:
     build:
       context: ./docker/laravel
@@ -71,13 +76,14 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - ../server/laravel:/var/www/laravel
+      - laravel_images:/var/www/laravel/storage/app/private/images
     depends_on:
       - laravel
       - redis
     networks:
       - voltgym_net
 
-  # ─── LARAVEL SCHEDULER ────────────────────────────────────────────────────
+  # â”€â”€â”€ LARAVEL SCHEDULER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   scheduler:
     build:
       context: ./docker/laravel
@@ -101,12 +107,13 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - ../server/laravel:/var/www/laravel
+      - laravel_images:/var/www/laravel/storage/app/private/images
     depends_on:
       - laravel
     networks:
       - voltgym_net
 
-  # ─── WORDPRESS (PHP-FPM) ──────────────────────────────────────────────────
+  # â”€â”€â”€ WORDPRESS (PHP-FPM) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   wordpress:
     build:
       context: ./docker/wordpress
@@ -130,7 +137,7 @@ services:
     networks:
       - voltgym_net
 
-  # ─── MYSQL ────────────────────────────────────────────────────────────────
+  # â”€â”€â”€ MYSQL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   mysql:
     image: mysql:8.0
     container_name: voltgym_mysql
@@ -154,7 +161,7 @@ services:
     networks:
       - voltgym_net
 
-  # ─── ADMINER ──────────────────────────────────────────────────────────────
+  # â”€â”€â”€ ADMINER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   adminer:
     image: adminer:4.8.1
     container_name: voltgym_adminer
@@ -169,7 +176,7 @@ services:
     networks:
       - voltgym_net
 
-  # ─── REDIS ────────────────────────────────────────────────────────────────
+  # â”€â”€â”€ REDIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   redis:
     image: redis:7.2-alpine
     container_name: voltgym_redis
@@ -180,7 +187,7 @@ services:
     networks:
       - voltgym_net
 
-# ─── VOLUMES ──────────────────────────────────────────────────────────────────
+# â”€â”€â”€ VOLUMES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 volumes:
   wordpress_app:
     driver: local
@@ -190,8 +197,11 @@ volumes:
     driver: local
   redis_data:
     driver: local
+  laravel_images:
+    driver: local
+    name: voltgym_laravel_images
 
-# ─── NETWORKS ─────────────────────────────────────────────────────────────────
+# â”€â”€â”€ NETWORKS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 networks:
   voltgym_net:
     driver: bridge

@@ -1,6 +1,6 @@
 # Frontend Documentation
 
-This folder contains documentation for the WordPress frontend that consumes the FitApp Laravel API.
+This folder contains documentation for the WordPress frontend that consumes the Voltgym Laravel API.
 
 ## Contents
 

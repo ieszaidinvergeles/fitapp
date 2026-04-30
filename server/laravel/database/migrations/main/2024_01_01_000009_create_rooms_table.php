@@ -19,9 +19,9 @@ return new class extends Migration
             $table->foreignId('gym_id');
             $table->string('name', 80);
             $table->integer('capacity');
+            $table->string('image_url', 500)->nullable();
 
             $table->foreign('gym_id')->references('id')->on('gyms')->cascadeOnDelete();
-
         });
     }
 

@@ -32,7 +32,9 @@ class UserResource extends JsonResource
             'role'                     => $this->role,
             'dni'                      => $this->dni,
             'birth_date'               => $this->birth_date?->toDateString(),
-            'profile_photo_url'        => $this->profile_photo_url,
+            'profile_photo_url'        => $this->profile_photo_url
+                                            ? route('users.photo', ['id' => $this->id])
+                                            : null,
             'membership_status'        => $this->membership_status,
             'cancellation_strikes'     => $this->cancellation_strikes,
             'is_blocked_from_booking'  => $this->is_blocked_from_booking,

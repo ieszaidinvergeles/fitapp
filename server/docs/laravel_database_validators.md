@@ -6,7 +6,7 @@
 
 ## 1.1. Why Dedicated Form Request Classes
 
-Laravel allows validating input directly inside controller methods using `$request->validate([...])`. This approach was deliberately avoided in FitApp. A dedicated `FormRequest` class for each operation provides:
+Laravel allows validating input directly inside controller methods using `$request->validate([...])`. This approach was deliberately avoided in Voltgym. A dedicated `FormRequest` class for each operation provides:
 
 * **SRP compliance:** The controller is not responsible for knowing which fields are required or what format they should be in.
 * **Reusability:** Multiple controller methods or command-line tools can use the same request class.

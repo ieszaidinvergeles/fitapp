@@ -1,6 +1,6 @@
-# FitApp: Gym Logic & Role Management
+# Voltgym: Gym Logic & Role Management
 
-This document provides a natural language overview of the business logic, user roles, application interfaces, and specific data structures like Custom Post Types (CPT) used within the FitApp platform.
+This document provides a natural language overview of the business logic, user roles, application interfaces, and specific data structures like Custom Post Types (CPT) used within the Voltgym platform.
 
 ## Application Interfaces
 
@@ -30,8 +30,8 @@ The system utilizes a hierarchical Role-Based Access Control (RBAC) model.
 
 The `assistant` role was introduced to handle front-desk operations without exposing sensitive structural functions to receptionists.
 
-*   **Why it was used:** A standard `staff` role doesn't have enough permissions to register new users or cancel bookings globally, but a `manager` role has too much power (e.g., deleting schedules entirely). The `assistant` bridges this gap, providing read-heavy access with limited, specific write access (like client onboarding).
-*   **Database Note:** Ensure this user is explicitly seeded in the SQL database during local setup and WordPress initialization.
+* **Why it was used:** A standard `staff` role doesn't have enough permissions to register new users or cancel bookings globally, but a `manager` role has too much power (e.g., deleting schedules entirely). The `assistant` bridges this gap, providing read-heavy access with limited, specific write access (like client onboarding).
+* **Database Note:** Ensure this user is explicitly seeded in the SQL database during local setup and WordPress initialization.
 
 ---
 
@@ -43,25 +43,27 @@ To integrate seamlessly with WordPress on the frontend, certain data is handled 
 
 ### CPT: `Volt GYM`
 
-*   **Nature:** It serves as a visual **product catalog**.
-*   **Purpose:** To showcase gym products, supplements, or merchandise directly to clients. 
-*   **Current Limitations:** It acts strictly as a catalog. There is **no e-commerce checkout integrated** at this phase. 
-*   **Target Audience:** It is exclusively designed to be consumed by the Client App interface, allowing members to browse offerings without making direct digital purchases.
+* **Nature:** It serves as a visual **product catalog**.
+* **Purpose:** To showcase gym products, supplements, or merchandise directly to clients.
+* **Current Limitations:** It acts strictly as a catalog. There is **no e-commerce checkout integrated** at this phase.
+* **Target Audience:** It is exclusively designed to be consumed by the Client App interface, allowing members to browse offerings without making direct digital purchases.
 
 ---
 
 ## Internal Screens
 
 ### Client Screens
-*   `Dashboard`: Overview of upcoming classes and daily metrics.
-*   `Classes & Bookings`: Interfaces for scheduling physical attendance.
-*   `Routines & Exercises`: Details on workout plans.
-*   `Metrics, Meal Schedule & Recipes`: Nutrition and tracking interfaces.
-*   `Settings`: User profile configuration.
+
+* `Dashboard`: Overview of upcoming classes and daily metrics.
+* `Classes & Bookings`: Interfaces for scheduling physical attendance.
+* `Routines & Exercises`: Details on workout plans.
+* `Metrics, Meal Schedule & Recipes`: Nutrition and tracking interfaces.
+* `Settings`: User profile configuration.
 
 ### Staff Screens
-*   `Dashboard`: Operational overview.
-*   `Attendance`: Front-desk check-in interface.
-*   `Manage Classes & Routines`: Creation and scheduling of gym offerings.
-*   `Rooms & Notifications`: Logistics and broadcast messaging.
-*   `Admin Users`: (Admin only) Platform user management.
+
+* `Dashboard`: Operational overview.
+* `Attendance`: Front-desk check-in interface.
+* `Manage Classes & Routines`: Creation and scheduling of gym offerings.
+* `Rooms & Notifications`: Logistics and broadcast messaging.
+* `Admin Users`: (Admin only) Platform user management.

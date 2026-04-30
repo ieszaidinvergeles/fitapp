@@ -5,7 +5,7 @@
             <p class="font-headline font-extrabold uppercase tracking-wide text-primary-container">Volt Gym</p>
             <p class="text-xs uppercase tracking-widest text-on-surface-variant">Despierta el trueno</p>
         </div>
-        <p class="text-xs text-on-surface-variant">Cliente WordPress consumiendo API de FitApp (Laravel).</p>
+        <p class="text-xs text-on-surface-variant"></p>
     </div>
 </footer>
 <?php endif; ?>
