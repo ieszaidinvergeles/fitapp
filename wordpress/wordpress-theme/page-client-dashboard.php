@@ -35,7 +35,7 @@ voltgym_get_header();
         <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary-container bg-surface-container-high text-primary-container font-headline font-bold">
             <?= strtoupper(substr(h($user['full_name'] ?? $user['username'] ?? 'U'), 0, 1)) ?>
         </div>
-        <a href="page-logout.php" class="text-zinc-500 hover:text-error transition-colors">
+        <a href="<?php echo esc_url(home_url('/?pagename=logout')); ?>" class="text-zinc-500 hover:text-error transition-colors">
             <span class="material-symbols-outlined">logout</span>
         </a>
     </div>
@@ -50,12 +50,12 @@ voltgym_get_header();
         </button>
     </div>
     <nav class="space-y-2">
-        <a href="page-client-dashboard.php" class="block px-4 py-3 rounded-xl bg-surface-container-high text-on-surface font-bold uppercase tracking-wider text-xs">Dashboard</a>
-        <a href="page-client-classes.php" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Classes</a>
-        <a href="page-client-bookings.php" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Bookings</a>
-        <a href="page-client-routines.php" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Routines</a>
-        <a href="page-client-settings.php" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Settings</a>
-        <a href="page-logout.php" class="block px-4 py-3 rounded-xl hover:bg-error-container/20 text-error hover:text-error transition-colors font-bold uppercase tracking-wider text-xs">Logout</a>
+        <a href="<?php echo esc_url(home_url('/?pagename=client-dashboard')); ?>" class="block px-4 py-3 rounded-xl bg-surface-container-high text-on-surface font-bold uppercase tracking-wider text-xs">Dashboard</a>
+        <a href="<?php echo esc_url(home_url('/?pagename=client-classes')); ?>" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Classes</a>
+        <a href="<?php echo esc_url(home_url('/?pagename=client-bookings')); ?>" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Bookings</a>
+        <a href="<?php echo esc_url(home_url('/?pagename=client-routines')); ?>" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Routines</a>
+        <a href="<?php echo esc_url(home_url('/?pagename=client-settings')); ?>" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Settings</a>
+        <a href="<?php echo esc_url(home_url('/?pagename=logout')); ?>" class="block px-4 py-3 rounded-xl hover:bg-error-container/20 text-error hover:text-error transition-colors font-bold uppercase tracking-wider text-xs">Logout</a>
     </nav>
 </aside>
 
@@ -92,14 +92,14 @@ voltgym_get_header();
                     <?php if ($routine): ?>
                         <h3 class="font-headline font-black text-4xl mb-2 tracking-tight uppercase"><?= h($routine['name']) ?></h3>
                         <p class="text-on-surface-variant mb-8 max-w-md">Level: <?= h($routine['difficulty_level'] ?? 'N/A') ?></p>
-                        <a href="page-client-routine.php?id=<?= urlencode($routine['id']) ?>" class="bg-gradient-to-r from-primary to-primary-container text-on-primary font-black px-10 py-4 rounded-full flex items-center gap-3 w-max hover:scale-105 transition-transform shadow-[0_0_20px_rgba(215,255,0,0.2)]">
+                        <a href="<?php echo esc_url(home_url('/?pagename=client-routine&id=' . urlencode($routine['id']))); ?>" class="bg-gradient-to-r from-primary to-primary-container text-on-primary font-black px-10 py-4 rounded-full flex items-center gap-3 w-max hover:scale-105 transition-transform shadow-[0_0_20px_rgba(215,255,0,0.2)]">
                             VIEW ROUTINE
                             <span class="material-symbols-outlined">play_arrow</span>
                         </a>
                     <?php else: ?>
                         <h3 class="font-headline font-black text-3xl mb-2 tracking-tight uppercase">No Active Routine</h3>
                         <p class="text-on-surface-variant mb-8 max-w-md">Assign a routine to push your limits.</p>
-                        <a href="page-client-routines.php" class="bg-gradient-to-r from-primary to-primary-container text-on-primary font-black px-10 py-4 rounded-full flex items-center w-max gap-3 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(215,255,0,0.2)]">
+                        <a href="<?php echo esc_url(home_url('/?pagename=client-routines')); ?>" class="bg-gradient-to-r from-primary to-primary-container text-on-primary font-black px-10 py-4 rounded-full flex items-center w-max gap-3 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(215,255,0,0.2)]">
                             BROWSE ROUTINES
                             <span class="material-symbols-outlined">search</span>
                         </a>
@@ -160,7 +160,7 @@ voltgym_get_header();
                     <div class="text-center py-6 text-zinc-500">
                         <span class="material-symbols-outlined text-4xl mb-2 opacity-50">event_busy</span>
                         <p class="text-sm font-medium">No upcoming classes.</p>
-                        <a href="page-client-classes.php" class="inline-block mt-4 text-xs font-bold text-primary hover:underline uppercase tracking-wider">Book Now</a>
+                        <a href="<?php echo esc_url(home_url('/?pagename=client-classes')); ?>" class="inline-block mt-4 text-xs font-bold text-primary hover:underline uppercase tracking-wider">Book Now</a>
                     </div>
                 <?php endif; ?>
             </div>
@@ -181,7 +181,7 @@ voltgym_get_header();
                         <?php endforeach; ?>
                     </ul>
                     <?php if (count($bookings) > 3): ?>
-                        <a href="page-client-bookings.php" class="block text-center mt-4 text-[10px] font-bold text-primary-fixed-dim uppercase tracking-wider hover:underline">View All</a>
+                        <a href="<?php echo esc_url(home_url('/?pagename=client-bookings')); ?>" class="block text-center mt-4 text-[10px] font-bold text-primary-fixed-dim uppercase tracking-wider hover:underline">View All</a>
                     <?php endif; ?>
                 <?php else: ?>
                     <p class="text-xs text-zinc-500">None scheduled.</p>
