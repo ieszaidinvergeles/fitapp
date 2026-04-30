@@ -6,7 +6,7 @@
 
 ## 1.1. Fat Models, Thin Controllers
 
-The FitApp backend follows the **Fat Model** pattern. Business rules, validation logic, and state management are encapsulated inside the Eloquent model that owns them. Controllers are responsible only for receiving requests and returning responses — they do not make business decisions.
+The Voltgym backend follows the **Fat Model** pattern. Business rules, validation logic, and state management are encapsulated inside the Eloquent model that owns them. Controllers are responsible only for receiving requests and returning responses — they do not make business decisions.
 
 The practical consequence is that any code that changes, blocks, or derives a value from a model record must go through a model method, not be duplicated across controllers. If the rule changes, it changes in one place.
 

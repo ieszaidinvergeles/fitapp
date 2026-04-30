@@ -4,7 +4,7 @@
  * Plugin URI: https://voltgym.local
  * Description: Registers the Volt GYM custom post type used as a product catalog without eCommerce checkout.
  * Version: 0.1.0
- * Author: FitApp
+ * Author: Voltgym
  * Text Domain: volt-gym-catalog
  */
 

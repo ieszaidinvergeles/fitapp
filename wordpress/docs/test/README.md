@@ -1,6 +1,6 @@
 # Frontend Test Documentation
 
-This folder groups frontend QA and integration testing notes for the WordPress side of FitApp.
+This folder groups frontend QA and integration testing notes for the WordPress side of Voltgym.
 
 ## Contents
 

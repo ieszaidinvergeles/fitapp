@@ -1,6 +1,6 @@
 # Backend Documentation
 
-This folder contains Laravel backend documentation for the FitApp REST API.
+This folder contains Laravel backend documentation for the Voltgym REST API.
 
 ## Contents
 

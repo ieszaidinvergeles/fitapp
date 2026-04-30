@@ -1,9 +1,9 @@
-# FitApp
+# Voltgym
 
 ## Project Structure
 
 ```text
-fitapp/
+Voltgym/
   server/        - Laravel backend (REST API, logic, Migrations)
   wordpress/     - WordPress frontend (Custom Theme & Plugins)
   voltgym-infra/ - Docker Orchestration and Deployment scripts
@@ -70,15 +70,20 @@ The infrastructure follows SOLID and KISS principles, orchestrated using Relativ
 ### Option A: Hosting on Linux (Production Server)
 
 1. **Clone the repository:**
+
    ```bash
-   git clone https://github.com/ieszaidinvergeles/fitapp.git
-   cd fitapp/voltgym-infra
+   git clone https://github.com/ieszaidinvergeles/Voltgym.git
+   cd Voltgym/voltgym-infra
    ```
+
 2. **Create the environment file if needed:**
+
    ```bash
    cp .env.example .env
    ```
+
 3. **Execute Deployment Script:**
+
    ```bash
    chmod +x ./scripts/voltgym-deploy.sh ./docker/laravel/entrypoint.sh
    ./scripts/voltgym-deploy.sh
@@ -89,15 +94,20 @@ The infrastructure follows SOLID and KISS principles, orchestrated using Relativ
 ### Option B: Hosting on Windows (Local Development)
 
 1. **Clone the repository and enter the infra folder:**
+
    ```powershell
-   git clone https://github.com/ieszaidinvergeles/fitapp.git
-   cd fitapp/voltgym-infra
+   git clone https://github.com/ieszaidinvergeles/Voltgym.git
+   cd Voltgym/voltgym-infra
    ```
+
 2. **Create the environment file:**
+
    ```powershell
    copy .env.example .env
    ```
+
 3. **Launch the application:**
+
    ```powershell
    docker compose up -d --build
    ```
@@ -109,15 +119,20 @@ Use these commands when the app is already installed and you want to apply new r
 #### On Linux
 
 1. Pull the latest repository changes:
+
    ```bash
-   cd fitapp/voltgym-infra
+   cd Voltgym/voltgym-infra
    git pull origin main
    ```
+
 2. Recreate services without rebuilding unless needed:
+
    ```bash
    docker compose up -d
    ```
+
 3. If Dockerfile or image changes are required, rebuild first:
+
    ```bash
    docker compose build --no-cache
    docker compose up -d
@@ -126,15 +141,20 @@ Use these commands when the app is already installed and you want to apply new r
 #### On Windows
 
 1. Update the repository:
+
    ```powershell
-   cd fitapp/voltgym-infra
+   cd Voltgym/voltgym-infra
    git pull origin main
    ```
+
 2. Start services with the latest code:
+
    ```powershell
    docker compose up -d
    ```
+
 3. If image rebuild is needed:
+
    ```powershell
    docker compose build --no-cache
    docker compose up -d
@@ -142,19 +162,24 @@ Use these commands when the app is already installed and you want to apply new r
 
 ### Stopping, starting, and restarting the deployed host
 
-These commands work from the `fitapp/voltgym-infra` folder after installation.
+These commands work from the `Voltgym/voltgym-infra` folder after installation.
 
 #### Linux host
 
 - **Stop all services:**
+
   ```bash
   docker compose down
   ```
+
 - **Start services again:**
+
   ```bash
   docker compose up -d
   ```
+
 - **Restart running services:**
+
   ```bash
   docker compose restart
   ```
@@ -164,14 +189,19 @@ Because the containers use `restart: unless-stopped`, they will return automatic
 #### Windows host
 
 - **Stop all services:**
+
   ```powershell
   docker compose down
   ```
+
 - **Start services again:**
+
   ```powershell
   docker compose up -d
   ```
+
 - **Restart running services:**
+
   ```powershell
   docker compose restart
   ```
@@ -181,7 +211,7 @@ If Docker Desktop is stopped, start Docker Desktop first, then run `docker compo
 ### Notes for managed deployments
 
 - If the host was shut down completely, start the VM/container host first.
-- After boot, run `docker compose up -d` from `fitapp/voltgym-infra` to ensure all services come up.
+- After boot, run `docker compose up -d` from `Voltgym/voltgym-infra` to ensure all services come up.
 - Use `docker compose ps` to verify service status.
 
 ## Cloud Firewall Settings (Azure / AWS)
@@ -199,6 +229,7 @@ If deploying to a Cloud VM, you must ensure the following inbound ports are open
 ## Continuous Deployment Automation
 
 The file `voltgym-infra/scripts/auto-update.sh` periodically checks if the origin repository has new commits. If it discovers changes, it:
+
 1. Pulls the latest code naturally.
 2. Updates Composer dependencies silently.
 3. Automatically runs `php artisan migrate --force` to inject new database schema rows without destroying WordPress or Database data.
@@ -208,6 +239,60 @@ The file `voltgym-infra/scripts/auto-update.sh` periodically checks if the origi
 Run this command from your Linux server shell to install it in the standard cron:
 
 ```bash
-echo "0 */2 * * * cd /home/voltgym/fitapp/voltgym-infra && ./scripts/auto-update.sh >> /var/log/voltgym-auto-update.log 2>&1" | crontab -
+echo "0 */2 * * * cd /home/voltgym/Voltgym/voltgym-infra && ./scripts/auto-update.sh >> /var/log/voltgym-auto-update.log 2>&1" | crontab -
 ```
+
 This tells the Ubuntu host to execute the script every 2 hours continuously while the server is alive.
+
+## Troubleshooting
+
+### WordPress Custom Theme or Plugin Issues
+
+If activating a custom theme or plugin breaks WordPress (e.g., white screen or errors), deactivate it via the database.
+
+#### Deactivate Broken Custom Theme
+
+1. Access the MySQL container:
+
+   ```bash
+   docker exec -it voltgym_mysql mysql -u voltgym_user -p voltgym_wordpress
+   ```
+
+   (Enter the MySQL password when prompted.)
+
+2. Switch to a default theme (e.g., Twenty Twenty-Four):
+
+   ```sql
+   UPDATE wp_options SET option_value = 'twentytwentyfour' WHERE option_name = 'template';
+   UPDATE wp_options SET option_value = 'twentytwentyfour' WHERE option_name = 'stylesheet';
+   ```
+
+3. Exit MySQL and restart WordPress:
+
+   ```bash
+   docker compose restart wordpress
+   ```
+
+#### Deactivate Broken Custom Plugin
+
+To deactivate all plugins (if a custom plugin causes issues):
+
+1. Access the MySQL container:
+
+   ```bash
+   docker exec -it voltgym_mysql mysql -u voltgym_user -p voltgym_wordpress
+   ```
+
+2. Deactivate all plugins:
+
+   ```sql
+   UPDATE wp_options SET option_value = 'a:0:{}' WHERE option_name = 'active_plugins';
+   ```
+
+3. Exit MySQL and restart WordPress:
+
+   ```bash
+   docker compose restart wordpress
+   ```
+
+For specific plugin deactivation, inspect the `active_plugins` value (serialized array) and remove the problematic plugin entry.
