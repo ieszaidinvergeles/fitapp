@@ -38,10 +38,15 @@ class GymClassController extends Controller
             }
 
             if ($request->filled('date')) {
-                $query->where('start_time', 'like', $request->input('date') . '%');
+                $query->whereDate('start_time', $request->input('date'));
             }
 
-            $result       = GymClassResource::collection($query->paginate(10)->withQueryString());
+            if ($request->filled('activity_id')) {
+                $query->where('activity_id', (int) $request->input('activity_id'));
+            }
+
+            $paginated = $query->paginate(5)->withQueryString();
+            $result = GymClassResource::collection($paginated)->response()->getData(true);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

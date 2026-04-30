@@ -152,9 +152,27 @@ voltgym_get_header();
                 </h4>
                 <?php if ($nextClass): ?>
                     <div class="bg-surface-container-low p-4 rounded-xl">
-                        <p class="text-[10px] text-primary-container font-black uppercase tracking-widest"><?= h($nextClass['start_time'] ?? '') ?></p>
+                        <?php
+                            $startTime = !empty($nextClass['start_time']) ? date('M j, Y - g:i A', strtotime($nextClass['start_time'])) : '';
+                            $endTime = !empty($nextClass['end_time']) ? date('g:i A', strtotime($nextClass['end_time'])) : '';
+                            $timeDisplay = $startTime . ($endTime ? ' to ' . $endTime : '');
+                            $instructorName = $nextClass['instructor']['full_name'] ?? $nextClass['instructor']['username'] ?? 'TBA';
+                            $capacity = $nextClass['capacity_limit'] ?? 'Unlimited';
+                            $available = $nextClass['available_spots'] ?? 0;
+                        ?>
+                        <p class="text-[10px] text-primary-container font-black uppercase tracking-widest"><?= h($timeDisplay) ?></p>
                         <p class="font-headline font-bold text-lg leading-tight uppercase tracking-tighter mt-1"><?= h($nextClass['activity']['name'] ?? 'Class') ?></p>
-                        <p class="text-xs text-zinc-500 mt-1"><?= (int)($nextClass['available_spots'] ?? 0) ?> spots left</p>
+                        
+                        <div class="mt-3 flex items-center justify-between text-xs text-zinc-400">
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">person</span>
+                                <span><?= h($instructorName) ?></span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">group</span>
+                                <span><?= (int)$available ?> / <?= h($capacity) ?> spots</span>
+                            </div>
+                        </div>
                     </div>
                 <?php else: ?>
                     <div class="text-center py-6 text-zinc-500">
@@ -174,7 +192,7 @@ voltgym_get_header();
                             <li class="flex items-center justify-between text-sm pb-3 border-b border-zinc-800 last:border-0 last:pb-0">
                                 <div>
                                     <p class="font-bold text-on-surface"><?= h($b['gym_class']['activity']['name'] ?? 'Class') ?></p>
-                                    <p class="text-[10px] text-zinc-500 font-mono mt-0.5"><?= h($b['gym_class']['start_time'] ?? '') ?></p>
+                                    <p class="text-[10px] text-zinc-500 font-mono mt-0.5"><?= h(!empty($b['gym_class']['start_time']) ? date('M j, Y - g:i A', strtotime($b['gym_class']['start_time'])) : '') ?></p>
                                 </div>
                                 <span class="bg-surface-container-highest px-2 py-1 rounded text-[10px] font-bold text-zinc-400 capitalize"><?= h($b['status'] ?? '') ?></span>
                             </li>
