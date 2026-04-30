@@ -22,7 +22,8 @@ voltgym_get_header();
                 </article>
             <?php endwhile; ?>
         </section>
-        <?php voltgym_get_sidebarbar(); ?>
+        <?php get_sidebar(); ?>
+         <!-- voltgym_get_sidebarbar();  -->
     </div>
 </main>
 <?php voltgym_get_footer(); ?>
