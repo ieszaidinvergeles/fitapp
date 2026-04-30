@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\ImageServiceInterface;
 use App\Http\Requests\StoreRecipeRequest;
 use App\Http\Requests\UpdateRecipeRequest;
 use App\Http\Resources\RecipeResource;
 use App\Models\Recipe;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 /**
  * Handles CRUD operations for recipes.
@@ -17,6 +19,17 @@ use Illuminate\Http\Request;
  */
 class RecipeController extends Controller
 {
+    /** @var ImageServiceInterface */
+    private ImageServiceInterface $imageService;
+
+    /** @var string */
+    private const IMAGE_FOLDER = 'recipes';
+
+    /** @param  ImageServiceInterface  $imageService */
+    public function __construct(ImageServiceInterface $imageService)
+    {
+        $this->imageService = $imageService;
+    }
     /**
      * Returns a paginated list of recipes with optional type and calorie filters.
      *
@@ -86,7 +99,14 @@ class RecipeController extends Controller
         try {
             $this->authorize('create', Recipe::class);
 
-            $result       = new RecipeResource(Recipe::create($request->validated()));
+            $recipe = Recipe::create($request->safe()->except('image'));
+
+            if ($request->hasFile('image')) {
+                $path = $this->imageService->upload($request->file('image'), self::IMAGE_FOLDER, $recipe->id);
+                $recipe->update(['image_url' => $path]);
+            }
+
+            $result       = new RecipeResource($recipe->fresh());
             $messageArray = ['general' => 'Recipe created.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -111,7 +131,14 @@ class RecipeController extends Controller
             $recipe = Recipe::findOrFail($id);
             $this->authorize('update', $recipe);
 
-            $result       = $recipe->update($request->validated());
+            $recipe->update($request->safe()->except('image'));
+
+            if ($request->hasFile('image')) {
+                $path = $this->imageService->replace($request->file('image'), self::IMAGE_FOLDER, $recipe->id, $recipe->image_url);
+                $recipe->update(['image_url' => $path]);
+            }
+
+            $result       = new RecipeResource($recipe->fresh());
             $messageArray = ['general' => 'Recipe updated.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -135,9 +162,90 @@ class RecipeController extends Controller
             $recipe = Recipe::findOrFail($id);
             $this->authorize('delete', $recipe);
 
+            $this->imageService->delete($recipe->image_url);
             $recipe->delete();
             $result       = true;
             $messageArray = ['general' => 'Recipe deleted.'];
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
+        return response()->json(['result' => $result, 'message' => $messageArray]);
+    }
+
+    /**
+     * Streams the recipe image from private storage with private cache headers.
+     *
+     * @param  int  $id
+     * @return Response|JsonResponse
+     */
+    public function showImage(int $id): Response|JsonResponse
+    {
+        try {
+            $recipe = Recipe::findOrFail($id);
+
+            if (!$recipe->image_url) {
+                return response()->json(['result' => false, 'message' => ['general' => 'No image found.']], 404);
+            }
+
+            return $this->imageService->stream($recipe->image_url);
+        } catch (\Exception $e) {
+            return response()->json(['result' => false, 'message' => ['general' => $e->getMessage()]], 404);
+        }
+    }
+
+    /**
+     * Uploads or replaces the recipe image in private storage.
+     * Authorization: advanced staff (same as update).
+     *
+     * @param  Request  $request
+     * @param  int      $id
+     * @return JsonResponse
+     */
+    public function uploadImage(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not upload image.'];
+
+        try {
+            $request->validate(['image' => 'required|image|mimes:jpeg,png,webp,gif|max:2048']);
+
+            $recipe = Recipe::findOrFail($id);
+            $this->authorize('update', $recipe);
+
+            $path = $this->imageService->replace($request->file('image'), self::IMAGE_FOLDER, $recipe->id, $recipe->image_url);
+            $recipe->update(['image_url' => $path]);
+
+            $result       = true;
+            $messageArray = ['general' => 'Image uploaded.'];
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
+        return response()->json(['result' => $result, 'message' => $messageArray]);
+    }
+
+    /**
+     * Deletes the recipe image from private storage and clears the database field.
+     * Authorization: admin only.
+     *
+     * @param  int  $id
+     * @return JsonResponse
+     */
+    public function deleteImage(int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not delete image.'];
+
+        try {
+            $recipe = Recipe::findOrFail($id);
+            $this->authorize('delete', $recipe);
+
+            $this->imageService->delete($recipe->image_url);
+            $recipe->update(['image_url' => null]);
+
+            $result       = true;
+            $messageArray = ['general' => 'Image deleted.'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }

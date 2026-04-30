@@ -90,6 +90,19 @@ Route::prefix('v1')->group(function (): void {
 
     Route::middleware('auth:sanctum')->group(function (): void {
 
+        // ─── Private image streaming (all authenticated users) ────────────────
+
+        Route::get('/users/{id}/photo',            [UserController::class,         'showPhoto'])->name('users.photo');
+        Route::get('/exercises/{id}/image',        [ExerciseController::class,     'showImage'])->name('exercises.image');
+        Route::get('/equipment/{id}/image',        [EquipmentController::class,    'showImage'])->name('equipment.image');
+        Route::get('/recipes/{id}/image',          [RecipeController::class,       'showImage'])->name('recipes.image');
+        Route::get('/routines/{id}/image',         [RoutineController::class,      'showImage'])->name('routines.image');
+        Route::get('/diet-plans/{id}/image',       [DietPlanController::class,     'showImage'])->name('diet-plans.image');
+        Route::get('/rooms/{id}/image',            [RoomController::class,         'showImage'])->name('rooms.image');
+        Route::get('/activities/{id}/image',       [ActivityController::class,     'showImage'])->name('activities.image');
+        Route::get('/membership-plans/{id}/image', [MembershipPlanController::class,'showImage'])->name('membership-plans.image');
+        Route::get('/gyms/{id}/logo',              [GymController::class,          'showLogo'])->name('gyms.logo');
+
         // Aggregate Dashboards
         Route::get('/dashboard',        [DashboardController::class,      'index']);
         Route::middleware('staff_portal')->get('/staff/dashboard', [StaffDashboardController::class, 'index']);
@@ -163,6 +176,9 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/routines/{id}/reorder',              [RoutineController::class, 'reorder']);
             Route::post('/routines/{id}/duplicate',            [RoutineController::class, 'duplicate']);
 
+            // User photo upload (user_online may also use this for their own photo)
+            Route::post('/users/{id}/photo',           [UserController::class, 'uploadPhoto']);
+
             // GymClass (write + mark attendance)
             Route::post('/classes',                       [GymClassController::class, 'store']);
             Route::put('/classes/{id}',                   [GymClassController::class, 'update']);
@@ -171,6 +187,12 @@ Route::prefix('v1')->group(function (): void {
             // Rooms (write)
             Route::post('/rooms',              [RoomController::class, 'store']);
             Route::put('/rooms/{id}',          [RoomController::class, 'update']);
+
+            // Image uploads (advanced and above)
+            Route::post('/exercises/{id}/image',         [ExerciseController::class,  'uploadImage']);
+            Route::post('/recipes/{id}/image',           [RecipeController::class,    'uploadImage']);
+            Route::post('/routines/{id}/image',          [RoutineController::class,   'uploadImage']);
+            Route::post('/rooms/{id}/image',             [RoomController::class,      'uploadImage']);
 
             // Notifications
             Route::get('/notifications',       [NotificationController::class, 'index']);
@@ -235,6 +257,26 @@ Route::prefix('v1')->group(function (): void {
 
             // Notifications (delete)
             Route::delete('/notifications/{id}',       [NotificationController::class, 'destroy']);
+
+            // Image uploads (admin only)
+            Route::post('/users/{id}/photo',            [UserController::class,          'uploadPhoto']);
+            Route::post('/equipment/{id}/image',        [EquipmentController::class,     'uploadImage']);
+            Route::post('/activities/{id}/image',       [ActivityController::class,      'uploadImage']);
+            Route::post('/membership-plans/{id}/image', [MembershipPlanController::class,'uploadImage']);
+            Route::post('/diet-plans/{id}/image',       [DietPlanController::class,      'uploadImage']);
+            Route::post('/gyms/{id}/logo',              [GymController::class,           'uploadLogo']);
+
+            // Image deletes (admin only)
+            Route::delete('/users/{id}/photo',            [UserController::class,          'deletePhoto']);
+            Route::delete('/exercises/{id}/image',        [ExerciseController::class,      'deleteImage']);
+            Route::delete('/equipment/{id}/image',        [EquipmentController::class,     'deleteImage']);
+            Route::delete('/recipes/{id}/image',          [RecipeController::class,        'deleteImage']);
+            Route::delete('/routines/{id}/image',         [RoutineController::class,       'deleteImage']);
+            Route::delete('/diet-plans/{id}/image',       [DietPlanController::class,      'deleteImage']);
+            Route::delete('/rooms/{id}/image',            [RoomController::class,          'deleteImage']);
+            Route::delete('/activities/{id}/image',       [ActivityController::class,      'deleteImage']);
+            Route::delete('/membership-plans/{id}/image', [MembershipPlanController::class,'deleteImage']);
+            Route::delete('/gyms/{id}/logo',              [GymController::class,           'deleteLogo']);
         });
     });
 });

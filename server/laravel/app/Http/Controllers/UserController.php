@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\ImageServiceInterface;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -19,6 +21,17 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
  */
 class UserController extends Controller
 {
+    /** @var ImageServiceInterface */
+    private ImageServiceInterface $imageService;
+
+    /** @var string */
+    private const IMAGE_FOLDER = 'users';
+
+    /** @param  ImageServiceInterface  $imageService */
+    public function __construct(ImageServiceInterface $imageService)
+    {
+        $this->imageService = $imageService;
+    }
     /**
      * Returns a paginated list of users, optionally filtered by role.
      * Access restricted to advanced staff and above by middleware and Policy.
@@ -177,6 +190,7 @@ class UserController extends Controller
             $user = User::findOrFail($id);
             $this->authorize('delete', $user);
 
+            $this->imageService->delete($user->profile_photo_url);
             $user->delete();
             $result       = true;
             $messageArray = ['general' => 'User deleted.'];
@@ -302,6 +316,136 @@ class UserController extends Controller
         if ($actor->isManager()) {
             if ($targetRole === 'admin' || $requestedRole === 'admin') {
                 throw new HttpException(403, 'Managers may not create or modify admin accounts.');
+            }
+        }
+    }
+
+    /**
+     * Streams the user profile photo from private storage with private cache headers.
+     * Authorization: any authenticated user.
+     *
+     * @param  int  $id
+     * @return Response|JsonResponse
+     */
+    public function showPhoto(int $id): Response|JsonResponse
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            if (!$user->profile_photo_url) {
+                return response()->json(['result' => false, 'message' => ['general' => 'No photo found.']], 404);
+            }
+
+            return $this->imageService->stream($user->profile_photo_url);
+        } catch (\Exception $e) {
+            return response()->json(['result' => false, 'message' => ['general' => $e->getMessage()]], 404);
+        }
+    }
+
+    /**
+     * Uploads or replaces a user's profile photo.
+     *
+     * Anti-impersonation rules:
+     *   - user_online: may only update their own photo.
+     *   - staff: cannot change their own photo; must be done by a superior.
+     *   - assistant, manager, admin: may update any subordinate's photo.
+     *
+     * @param  Request  $request
+     * @param  int      $id
+     * @return JsonResponse
+     */
+    public function uploadPhoto(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not upload photo.'];
+        $statusCode   = 200;
+
+        try {
+            $request->validate(['image' => 'required|image|mimes:jpeg,png,webp,gif|max:2048']);
+
+            $actor  = $request->user();
+            $target = User::findOrFail($id);
+
+            $this->guardPhotoUpload($actor, $target);
+
+            $path = $this->imageService->replace($request->file('image'), self::IMAGE_FOLDER, $target->id, $target->profile_photo_url);
+            $target->update(['profile_photo_url' => $path]);
+
+            $result       = true;
+            $messageArray = ['general' => 'Photo uploaded.'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
+    }
+
+    /**
+     * Deletes a user's profile photo from private storage and clears the database field.
+     * Authorization: admin or the user's superior (same rules as upload).
+     *
+     * @param  Request  $request
+     * @param  int      $id
+     * @return JsonResponse
+     */
+    public function deletePhoto(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not delete photo.'];
+        $statusCode   = 200;
+
+        try {
+            $actor  = $request->user();
+            $target = User::findOrFail($id);
+
+            $this->guardPhotoUpload($actor, $target);
+
+            $this->imageService->delete($target->profile_photo_url);
+            $target->update(['profile_photo_url' => null]);
+
+            $result       = true;
+            $messageArray = ['general' => 'Photo deleted.'];
+        } catch (HttpExceptionInterface $e) {
+            $messageArray = ['general' => $e->getMessage()];
+            $statusCode   = $e->getStatusCode();
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
+        return response()->json(['result' => $result, 'message' => $messageArray], $statusCode);
+    }
+
+    /**
+     * Enforces anti-impersonation rules for profile photo changes.
+     *
+     * @param  User  $actor
+     * @param  User  $target
+     * @return void
+     * @throws HttpException
+     */
+    private function guardPhotoUpload(User $actor, User $target): void
+    {
+        if ($actor->isAdmin()) {
+            return;
+        }
+
+        if ($actor->role === 'user_online') {
+            if ($actor->id !== $target->id) {
+                throw new HttpException(403, 'Online users may only change their own photo.');
+            }
+            return;
+        }
+
+        if ($actor->role === 'staff') {
+            throw new HttpException(403, 'Staff photo changes must be made by a superior to prevent identity impersonation.');
+        }
+
+        if (in_array($actor->role, ['manager', 'assistant'], true)) {
+            if (in_array($target->role, ['admin', 'manager'], true) && $actor->id !== $target->id) {
+                throw new HttpException(403, 'You may not change the photo of a user with equal or higher privilege.');
             }
         }
     }
