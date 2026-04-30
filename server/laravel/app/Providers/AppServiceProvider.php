@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Contracts\ImageServiceInterface;
+use App\Services\ImageService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,7 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        /**
+         * DIP: Bind the ImageServiceInterface contract to its concrete implementation.
+         * All controllers that need image operations receive ImageServiceInterface via
+         * constructor injection, making it trivial to swap storage drivers.
+         */
+        $this->app->bind(ImageServiceInterface::class, ImageService::class);
     }
 
     /**

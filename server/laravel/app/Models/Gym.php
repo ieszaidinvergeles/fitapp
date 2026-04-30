@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string      $city
  * @property string|null $location_coords
  * @property string      $phone
+ * @property string|null $logo_url
  *
  * @property-read \App\Models\User|null                                                   $manager
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>         $users
@@ -43,6 +44,7 @@ class Gym extends Model
         'city',
         'location_coords',
         'phone',
+        'logo_url',
     ];
 
     /** @var array<string, string> */

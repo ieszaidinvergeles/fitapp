@@ -12,13 +12,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * SRP: Encapsulates routine configuration, exercise ordering, and duplication logic.
  * OCP: New routine behaviors are added as methods without altering core relationships.
  *
- * @property int      $id
- * @property string   $name
- * @property string   $description
- * @property int|null $creator_id
- * @property string   $difficulty_level
- * @property int      $estimated_duration_min
- * @property int|null $associated_diet_plan_id
+ * @property int         $id
+ * @property string      $name
+ * @property string      $description
+ * @property int|null    $creator_id
+ * @property string      $difficulty_level
+ * @property int         $estimated_duration_min
+ * @property int|null    $associated_diet_plan_id
+ * @property string|null $cover_image_url
  *
  * @property-read \App\Models\User|null                                                   $creator
  * @property-read \App\Models\DietPlan|null                                               $dietPlan
@@ -38,6 +39,7 @@ class Routine extends Model
         'difficulty_level',
         'estimated_duration_min',
         'associated_diet_plan_id',
+        'cover_image_url',
     ];
 
     /** @var array<string, string> */

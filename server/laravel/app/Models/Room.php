@@ -13,10 +13,11 @@ use Illuminate\Support\Carbon;
  * SRP: Encapsulates room configuration and time-conflict resolution for class scheduling.
  * OCP: Conflict detection logic is self-contained and extensible per room.
  *
- * @property int    $id
- * @property int    $gym_id
- * @property string $name
- * @property int    $capacity
+ * @property int         $id
+ * @property int         $gym_id
+ * @property string      $name
+ * @property int         $capacity
+ * @property string|null $image_url
  *
  * @property-read \App\Models\Gym                                                      $gym
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\GymClass> $gymClasses
@@ -31,6 +32,7 @@ class Room extends Model
         'gym_id',
         'name',
         'capacity',
+        'image_url',
     ];
 
     /** @var array<string, string> */

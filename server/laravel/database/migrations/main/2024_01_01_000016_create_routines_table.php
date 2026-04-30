@@ -18,10 +18,11 @@ return new class extends Migration
             $table->id();
             $table->string('name', 80);
             $table->text('description');
-            $table->foreignId('creator_id')->nullable(); 
+            $table->foreignId('creator_id')->nullable();
             $table->enum('difficulty_level', ['beginner', 'intermediate', 'advanced', 'expert']);
             $table->integer('estimated_duration_min');
-            $table->foreignId('associated_diet_plan_id')->nullable(); 
+            $table->foreignId('associated_diet_plan_id')->nullable();
+            $table->string('cover_image_url', 500)->nullable();
 
             $table->foreign('creator_id')->references('id')->on('users')->nullOnDelete();
             $table->foreign('associated_diet_plan_id')->references('id')->on('diet_plans')->nullOnDelete();

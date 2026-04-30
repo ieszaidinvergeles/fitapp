@@ -16,10 +16,11 @@ return new class extends Migration
     {
         Schema::create('membership_plans', function (Blueprint $table) {
             $table->id();
-            $table->string('name',80);
+            $table->string('name', 80);
             $table->enum('type', ['physical', 'online', 'duo']);
             $table->boolean('allow_partner_link')->default(false);
             $table->decimal('price', 6, 2);
+            $table->string('badge_image_url', 500)->nullable();
         });
     }
 
