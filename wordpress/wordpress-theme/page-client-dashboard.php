@@ -131,7 +131,7 @@ voltgym_get_header();
             
             <!-- Notifications -->
             <?php if ($notifCount > 0): ?>
-            <a href="page-client-settings.php" class="block bg-surface-container-highest rounded-3xl p-6 relative overflow-hidden group hover:bg-[#1e2117] transition-all border border-outline-variant/10">
+            <a href="<?php echo esc_url(home_url('/?pagename=client-settings')); ?>" class="block bg-surface-container-highest rounded-3xl p-6 relative overflow-hidden group hover:bg-[#1e2117] transition-all border border-outline-variant/10">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center shrink-0">
                         <span class="material-symbols-outlined text-on-primary-container text-2xl">notifications_active</span>
