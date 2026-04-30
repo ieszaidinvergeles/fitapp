@@ -239,6 +239,7 @@ The file `voltgym-infra/scripts/auto-update.sh` periodically checks if the origi
 Run this command from your Linux server shell to install it in the standard cron:
 
 ```bash
+
 echo "0 */2 * * * cd /home/voltgym/Voltgym/voltgym-infra && ./scripts/auto-update.sh >> /var/log/voltgym-auto-update.log 2>&1" | crontab -
 ```
 
