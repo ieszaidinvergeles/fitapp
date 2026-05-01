@@ -1,0 +1,22 @@
+/*
+ * rtl.css — Right-to-Left Language Support
+ *
+ * Loaded automatically by WordPress when the active locale is RTL.
+ * In the standalone PHP client, include this manually for RTL locales.
+ *
+ * Overrides directional properties defined in style.css.
+ */
+
+[dir="rtl"] .kinetic-border {
+    border-left: none;
+    border-right: 4px solid #d4fb00;
+}
+
+[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] .material-symbols-outlined {
+    transform: scaleX(-1);
+}

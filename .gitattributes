@@ -1,0 +1,42 @@
+# Default: normalize all text files to LF in the repository.
+# Windows checkouts get CRLF via core.autocrlf, but the repo always stores LF.
+* text=auto eol=lf
+
+# Shell scripts MUST be LF — Docker/Linux will refuse to execute CRLF scripts.
+*.sh text eol=lf
+
+# Nginx config files — parsed by Linux nginx, must be LF.
+*.conf text eol=lf
+
+# Docker and compose files — parsed by Docker Engine (Linux), must be LF.
+Dockerfile text eol=lf
+docker-compose*.yml text eol=lf
+.dockerignore text eol=lf
+.env.example text eol=lf
+
+# PHP source files — LF normalized.
+*.php text eol=lf
+
+# Web assets.
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.md text eol=lf
+*.sql text eol=lf
+
+# Binary files — never touch line endings.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.zip binary
+*.gz binary
+*.tar binary
