@@ -31,7 +31,7 @@ class GymClassController extends Controller
         $messageArray = ['general' => 'Could not retrieve classes.'];
 
         try {
-            $query = GymClass::query();
+            $query = GymClass::with(['activity', 'instructor', 'room']);
 
             if ($request->filled('gym_id')) {
                 $query->where('gym_id', (int) $request->input('gym_id'));
@@ -39,11 +39,17 @@ class GymClassController extends Controller
 
             if ($request->filled('date')) {
                 $query->whereDate('start_time', $request->input('date'));
+                // Note: We remove the 'start_time > now' filter here to allow viewing history if the user searches for it.
+            } else {
+                // By default only show future classes
+                $query->where('start_time', '>', now());
             }
 
             if ($request->filled('activity_id')) {
                 $query->where('activity_id', (int) $request->input('activity_id'));
             }
+
+            $query->orderBy('start_time', 'asc');
 
             $paginated = $query->paginate(5)->withQueryString();
             $result = GymClassResource::collection($paginated)->response()->getData(true);

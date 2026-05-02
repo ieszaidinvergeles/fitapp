@@ -1,7 +1,7 @@
 <?php
 require_once 'functions.php';
 require_login();
-$page = max(1, (int)($_GET['page'] ?? 1));
+$page = max(1, (int)($_GET['paged_classes'] ?? $_GET['page'] ?? 1));
 $date = $_GET['date'] ?? '';
 $activityId = $_GET['activity_id'] ?? '';
 $success = null;
@@ -13,6 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['book_class_id'])) {
         $success = api_message($book) ?? 'Class booked successfully.';
     } else {
         $error = api_message($book) ?? 'Could not book class.';
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['cancel_booking_id'])) {
+    $cancel = api_post('/bookings/' . (int)$_POST['cancel_booking_id'] . '/cancel', [], auth: true);
+    if (!empty($cancel['result']) && $cancel['result'] !== false) {
+        $success = api_message($cancel) ?? 'Booking cancelled successfully.';
+    } else {
+        $error = api_message($cancel) ?? 'Could not cancel booking.';
     }
 }
 
@@ -32,6 +39,15 @@ $activitiesResponse = api_get('/activities');
 $actResult = $activitiesResponse['result'] ?? [];
 $activities = isset($actResult['data']) ? $actResult['data'] : (is_array($actResult) ? $actResult : []);
 
+$bookingsResponse = api_get('/bookings', auth: true);
+$userBookingsRaw = isset($bookingsResponse['result']['data']) ? $bookingsResponse['result']['data'] : (is_array($bookingsResponse['result'] ?? null) ? $bookingsResponse['result'] : []);
+$bookedClassIds = [];
+foreach ($userBookingsRaw as $b) {
+    if (($b['status'] ?? '') === 'active' && !empty($b['class_id'])) {
+        $bookedClassIds[$b['class_id']] = $b['id'];
+    }
+}
+
 wp_app_page_start('Classes');
 ?>
     <?php show_error($error); show_success($success); ?>
@@ -39,7 +55,7 @@ wp_app_page_start('Classes');
     <form method="GET" action="<?= esc_url(home_url('/')) ?>" class="mb-6 flex flex-wrap md:flex-nowrap items-center gap-3">
         <input type="hidden" name="pagename" value="client-classes" />
         <input type="date" name="date" value="<?= h($date, '') ?>" class="bg-surface-container-highest rounded-xl border border-outline-variant/20 px-4 py-3 w-full md:w-auto"/>
-        <select name="activity_id" class="bg-surface-container-highest rounded-xl border border-outline-variant/20 px-4 py-3 w-full md:w-auto text-on-surface">
+        <select name="activity_id" class="bg-surface-container-highest rounded-xl border border-outline-variant/20 px-8 py-3 w-full md:w-auto text-on-surface">
             <option value="">All Activities</option>
             <?php foreach ($activities as $act): ?>
                 <option value="<?= h($act['id']) ?>" <?= ((string)$act['id'] === (string)$activityId) ? 'selected' : '' ?>>
@@ -86,7 +102,21 @@ wp_app_page_start('Classes');
                         <?= !empty($c['is_cancelled']) ? 'Cancelled' : 'Available' ?>
                     </span>
                     
-                    <?php if (empty($c['is_cancelled'])): ?>
+                    <?php 
+                        $isPast = strtotime($c['start_time']) < time();
+                    ?>
+                    <?php if ($isPast): ?>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-zinc-500 bg-zinc-800/50 px-4 py-2 rounded-full border border-zinc-700/30">
+                            Class Finished
+                        </span>
+                    <?php elseif (isset($bookedClassIds[$c['id']])): ?>
+                        <form method="POST" onsubmit="event.preventDefault(); showConfirmModal(this);">
+                            <input type="hidden" name="cancel_booking_id" value="<?= (int)($bookedClassIds[$c['id']]) ?>"/>
+                            <button class="bg-surface-container-high border border-error/30 text-error font-black px-6 py-2 rounded-full flex items-center gap-2 text-xs uppercase tracking-wider hover:bg-error/10 hover:border-error transition-all shadow-sm">
+                                Cancel Booking
+                            </button>
+                        </form>
+                    <?php elseif (empty($c['is_cancelled'])): ?>
                         <form method="POST">
                             <input type="hidden" name="book_class_id" value="<?= (int)($c['id'] ?? 0) ?>"/>
                             <button class="bg-gradient-to-r from-primary to-primary-container text-on-primary font-black px-6 py-2 rounded-full flex items-center gap-2 text-xs uppercase tracking-wider hover:scale-105 transition-transform shadow-[0_0_15px_rgba(215,255,0,0.15)]">
@@ -106,7 +136,7 @@ wp_app_page_start('Classes');
             $lastPage = $meta['last_page'];
             
             $buildUrl = function($p) use ($date, $activityId) {
-                $url = '/?pagename=client-classes&page=' . $p;
+                $url = '/?pagename=client-classes&paged_classes=' . $p;
                 if ($date !== '') $url .= '&date=' . urlencode($date);
                 if ($activityId !== '') $url .= '&activity_id=' . urlencode($activityId);
                 return esc_url(home_url($url));
@@ -129,6 +159,57 @@ wp_app_page_start('Classes');
         </div>
         <?php endif; ?>
     </div>
-<?php
-wp_app_page_end(false);
+</div>
 
+<!-- Custom Confirmation Modal -->
+<div id="confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="bg-surface-container rounded-3xl p-8 max-w-sm w-full border border-outline-variant/30 shadow-2xl scale-95 transition-all duration-300 opacity-0" id="modal-box">
+        <div class="w-16 h-16 bg-error/10 text-error rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="material-symbols-outlined text-3xl">warning</span>
+        </div>
+        <h3 class="text-xl font-black uppercase tracking-tight text-center mb-2">Cancel Booking?</h3>
+        <p class="text-zinc-400 text-sm text-center mb-8">Are you sure you want to cancel this booking? This action cannot be undone.</p>
+        <div class="flex gap-3">
+            <button id="modal-cancel-btn" class="flex-1 px-6 py-3 rounded-full bg-surface-container-high text-xs font-black uppercase tracking-wider hover:bg-surface-container-highest transition-all">No, Keep it</button>
+            <button id="modal-confirm-btn" class="flex-1 px-6 py-3 rounded-full bg-error text-on-error text-xs font-black uppercase tracking-wider hover:scale-105 transition-all shadow-lg shadow-error/20">Yes, Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pendingForm = null;
+    const modal = document.getElementById('confirm-modal');
+    const modalBox = document.getElementById('modal-box');
+
+    function showConfirmModal(form) {
+        pendingForm = form;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modalBox.classList.remove('scale-95', 'opacity-0');
+        }, 10);
+    }
+
+    function hideModal() {
+        modalBox.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            pendingForm = null;
+        }, 300);
+    }
+
+    document.getElementById('modal-cancel-btn').addEventListener('click', hideModal);
+    document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+        if (pendingForm) pendingForm.submit();
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) hideModal();
+    });
+</script>
+
+<?php
+$GLOBALS['active'] = 'classes';
+wp_app_page_end(false);
+?>

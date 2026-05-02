@@ -23,6 +23,7 @@ class UserMealScheduleResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        die("EXECUTING_RESOURCE");
         return [
             'id'          => $this->id,
             'user_id'     => $this->user_id,
@@ -30,7 +31,7 @@ class UserMealScheduleResource extends JsonResource
             'meal_type'   => $this->meal_type,
             'recipe_id'   => $this->recipe_id,
             'is_consumed' => $this->is_consumed,
-            'recipe'      => new RecipeResource($this->whenLoaded('recipe')),
+            'recipe'      => $this->recipe_id ? \App\Models\Recipe::find($this->recipe_id) : null,
         ];
     }
 }

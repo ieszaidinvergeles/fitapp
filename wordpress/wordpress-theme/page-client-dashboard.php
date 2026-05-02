@@ -17,65 +17,62 @@ $metric     = $data['latest_metric']              ?? null;
 $notifCount = $data['unread_notifications_count'] ?? 0;
 $nextClass  = $data['next_class']                 ?? null;
 
-$page_title = 'Member Dashboard';
-$active     = 'dashboard';
-$GLOBALS['hide_global_header'] = true;
-$GLOBALS['hide_global_footer'] = true;
+$success = null;
+$error = null;
 
-voltgym_get_header();
-?>
-<header class="fixed top-0 z-40 w-full bg-[#0d0f08] flex justify-between items-center px-6 py-4 border-b border-surface-container-high border-opacity-50">
-    <div class="flex items-center gap-4">
-        <button id="open-client-menu" type="button" class="text-[#d4fb00] hover:bg-zinc-800 transition-colors p-2 rounded-lg active:scale-95 duration-150">
-            <span class="material-symbols-outlined text-2xl">menu</span>
-        </button>
-        <h1 class="text-3xl font-black italic text-[#d4fb00] tracking-tighter font-headline uppercase">VOLT</h1>
-    </div>
-    <div class="flex items-center gap-6">
-        <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary-container bg-surface-container-high text-primary-container font-headline font-bold">
-            <?= strtoupper(substr(h($user['full_name'] ?? $user['username'] ?? 'U'), 0, 1)) ?>
-        </div>
-        <a href="<?php echo esc_url(home_url('/?pagename=logout')); ?>" class="text-zinc-500 hover:text-error transition-colors">
-            <span class="material-symbols-outlined">logout</span>
-        </a>
-    </div>
-</header>
-
-<div id="client-menu-overlay" class="hidden fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm"></div>
-<aside id="client-menu-drawer" class="fixed top-0 left-0 h-full w-80 max-w-[85vw] z-[80] -translate-x-full transition-transform duration-300 bg-surface-container p-6 border-r border-outline-variant/30">
-    <div class="flex items-center justify-between mb-8">
-        <h3 class="font-headline font-black uppercase text-primary-container tracking-tight">Volt Gym</h3>
-        <button id="close-client-menu" type="button" class="text-on-surface-variant hover:text-primary-container">
-            <span class="material-symbols-outlined">close</span>
-        </button>
-    </div>
-    <nav class="space-y-2">
-        <a href="<?php echo esc_url(home_url('/?pagename=client-dashboard')); ?>" class="block px-4 py-3 rounded-xl bg-surface-container-high text-on-surface font-bold uppercase tracking-wider text-xs">Dashboard</a>
-        <a href="<?php echo esc_url(home_url('/?pagename=client-classes')); ?>" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Classes</a>
-        <a href="<?php echo esc_url(home_url('/?pagename=client-bookings')); ?>" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Bookings</a>
-        <a href="<?php echo esc_url(home_url('/?pagename=client-routines')); ?>" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Routines</a>
-        <a href="<?php echo esc_url(home_url('/?pagename=client-settings')); ?>" class="block px-4 py-3 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors font-bold uppercase tracking-wider text-xs">Settings</a>
-        <a href="<?php echo esc_url(home_url('/?pagename=logout')); ?>" class="block px-4 py-3 rounded-xl hover:bg-error-container/20 text-error hover:text-error transition-colors font-bold uppercase tracking-wider text-xs">Logout</a>
-    </nav>
-</aside>
-
-<main class="pt-24 pb-32 px-6 max-w-7xl mx-auto">
-    <section class="mb-12">
-        <h2 class="font-headline font-extrabold text-5xl md:text-7xl tracking-tighter mb-2 italic">Welcome, <?= h($user['full_name'] ?? $user['username'] ?? 'Athlete') ?></h2>
-        <div class="flex items-center gap-4">
-            <div class="h-[2px] w-12 bg-primary-container"></div>
-            <p class="text-on-surface-variant font-bold uppercase tracking-[0.2em] text-xs">
-                <?= h($membership['name'] ?? 'Free Tier') ?> Access
-                <?php if ($gym): ?> - <?= h($gym['name']) ?><?php endif; ?>
-            </p>
-        </div>
-    </section>
-
-    <?php
-    if (($response['result'] ?? null) === false) {
-        show_error(api_message($response));
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['cancel_booking_id'])) {
+    $cancel = api_post('/bookings/' . (int)$_POST['cancel_booking_id'] . '/cancel', [], auth: true);
+    if (!empty($cancel['result']) && $cancel['result'] !== false) {
+        $success = api_message($cancel) ?? 'Booking cancelled successfully.';
+        // Refresh data after cancellation
+        $response = api_get('/dashboard', auth: true);
+        $data = $response['result'] ?? [];
+        $bookings = $data['upcoming_bookings'] ?? [];
+        $nextClass = $data['next_class'] ?? null;
+    } else {
+        $error = api_message($cancel) ?? 'Could not cancel booking.';
     }
-    ?>
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['book_class_id'])) {
+    $book = api_post('/bookings', ['class_id' => (int)$_POST['book_class_id']], auth: true);
+    if (!empty($book['result']) && $book['result'] !== false) {
+        $success = api_message($book) ?? 'Class booked successfully.';
+        $response = api_get('/dashboard', auth: true);
+        $data = $response['result'] ?? [];
+        $bookings = $data['upcoming_bookings'] ?? [];
+        $nextClass = $data['next_class'] ?? null;
+    } else {
+        $error = api_message($book) ?? 'Could not book class.';
+    }
+}
+
+$bookedClassMap = [];
+foreach ($bookings as $b) {
+    if (($b['status'] ?? '') === 'active' && !empty($b['class_id'])) {
+        $bookedClassMap[$b['class_id']] = $b['id'];
+    }
+}
+
+wp_app_page_start('Member Dashboard');
+?>
+<div class="mb-6">
+    <?php show_error($error); show_success($success); ?>
+</div>
+<section class="mb-12">
+    <h2 class="font-headline font-extrabold text-5xl md:text-7xl tracking-tighter mb-2 italic">Welcome, <?= h($user['full_name'] ?? $user['username'] ?? 'Athlete') ?></h2>
+    <div class="flex items-center gap-4">
+        <div class="h-[2px] w-12 bg-primary-container"></div>
+        <p class="text-on-surface-variant font-bold uppercase tracking-[0.2em] text-xs">
+            <?= h($membership['name'] ?? 'Free Tier') ?> Access
+            <?php if ($gym): ?> - <?= h($gym['name']) ?><?php endif; ?>
+        </p>
+    </div>
+</section>
+
+<?php
+if (($response['result'] ?? null) === false) {
+    show_error(api_message($response));
+}
+?>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- Left Column -->
@@ -173,6 +170,26 @@ voltgym_get_header();
                                 <span><?= (int)$available ?> / <?= h($capacity) ?> spots</span>
                             </div>
                         </div>
+
+                        <div class="mt-4 pt-4 border-t border-zinc-800 flex items-center justify-between">
+                            <?php if (isset($bookedClassMap[$nextClass['id']])): ?>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-primary-container bg-primary-container/10 px-2 py-1 rounded">Booked</span>
+                                <form method="POST" onsubmit="event.preventDefault(); showConfirmModal(this);">
+                                    <input type="hidden" name="cancel_booking_id" value="<?= (int)$bookedClassMap[$nextClass['id']] ?>"/>
+                                    <button class="text-[10px] font-black uppercase tracking-widest text-error hover:underline flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-[14px]">cancel</span> Cancel
+                                    </button>
+                                </form>
+                            <?php else: ?>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Available</span>
+                                <form method="POST">
+                                    <input type="hidden" name="book_class_id" value="<?= (int)$nextClass['id'] ?>"/>
+                                    <button class="bg-primary-container text-on-primary-container font-black px-4 py-1.5 rounded-full text-[10px] uppercase tracking-wider hover:scale-105 transition-transform">
+                                        Book Now
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 <?php else: ?>
                     <div class="text-center py-6 text-zinc-500">
@@ -194,7 +211,17 @@ voltgym_get_header();
                                     <p class="font-bold text-on-surface"><?= h($b['gym_class']['activity']['name'] ?? 'Class') ?></p>
                                     <p class="text-[10px] text-zinc-500 font-mono mt-0.5"><?= h(!empty($b['gym_class']['start_time']) ? date('M j, Y - g:i A', strtotime($b['gym_class']['start_time'])) : '') ?></p>
                                 </div>
-                                <span class="bg-surface-container-highest px-2 py-1 rounded text-[10px] font-bold text-zinc-400 capitalize"><?= h($b['status'] ?? '') ?></span>
+                                <div class="flex items-center gap-3">
+                                    <span class="bg-surface-container-highest px-2 py-1 rounded text-[10px] font-bold text-zinc-400 capitalize"><?= h($b['status'] ?? '') ?></span>
+                                    <?php if (($b['status'] ?? '') === 'active'): ?>
+                                        <form method="POST" onsubmit="event.preventDefault(); showConfirmModal(this);">
+                                            <input type="hidden" name="cancel_booking_id" value="<?= (int)$b['id'] ?>"/>
+                                            <button type="submit" class="text-error/60 hover:text-error transition-colors flex items-center" title="Cancel Booking">
+                                                <span class="material-symbols-outlined text-[18px]">cancel</span>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -210,31 +237,57 @@ voltgym_get_header();
     </div>
 </main>
 
-<?php
-voltgym_get_template_part('template-parts/nav', 'client');
-voltgym_get_footer();
-unset($GLOBALS['hide_global_header']);
-unset($GLOBALS['hide_global_footer']);
-?>
-<script>
-(() => {
-    const overlay = document.getElementById('client-menu-overlay');
-    const drawer = document.getElementById('client-menu-drawer');
-    const openBtn = document.getElementById('open-client-menu');
-    const closeBtn = document.getElementById('close-client-menu');
-    if (!overlay || !drawer || !openBtn || !closeBtn) return;
+<!-- Custom Confirmation Modal -->
+<div id="confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="bg-surface-container rounded-3xl p-8 max-w-sm w-full border border-outline-variant/30 shadow-2xl scale-95 transition-all duration-300 opacity-0" id="modal-box">
+        <div class="w-16 h-16 bg-error/10 text-error rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="material-symbols-outlined text-3xl">warning</span>
+        </div>
+        <h3 class="text-xl font-black uppercase tracking-tight text-center mb-2">Cancel Booking?</h3>
+        <p class="text-zinc-400 text-sm text-center mb-8">Are you sure you want to cancel this booking? This action cannot be undone.</p>
+        <div class="flex gap-3">
+            <button id="modal-cancel-btn" class="flex-1 px-6 py-3 rounded-full bg-surface-container-high text-xs font-black uppercase tracking-wider hover:bg-surface-container-highest transition-all">No, Keep it</button>
+            <button id="modal-confirm-btn" class="flex-1 px-6 py-3 rounded-full bg-error text-on-error text-xs font-black uppercase tracking-wider hover:scale-105 transition-all shadow-lg shadow-error/20">Yes, Cancel</button>
+        </div>
+    </div>
+</div>
 
-    const open = () => {
-        overlay.classList.remove('hidden');
-        drawer.classList.remove('-translate-x-full');
-    };
-    const close = () => {
-        overlay.classList.add('hidden');
-        drawer.classList.add('-translate-x-full');
-    };
-    openBtn.addEventListener('click', open);
-    closeBtn.addEventListener('click', close);
-    overlay.addEventListener('click', close);
-})();
+<script>
+    let pendingForm = null;
+    const modal = document.getElementById('confirm-modal');
+    const modalBox = document.getElementById('modal-box');
+
+    function showConfirmModal(form) {
+        pendingForm = form;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modalBox.classList.remove('scale-95', 'opacity-0');
+        }, 10);
+    }
+
+    function hideModal() {
+        modalBox.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            pendingForm = null;
+        }, 300);
+    }
+
+    document.getElementById('modal-cancel-btn').addEventListener('click', hideModal);
+    document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+        if (pendingForm) pendingForm.submit();
+    });
+
+    // Close on backdrop click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) hideModal();
+    });
 </script>
+
+<?php
+$GLOBALS['active'] = 'dashboard';
+wp_app_page_end(false);
+?>
 

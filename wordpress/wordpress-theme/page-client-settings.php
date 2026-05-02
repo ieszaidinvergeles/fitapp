@@ -158,5 +158,6 @@ wp_app_page_start('Athlete Profile');
         </div>
     </section>
 <?php
+$GLOBALS['active'] = 'settings';
 wp_app_page_end(false);
 

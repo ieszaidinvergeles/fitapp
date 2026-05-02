@@ -14,11 +14,11 @@ class StoreUserMealScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'sometimes|required|exists:users,id',
             'date' => 'required|date',
             'meal_type' => 'required|in:breakfast,lunch,dinner,snack,pre_workout,post_workout',
             'recipe_id' => 'nullable|exists:recipes,id',
-            'is_consumed' => 'required|boolean',
+            'is_consumed' => 'sometimes|boolean',
         ];
     }
 }

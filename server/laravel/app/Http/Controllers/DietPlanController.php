@@ -39,7 +39,8 @@ class DietPlanController extends Controller
         $messageArray = ['general' => 'Could not retrieve diet plans.'];
         try {
             $this->authorize('viewAny', DietPlan::class);
-            $result       = DietPlanResource::collection(DietPlan::paginate(10)->withQueryString());
+            $paginated = DietPlan::paginate(10)->withQueryString();
+            $result    = DietPlanResource::collection($paginated)->response()->getData(true);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

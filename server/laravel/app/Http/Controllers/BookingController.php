@@ -34,10 +34,25 @@ class BookingController extends Controller
             $this->authorize('viewAny', Booking::class);
 
             $query = $request->user()->canManageOperations()
-                ? Booking::query()
-                : Booking::where('user_id', $request->user()->id);
+                ? Booking::with(['gymClass.activity', 'gymClass.room', 'gymClass.gym', 'user'])
+                : Booking::with(['gymClass.activity', 'gymClass.room', 'gymClass.gym'])
+                    ->where('user_id', $request->user()->id);
 
-            $result       = BookingResource::collection($query->paginate(10)->withQueryString());
+            if (!$request->boolean('include_past')) {
+                $query->whereHas('gymClass', function($q) {
+                    $q->where('start_time', '>', now());
+                })->where('status', 'active');
+            }
+
+            $query->orderBy(
+                GymClass::select('start_time')
+                    ->whereColumn('id', 'bookings.class_id')
+                    ->limit(1),
+                'desc'
+            );
+
+            $paginated = $query->paginate(10)->withQueryString();
+            $result    = BookingResource::collection($paginated)->response()->getData(true);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -102,7 +117,7 @@ class BookingController extends Controller
             }
 
             if ($user->isBlockedFromBooking()) {
-                return response()->json(['result' => false, 'message' => ['general' => 'You are blocked from booking.']], 422);
+                return response()->json(['result' => false, 'message' => ['general' => 'Booking blocked: You have reached the limit of 3 cancellation strikes. Please contact the front desk to restore your booking privileges.']], 422);
             }
 
             if ($gymClass->isUserBooked($user->id)) {

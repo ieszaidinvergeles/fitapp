@@ -37,6 +37,11 @@ class UserMealScheduleController extends Controller
                 $query->forDate($request->input('date'));
             }
 
+            $query->with('recipe')
+                  ->orderBy('is_consumed', 'asc')
+                  ->orderBy('date', 'desc')
+                  ->orderBy('meal_type', 'asc');
+
             $result       = UserMealScheduleResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
@@ -88,6 +93,7 @@ class UserMealScheduleController extends Controller
 
             $data            = $request->validated();
             $data['user_id'] = $request->user()->id;
+            $data['is_consumed'] = $data['is_consumed'] ?? false;
             $result          = new UserMealScheduleResource(UserMealSchedule::create($data));
             $messageArray    = ['general' => 'Meal entry created.'];
         } catch (\Exception $e) {

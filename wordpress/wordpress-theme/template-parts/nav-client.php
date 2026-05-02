@@ -20,10 +20,11 @@ $active = $active ?? '';
      * Each entry: [href, icon, label, key]
      */
     $items = [
-        ['page-client-dashboard.php', 'grid_view',           'Home',     'dashboard'],
-        ['page-client-bookings.php',  'confirmation_number', 'Booking',  'classes'],
-        ['page-client-routines.php',  'event_note',          'Routines', 'routines'],
-        ['page-client-settings.php',  'settings',            'Settings', 'settings'],
+        ['?pagename=client-dashboard',  'grid_view',           'Home',       'dashboard'],
+        ['?pagename=client-bookings',   'confirmation_number', 'Booking',    'classes'],
+        ['?pagename=client-routines',   'event_note',          'Routines',   'routines'],
+        ['?pagename=client-diet-plans', 'restaurant',          'Diets',      'diet-plans'],
+        ['?pagename=client-settings',   'settings',            'Settings',   'settings'],
     ];
     foreach ($items as [$href, $icon, $label, $key]):
         $isActive = ($active === $key);

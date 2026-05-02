@@ -39,5 +39,6 @@ wp_app_page_start('Routines');
         <?php if (!$listData): ?><p class="text-on-surface-variant">No routines available.</p><?php endif; ?>
     </div>
 <?php
+$GLOBALS['active'] = 'routines';
 wp_app_page_end(false);
 

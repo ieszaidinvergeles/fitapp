@@ -86,15 +86,19 @@ function voltgym_create_required_pages(): void
 // Run automatically when the theme is activated.
 add_action('after_switch_theme', 'voltgym_create_required_pages');
 
-// Also allow a manual trigger via ?voltgym_setup=1 (admin only).
+// Also allow a manual trigger via ?voltgym_setup=1.
 add_action('init', function () {
     if (
         isset($_GET['voltgym_setup']) &&
-        $_GET['voltgym_setup'] === '1' &&
-        current_user_can('manage_options')
+        $_GET['voltgym_setup'] === '1'
     ) {
         voltgym_create_required_pages();
-        wp_redirect(admin_url('?voltgym_pages_created=1'));
+        // Redirect to home if not in admin
+        if (!is_admin()) {
+            wp_redirect(home_url('/?voltgym_pages_created=1'));
+        } else {
+            wp_redirect(admin_url('?voltgym_pages_created=1'));
+        }
         exit;
     }
 });
@@ -656,39 +660,74 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
     $page_title = $title;
     $GLOBALS['hide_global_header'] = true;
     $GLOBALS['hide_global_footer'] = true;
+    
+    $user = $_SESSION['user'] ?? [];
+    
     voltgym_get_header();
     ?>
-    <header class="fixed top-0 z-40 w-full bg-[#0d0f08] border-b border-outline-variant/20 px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary-container">bolt</span>
-            <span class="font-headline font-black uppercase tracking-tight text-primary-container">Volt Gym</span>
-            <span class="text-[10px] px-2 py-1 rounded-full bg-surface-container text-on-surface-variant uppercase tracking-widest font-black"><?= h(get_user_role(), 'guest') ?></span>
+    <header class="fixed top-0 z-40 w-full bg-[#0d0f08] flex justify-between items-center px-6 py-4 border-b border-surface-container-high border-opacity-50">
+        <div class="flex items-center gap-4">
+            <button id="open-client-menu" type="button" class="text-[#d4fb00] hover:bg-zinc-800 transition-colors p-2 rounded-lg active:scale-95 duration-150">
+                <span class="material-symbols-outlined text-2xl">menu</span>
+            </button>
+            <h1 class="text-3xl font-black italic text-[#d4fb00] tracking-tighter font-headline uppercase">VOLT</h1>
         </div>
-        <a href="<?= esc_url(home_url('/?pagename=logout')) ?>" class="text-xs font-black uppercase tracking-widest text-on-surface-variant hover:text-primary-container transition-colors">Logout</a>
-    </header>
-    <main class="pt-24 pb-32 px-6 max-w-6xl mx-auto min-h-screen">
-        <nav class="mb-6 overflow-x-auto no-scrollbar">
-            <div class="flex gap-2 min-w-max">
-                <?php if ($staffNav): ?>
-                    <a href="<?= esc_url(home_url('/?pagename=staff-dashboard')) ?>" class="px-4 py-2 rounded-full bg-surface-container-high text-xs font-black uppercase tracking-wider">Dashboard</a>
-                    <a href="<?= esc_url(home_url('/?pagename=staff-attendance')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Attendance</a>
-                    <a href="<?= esc_url(home_url('/?pagename=staff-manage-classes')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Classes</a>
-                    <a href="<?= esc_url(home_url('/?pagename=staff-manage-routines')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Routines</a>
-                    <a href="<?= esc_url(home_url('/?pagename=staff-rooms')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Rooms</a>
-                    <?php if (can_manage_members()): ?>
-                        <a href="<?= esc_url(home_url('/?pagename=staff-admin-users')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Users</a>
-                    <?php endif; ?>
-                <?php else: ?>
-                    <a href="<?= esc_url(home_url('/?pagename=client-dashboard')) ?>" class="px-4 py-2 rounded-full bg-surface-container-high text-xs font-black uppercase tracking-wider">Dashboard</a>
-                    <a href="<?= esc_url(home_url('/?pagename=client-classes')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Classes</a>
-                    <a href="<?= esc_url(home_url('/?pagename=client-bookings')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Bookings</a>
-                    <a href="<?= esc_url(home_url('/?pagename=client-routines')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Routines</a>
-                    <a href="<?= esc_url(home_url('/?pagename=client-meal-schedule')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Meals</a>
-                    <a href="<?= esc_url(home_url('/?pagename=client-settings')) ?>" class="px-4 py-2 rounded-full bg-surface-container text-xs font-black uppercase tracking-wider">Settings</a>
-                <?php endif; ?>
+        <div class="flex items-center gap-6">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary-container bg-surface-container-high text-primary-container font-headline font-bold">
+                <?= strtoupper(substr(h($user['full_name'] ?? $user['username'] ?? 'U'), 0, 1)) ?>
             </div>
+            <a href="<?php echo esc_url(home_url('/?pagename=logout')); ?>" class="text-zinc-500 hover:text-error transition-colors">
+                <span class="material-symbols-outlined">logout</span>
+            </a>
+        </div>
+    </header>
+
+    <div id="client-menu-overlay" class="hidden fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm"></div>
+    <aside id="client-menu-drawer" class="fixed top-0 left-0 h-full w-80 max-w-[85vw] z-[80] -translate-x-full transition-transform duration-300 bg-surface-container p-6 border-r border-outline-variant/30 flex flex-col">
+        <div class="flex items-center justify-between mb-8">
+            <h3 class="font-headline font-black uppercase text-primary-container tracking-tight">Volt Gym</h3>
+            <button id="close-client-menu" type="button" class="text-on-surface-variant hover:text-primary-container">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <nav class="space-y-2 flex-1">
+            <?php 
+            $activePage = $GLOBALS['active'] ?? '';
+            $linkClass = "block px-4 py-3 rounded-xl font-bold uppercase tracking-wider text-xs transition-colors ";
+            $inactiveCls = $linkClass . "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface";
+            $activeCls = $linkClass . "bg-primary-container text-on-primary-container shadow-lg shadow-primary-container/20";
+            ?>
+            <?php if ($staffNav): ?>
+                <a href="<?= esc_url(home_url('/?pagename=staff-dashboard')) ?>" class="<?= $activePage === 'staff-dashboard' ? $activeCls : $inactiveCls ?>">Dashboard</a>
+                <a href="<?= esc_url(home_url('/?pagename=staff-attendance')) ?>" class="<?= $activePage === 'staff-attendance' ? $activeCls : $inactiveCls ?>">Attendance</a>
+                <a href="<?= esc_url(home_url('/?pagename=staff-manage-classes')) ?>" class="<?= $activePage === 'staff-manage-classes' ? $activeCls : $inactiveCls ?>">Classes</a>
+                <a href="<?= esc_url(home_url('/?pagename=staff-manage-routines')) ?>" class="<?= $activePage === 'staff-manage-routines' ? $activeCls : $inactiveCls ?>">Routines</a>
+                <a href="<?= esc_url(home_url('/?pagename=staff-rooms')) ?>" class="<?= $activePage === 'staff-rooms' ? $activeCls : $inactiveCls ?>">Rooms</a>
+                <?php if (can_manage_members()): ?>
+                    <a href="<?= esc_url(home_url('/?pagename=staff-admin-users')) ?>" class="<?= $activePage === 'staff-admin-users' ? $activeCls : $inactiveCls ?>">Users</a>
+                <?php endif; ?>
+            <?php else: ?>
+                <a href="<?= esc_url(home_url('/?pagename=client-dashboard')) ?>" class="<?= $activePage === 'dashboard' ? $activeCls : $inactiveCls ?>">Dashboard</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-classes')) ?>" class="<?= $activePage === 'classes' ? $activeCls : $inactiveCls ?>">Classes</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-bookings')) ?>" class="<?= $activePage === 'bookings' ? $activeCls : $inactiveCls ?>">Bookings</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-routines')) ?>" class="<?= $activePage === 'routines' ? $activeCls : $inactiveCls ?>">Routines</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-diet-plans')) ?>" class="<?= $activePage === 'diet-plans' ? $activeCls : $inactiveCls ?>">Diet Plans</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-meal-schedule')) ?>" class="<?= $activePage === 'meals' ? $activeCls : $inactiveCls ?>">Meals</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-settings')) ?>" class="<?= $activePage === 'settings' ? $activeCls : $inactiveCls ?>">Settings</a>
+            <?php endif; ?>
         </nav>
-        <h1 class="font-headline text-5xl font-black uppercase tracking-tight mb-6"><?= h($title) ?></h1>
+        <div class="mt-4 pt-4 border-t border-outline-variant/30">
+            <a href="<?= esc_url(home_url('/?pagename=logout')) ?>" class="block px-4 py-3 rounded-xl hover:bg-error-container/20 text-error hover:text-error transition-colors font-bold uppercase tracking-wider text-xs">Logout</a>
+        </div>
+    </aside>
+
+    <main class="pt-24 pb-32 px-6 max-w-7xl mx-auto min-h-screen">
+        <?php if ($title !== 'Member Dashboard'): ?>
+            <div class="mb-8">
+                <h1 class="font-headline font-black text-4xl uppercase tracking-tighter italic"><?= h($title) ?></h1>
+                <div class="h-1 w-12 bg-primary-container mt-2"></div>
+            </div>
+        <?php endif; ?>
     <?php
 }
 
@@ -706,6 +745,29 @@ function wp_app_page_end(bool $staffNav = false): void
     voltgym_get_template_part('template-parts/nav', $staffNav ? 'staff' : 'client');
     voltgym_get_footer();
     unset($GLOBALS['hide_global_header'], $GLOBALS['hide_global_footer']);
+    ?>
+    <script>
+    (() => {
+        const overlay = document.getElementById('client-menu-overlay');
+        const drawer = document.getElementById('client-menu-drawer');
+        const openBtn = document.getElementById('open-client-menu');
+        const closeBtn = document.getElementById('close-client-menu');
+        if (!overlay || !drawer || !openBtn || !closeBtn) return;
+
+        const open = () => {
+            overlay.classList.remove('hidden');
+            drawer.classList.remove('-translate-x-full');
+        };
+        const close = () => {
+            overlay.classList.add('hidden');
+            drawer.classList.add('-translate-x-full');
+        };
+        openBtn.addEventListener('click', open);
+        closeBtn.addEventListener('click', close);
+        overlay.addEventListener('click', close);
+    })();
+    </script>
+    <?php
 }
 
 /**
