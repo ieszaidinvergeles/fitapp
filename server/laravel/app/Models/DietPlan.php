@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string      $name
  * @property string|null $goal_description
  * @property string|null $cover_image_url
+ * @property bool        $is_favorite_flag
  *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Routine> $routines
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Recipe> $recipes

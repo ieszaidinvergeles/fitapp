@@ -36,20 +36,21 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function index(Request $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */
+        $result       = null;
         $messageArray = ['general' => 'Could not retrieve diet plans.'];
         try {
             $this->authorize('viewAny', DietPlan::class);
 
             $query = DietPlan::query();
+            $activeUser = $request->user() ?: Auth::guard('sanctum')->user();
 
             if ($request->has('favorites')) {
-                $user = $request->user() ?: Auth::guard('sanctum')->user();
-                if (!$user) {
+                if (!$activeUser) {
                     return response()->json(['result' => ['data' => []], 'message' => ['general' => 'Unauthorized']]);
                 }
                 $favoriteIds = DB::table('user_favorites')
-                    ->where('user_id', $user->id)
+                    ->where('user_id', $activeUser->id)
                     ->where('entity_type', 'diet_plan')
                     ->pluck('entity_id');
                 $query->whereIn('id', $favoriteIds);
@@ -59,7 +60,6 @@ class DietPlanController extends Controller
 
             // Pre-calculate favorites
             $userFavs = [];
-            $activeUser = $request->user() ?: Auth::guard('sanctum')->user();
             if ($activeUser) {
                 $userFavs = DB::table('user_favorites')
                     ->where('user_id', $activeUser->id)
@@ -86,7 +86,8 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function show(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */
+        $result       = null;
         $messageArray = ['general' => 'Could not retrieve diet plan.'];
         try {
             $plan         = DietPlan::with('recipes')->findOrFail($id);
@@ -102,7 +103,8 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function store(StoreDietPlanRequest $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */
+        $result       = null;
         $messageArray = ['general' => 'Could not create diet plan.'];
         try {
             $this->authorize('create', DietPlan::class);
@@ -122,7 +124,8 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function update(UpdateDietPlanRequest $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */
+        $result       = null;
         $messageArray = ['general' => 'Could not update diet plan.'];
         try {
             $plan = DietPlan::findOrFail($id);
@@ -215,7 +218,7 @@ class DietPlanController extends Controller
     }
 
     /** @return Response|JsonResponse */
-    public function showImage(int $id)
+    public function showImage(int $id): Response|JsonResponse
     {
         try {
             $plan = DietPlan::findOrFail($id);
