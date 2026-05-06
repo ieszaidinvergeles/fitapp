@@ -49,17 +49,27 @@ class EquipmentController extends Controller
      */
     public function index(): JsonResponse
     {
-        $result       = false;
-        $messageArray = ['general' => 'Could not retrieve equipment.'];
-
         try {
-            $result       = EquipmentResource::collection(Equipment::paginate(10)->withQueryString());
-            $messageArray = ['general' => 'OK'];
+            $paginated    = Equipment::paginate(6)->withQueryString();
+            $result       = [
+                'data' => EquipmentResource::collection($paginated),
+                'meta' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page'    => $paginated->lastPage(),
+                    'per_page'     => $paginated->perPage(),
+                    'total'        => $paginated->total(),
+                ]
+            ];
+            return response()->json([
+                'result' => $result,
+                'message' => ['general' => 'OK']
+            ]);
         } catch (\Exception $e) {
-            $messageArray = ['general' => $e->getMessage()];
+            return response()->json([
+                'result' => false,
+                'message' => ['general' => $e->getMessage()]
+            ], 500);
         }
-
-        return response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /**

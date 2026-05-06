@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRoutineRequest;
 use App\Http\Requests\UpdateRoutineRequest;
 use App\Http\Resources\RoutineResource;
 use App\Models\Routine;
+use App\Models\UserFavorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -381,6 +382,46 @@ class RoutineController extends Controller
 
             $result       = true;
             $messageArray = ['general' => 'Image deleted.'];
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
+        return response()->json(['result' => $result, 'message' => $messageArray]);
+    }
+
+    /**
+     * Toggles a routine as a favorite for the authenticated user.
+     *
+     * @param  Request  $request
+     * @param  int      $id
+     * @return JsonResponse
+     */
+    public function favorite(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not update favorites.'];
+
+        try {
+            $userId = $request->user()->id;
+            $routine = Routine::findOrFail($id);
+            
+            $favorite = UserFavorite::where('user_id', $userId)
+                ->where('entity_type', 'routine')
+                ->where('entity_id', $id)
+                ->first();
+
+            if ($favorite) {
+                $favorite->delete();
+                $messageArray = ['general' => 'Removed from favorites.'];
+            } else {
+                UserFavorite::create([
+                    'user_id'     => $userId,
+                    'entity_type' => 'routine',
+                    'entity_id'   => $id,
+                ]);
+                $messageArray = ['general' => 'Added to favorites.'];
+            }
+            $result = true;
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }

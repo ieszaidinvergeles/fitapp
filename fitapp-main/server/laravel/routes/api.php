@@ -136,8 +136,12 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/favorites',          [UserFavoriteController::class, 'store']);
         Route::delete('/favorites/{id}',   [UserFavoriteController::class, 'destroy']);
 
-        // Routine activation
+        // Routine management & activation
         Route::post('/routines/{id}/activate',  [RoutineController::class, 'activate']);
+        Route::post('/routines/{id}/favorite',  [RoutineController::class, 'favorite']);
+
+        // DietPlan management
+        Route::post('/diet-plans/{id}/favorite', [DietPlanController::class, 'favorite']);
 
         // Staff Attendance (self service)
         Route::post('/attendance/clock-in',     [StaffAttendanceController::class, 'clockIn']);

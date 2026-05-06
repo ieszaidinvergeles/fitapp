@@ -21,8 +21,8 @@ $active = $active ?? '';
      */
     $items = [
         ['?pagename=client-dashboard',  'grid_view',           'Home',       'dashboard'],
-        ['?pagename=client-bookings',   'confirmation_number', 'Booking',    'classes'],
-        ['?pagename=client-routines',   'event_note',          'Routines',   'routines'],
+        ['?pagename=client-equipment',  'fitness_center',      'Inventory',  'equipment'],
+        ['?pagename=client-routines',   'event_note',          'Workouts',   'routines'],
         ['?pagename=client-diet-plans', 'restaurant',          'Diets',      'diet-plans'],
         ['?pagename=client-settings',   'settings',            'Settings',   'settings'],
     ];

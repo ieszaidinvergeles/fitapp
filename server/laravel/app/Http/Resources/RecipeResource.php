@@ -28,8 +28,10 @@ class RecipeResource extends JsonResource
             'name'        => $this->name,
             'description' => $this->description,
             'type'        => $this->type,
-            'calories'    => $this->calories,
-            'macros'      => $this->macros_json,
+            'ingredients'       => $this->ingredients,
+            'preparation_steps' => $this->preparation_steps,
+            'calories'          => $this->calories,
+            'macros'            => $this->macros_json,
             'image_url'   => $this->image_url
                                 ? route('recipes.image', ['id' => $this->id])
                                 : null,

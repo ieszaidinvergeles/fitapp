@@ -21,10 +21,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserFavorite extends Model
 {
     /** @var bool */
-    public $incrementing = false;
+    public $incrementing = true;
 
-    /** @var mixed */
-    protected $primaryKey = null;
+    /** @var string */
+    protected $primaryKey = 'id';
 
     /** @var bool */
     public $timestamps = false;
@@ -74,7 +74,8 @@ class UserFavorite extends Model
      */
     public static function existsFor(int $userId, string $entityType, int $entityId): bool
     {
-        return self::where('user_id', $userId)
+        return \Illuminate\Support\Facades\DB::table('user_favorites')
+                   ->where('user_id', $userId)
                    ->where('entity_type', $entityType)
                    ->where('entity_id', $entityId)
                    ->exists();

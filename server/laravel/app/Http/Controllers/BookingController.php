@@ -38,10 +38,21 @@ class BookingController extends Controller
                 : Booking::with(['gymClass.activity', 'gymClass.room', 'gymClass.gym'])
                     ->where('user_id', $request->user()->id);
 
-            if (!$request->boolean('include_past')) {
+            if ($request->boolean('include_past')) {
+                $query->whereHas('gymClass', function($q) {
+                    $q->where('start_time', '<', now());
+                });
+            } else {
                 $query->whereHas('gymClass', function($q) {
                     $q->where('start_time', '>', now());
-                })->where('status', 'active');
+                });
+            }
+
+            if ($request->boolean('hide_cancelled')) {
+                $query->where('status', '!=', 'cancelled')
+                      ->whereHas('gymClass', function($q) {
+                          $q->where('is_cancelled', 0);
+                      });
             }
 
             $query->orderBy(
@@ -51,7 +62,7 @@ class BookingController extends Controller
                 'desc'
             );
 
-            $paginated = $query->paginate(10)->withQueryString();
+            $paginated = $query->paginate(5)->withQueryString();
             $result    = BookingResource::collection($paginated)->response()->getData(true);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {

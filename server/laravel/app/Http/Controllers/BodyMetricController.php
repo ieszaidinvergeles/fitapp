@@ -31,9 +31,11 @@ class BodyMetricController extends Controller
         try {
             $this->authorize('viewAny', BodyMetric::class);
 
-            $query = $request->user()->isAdmin()
+            $query = ($request->user()->isAdmin()
                 ? BodyMetric::query()
-                : BodyMetric::where('user_id', $request->user()->id);
+                : BodyMetric::where('user_id', $request->user()->id))
+                ->orderBy('date', 'desc')
+                ->orderBy('id', 'desc');
 
             $result       = BodyMetricResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];

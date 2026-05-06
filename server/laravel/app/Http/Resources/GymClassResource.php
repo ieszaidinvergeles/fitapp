@@ -32,6 +32,8 @@ class GymClassResource extends JsonResource
             'start_time'     => $this->start_time?->toIso8601String(),
             'end_time'       => $this->end_time?->toIso8601String(),
             'capacity_limit' => $this->capacity_limit,
+            'bookings_count' => (int) ($this->bookings_count ?? $this->bookings()->where('status', 'active')->count()),
+            'is_full'        => (bool) ($this->capacity_limit > 0 && ($this->bookings_count ?? $this->bookings()->where('status', 'active')->count()) >= $this->capacity_limit),
             'is_cancelled'   => $this->is_cancelled,
             'gym'            => new GymResource($this->whenLoaded('gym')),
             'activity'       => new ActivityResource($this->whenLoaded('activity')),

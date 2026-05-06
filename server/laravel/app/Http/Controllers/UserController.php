@@ -419,6 +419,55 @@ class UserController extends Controller
     }
 
     /**
+     * Allows the authenticated user to update their own basic profile info.
+     */
+    public function updateMe(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            $data = $request->validate([
+                'username'  => 'sometimes|required|string|max:20|unique:users,username,' . $user->id,
+                'full_name' => 'sometimes|nullable|string|max:160',
+            ]);
+
+            $user->update($data);
+
+            return response()->json([
+                'result' => new UserResource($user),
+                'message' => ['general' => 'Profile updated successfully.']
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['result' => false, 'message' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['result' => false, 'message' => ['general' => $e->getMessage()]], 422);
+        }
+    }
+
+    /**
+     * Allows the authenticated user to upload their own profile photo.
+     */
+    public function uploadMyPhoto(Request $request): JsonResponse
+    {
+        try {
+            $request->validate(['image' => 'required|image|mimes:jpeg,png,webp,gif|max:2048']);
+
+            $user = $request->user();
+            $path = $this->imageService->replace($request->file('image'), self::IMAGE_FOLDER, $user->id, $user->profile_photo_url);
+            $user->update(['profile_photo_url' => $path]);
+
+            return response()->json([
+                'result' => true,
+                'message' => ['general' => 'Photo uploaded successfully.']
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['result' => false, 'message' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['result' => false, 'message' => ['general' => $e->getMessage()]], 422);
+        }
+    }
+
+    /**
      * Enforces anti-impersonation rules for profile photo changes.
      *
      * @param  User  $actor

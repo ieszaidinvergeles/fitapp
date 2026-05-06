@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
 
 /**
  * Transforms a Notification model into a standardized API JSON response.
@@ -31,6 +32,7 @@ class NotificationResource extends JsonResource
             'target_audience' => $this->target_audience,
             'related_gym_id'  => $this->related_gym_id,
             'created_at'      => $this->created_at?->toIso8601String(),
+            'read_at'         => $this->read_at ? Carbon::parse($this->read_at)->toIso8601String() : null,
             'sender'          => new UserResource($this->whenLoaded('sender')),
         ];
     }

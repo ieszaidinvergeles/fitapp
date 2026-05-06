@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DietPlanController;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\ExerciseController;
+use App\Http\Controllers\FriendshipController;
 use App\Http\Controllers\GymClassController;
 use App\Http\Controllers\GymController;
 use App\Http\Controllers\MembershipPlanController;
@@ -105,7 +106,15 @@ Route::prefix('v1')->group(function (): void {
 
         // Aggregate Dashboards
         Route::get('/dashboard',        [DashboardController::class,      'index']);
+        Route::put('/me/update',        [UserController::class,           'updateMe']);
+        Route::post('/me/photo',        [UserController::class,           'uploadMyPhoto']);
         Route::middleware('staff_portal')->get('/staff/dashboard', [StaffDashboardController::class, 'index']);
+
+        // Friendships
+        Route::get('/friends/search',       [FriendshipController::class, 'search']);
+        Route::get('/friends',              [FriendshipController::class, 'index']);
+        Route::post('/friends/{id}/toggle', [FriendshipController::class, 'toggle']);
+        Route::get('/friends/{id}/profile', [FriendshipController::class, 'showProfile']);
 
         // Bookings
         Route::get('/bookings',             [BookingController::class, 'index']);
@@ -136,8 +145,12 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/favorites',          [UserFavoriteController::class, 'store']);
         Route::delete('/favorites/{id}',   [UserFavoriteController::class, 'destroy']);
 
-        // Routine activation
+        // Routine management & activation
         Route::post('/routines/{id}/activate',  [RoutineController::class, 'activate']);
+        Route::post('/routines/{id}/favorite',  [RoutineController::class, 'favorite']);
+
+        // DietPlan management
+        Route::post('/diet-plans/{id}/favorite', [DietPlanController::class, 'favorite']);
 
         // Staff Attendance (self service)
         Route::post('/attendance/clock-in',     [StaffAttendanceController::class, 'clockIn']);

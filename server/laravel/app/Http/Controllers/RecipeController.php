@@ -52,7 +52,10 @@ class RecipeController extends Controller
                 $query->byCalorieRange(0, (int) $request->input('max_calories'));
             }
 
-            $result       = RecipeResource::collection($query->paginate(10)->withQueryString());
+            $perPage = (int) $request->input('per_page', 10);
+            $paginator    = $query->paginate($perPage)->withQueryString();
+
+            $result       = RecipeResource::collection($paginator)->response()->getData(true);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

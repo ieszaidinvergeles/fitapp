@@ -16,10 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['cancel_booking_id'])
 
 $page = max(1, (int)($_GET['paged_bookings'] ?? 1));
 $includePast = isset($_GET['include_past']) && $_GET['include_past'] === '1';
+$hideCancelled = isset($_GET['hide_cancelled']) && $_GET['hide_cancelled'] === '1';
 
 $endpoint = '/bookings?page=' . $page;
 if ($includePast) {
     $endpoint .= '&include_past=1';
+}
+if ($hideCancelled) {
+    $endpoint .= '&hide_cancelled=1';
 }
 
 $response = api_get($endpoint, auth: true);
@@ -41,7 +45,18 @@ wp_app_page_start('My Bookings');
                     <div class="w-10 h-5 bg-zinc-700 rounded-full peer peer-checked:bg-primary-container transition-colors"></div>
                     <div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                 </div>
-                <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-on-surface transition-colors">Show Past Bookings</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-on-surface transition-colors">Show Past</span>
+            </label>
+
+            <div class="w-[1px] h-4 bg-zinc-800"></div>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <div class="relative flex items-center">
+                    <input type="checkbox" name="hide_cancelled" value="1" <?= $hideCancelled ? 'checked' : '' ?> onchange="this.form.submit()" class="peer sr-only"/>
+                    <div class="w-10 h-5 bg-zinc-700 rounded-full peer peer-checked:bg-primary-container transition-colors"></div>
+                    <div class="absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                </div>
+                <span class="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-on-surface transition-colors">Hide Cancelled</span>
             </label>
         </form>
     </div>
@@ -111,24 +126,32 @@ wp_app_page_start('My Bookings');
 
         <!-- Pagination -->
         <?php
-        $meta = $result['meta'] ?? null;
+        $meta = $result['meta'] ?? $response['meta'] ?? null;
         if ($meta && ($meta['last_page'] ?? 1) > 1):
             $currentPage = $meta['current_page'];
             $lastPage = $meta['last_page'];
-            $queryParams = $_GET;
-            unset($queryParams['paged_bookings']);
+            
+            $baseQuery = '?pagename=client-bookings';
+            if ($includePast) $baseQuery .= '&include_past=1';
+            if ($hideCancelled) $baseQuery .= '&hide_cancelled=1';
         ?>
-            <div class="flex items-center justify-center gap-2 mt-12">
-                <?php for ($i = 1; $i <= $lastPage; $i++): ?>
-                    <?php 
-                        $queryParams['paged_bookings'] = $i;
-                        $pageUrl = home_url('/?' . http_build_query($queryParams));
-                    ?>
-                    <a href="<?= esc_url($pageUrl) ?>" class="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black border transition-all <?= $i === $currentPage ? 'bg-primary-container text-on-primary-container border-primary-container shadow-lg shadow-primary-container/20' : 'bg-surface-container border-outline-variant/10 text-zinc-400 hover:border-primary-container hover:text-primary-container' ?>">
-                        <?= $i ?>
-                    </a>
-                <?php endfor; ?>
+        <div class="mt-12 flex items-center justify-center gap-4">
+            <?php if ($currentPage > 1): ?>
+                <a href="<?= $baseQuery ?>&paged_bookings=<?= $currentPage - 1 ?>" class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-zinc-400 hover:text-primary-container transition-colors border border-outline-variant/20">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </a>
+            <?php endif; ?>
+            
+            <div class="px-6 py-3 rounded-2xl bg-surface-container border border-outline-variant/20 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                Page <?= $currentPage ?> / <?= $lastPage ?>
             </div>
+            
+            <?php if ($currentPage < $lastPage): ?>
+                <a href="<?= $baseQuery ?>&paged_bookings=<?= $currentPage + 1 ?>" class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-zinc-400 hover:text-primary-container transition-colors border border-outline-variant/20">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </a>
+            <?php endif; ?>
+        </div>
         <?php endif; ?>
     </div>
 

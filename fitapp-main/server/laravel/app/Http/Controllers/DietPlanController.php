@@ -7,6 +7,7 @@ use App\Http\Requests\StoreDietPlanRequest;
 use App\Http\Requests\UpdateDietPlanRequest;
 use App\Http\Resources\DietPlanResource;
 use App\Models\DietPlan;
+use App\Models\UserFavorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -170,6 +171,46 @@ class DietPlanController extends Controller
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
+        return response()->json(['result' => $result, 'message' => $messageArray]);
+    }
+
+    /**
+     * Toggles a diet plan as a favorite for the authenticated user.
+     *
+     * @param  Request  $request
+     * @param  int      $id
+     * @return JsonResponse
+     */
+    public function favorite(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not update favorites.'];
+
+        try {
+            $userId = $request->user()->id;
+            $plan = DietPlan::findOrFail($id);
+            
+            $favorite = UserFavorite::where('user_id', $userId)
+                ->where('entity_type', 'diet_plan')
+                ->where('entity_id', $id)
+                ->first();
+
+            if ($favorite) {
+                $favorite->delete();
+                $messageArray = ['general' => 'Removed from favorites.'];
+            } else {
+                UserFavorite::create([
+                    'user_id'     => $userId,
+                    'entity_type' => 'diet_plan',
+                    'entity_id'   => $id,
+                ]);
+                $messageArray = ['general' => 'Added to favorites.'];
+            }
+            $result = true;
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
         return response()->json(['result' => $result, 'message' => $messageArray]);
     }
 }

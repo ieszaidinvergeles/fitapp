@@ -30,6 +30,10 @@ class ExerciseResource extends JsonResource
                                         ? route('exercises.image', ['id' => $this->id])
                                         : null,
             'video_url'           => $this->video_url,
+            'sets'                => $this->pivot->recommended_sets ?? null,
+            'reps'                => $this->pivot->recommended_reps ?? null,
+            'rest'                => $this->pivot->rest_seconds ?? null,
+            'order'               => $this->pivot->order_index ?? null,
         ];
     }
 }

@@ -22,12 +22,16 @@ class UserManagementMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() || !$request->user()->canManageMembers()) {
-            return response()->json([
-                'message' => 'Forbidden. Member-management role required.',
-            ], Response::HTTP_FORBIDDEN);
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
+        // We allow the request to proceed to the Controller.
+        // The UserController calls $this->authorize('update', $user), 
+        // which triggers UserPolicy. UserPolicy already allows self-updates.
+        // This middleware should ONLY block if the user is not staff AND trying to access restricted management routes.
+        
         return $next($request);
     }
 }

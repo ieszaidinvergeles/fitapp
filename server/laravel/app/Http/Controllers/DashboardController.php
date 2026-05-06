@@ -66,13 +66,29 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get();
 
-            $unreadCount = Notification::where('related_gym_id', $user->current_gym_id)
-                ->where('created_at', '>=', $user->created_at)
-                ->count();
+            $unreadCount = Notification::where(function($q) use ($user) {
+                $q->where('target_audience', 'global');
+                if ($user->current_gym_id) {
+                    $q->orWhere(function($sq) use ($user) {
+                        $sq->where('target_audience', 'specific_gym')
+                           ->where('related_gym_id', $user->current_gym_id);
+                    });
+                }
+            })
+            ->whereNotExists(function ($query) use ($user) {
+                $query->select(\Illuminate\Support\Facades\DB::raw(1))
+                    ->from('notification_delivery_logs')
+                    ->whereColumn('notification_delivery_logs.notification_id', 'notifications.id')
+                    ->where('notification_delivery_logs.recipient_id', $user->id)
+                    ->where('notification_delivery_logs.status', 'read');
+            })
+            ->where('created_at', '>=', $user->created_at)
+            ->count();
 
             $nextClass = null;
             if ($user->current_gym_id) {
                 $nextClass = GymClass::with(['activity', 'room', 'instructor'])
+                    ->withCount(['bookings' => function($q) { $q->where('status', 'active'); }])
                     ->where('gym_id', $user->current_gym_id)
                     ->where('start_time', '>', now())
                     ->where('is_cancelled', false)

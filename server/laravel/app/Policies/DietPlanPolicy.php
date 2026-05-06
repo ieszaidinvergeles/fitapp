@@ -26,7 +26,7 @@ class DietPlanPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->isAdvanced();
+        return true;
     }
 
     /**
@@ -39,7 +39,7 @@ class DietPlanPolicy
      */
     public function view(User $user, DietPlan $dietPlan): bool
     {
-        return $user->isAdvanced();
+        return true;
     }
 
     /**

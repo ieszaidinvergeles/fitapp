@@ -23,7 +23,6 @@ class UserMealScheduleResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        die("EXECUTING_RESOURCE");
         return [
             'id'          => $this->id,
             'user_id'     => $this->user_id,

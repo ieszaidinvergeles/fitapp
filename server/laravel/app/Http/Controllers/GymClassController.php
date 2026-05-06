@@ -31,7 +31,8 @@ class GymClassController extends Controller
         $messageArray = ['general' => 'Could not retrieve classes.'];
 
         try {
-            $query = GymClass::with(['activity', 'instructor', 'room']);
+            $query = GymClass::with(['activity', 'instructor', 'room'])
+                ->withCount(['bookings' => function($q) { $q->where('status', 'active'); }]);
 
             if ($request->filled('gym_id')) {
                 $query->where('gym_id', (int) $request->input('gym_id'));

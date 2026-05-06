@@ -37,12 +37,23 @@ class UserMealScheduleController extends Controller
                 $query->forDate($request->input('date'));
             }
 
+            // Hide consumed ONLY if explicitly requested via switch
+            if ($request->has('hide_consumed') && $request->boolean('hide_consumed')) {
+                $query->where('is_consumed', false);
+            }
+
+            // Filter by date (past vs future/today) if requested
+            if (!$request->boolean('include_past')) {
+                $query->where('date', '>=', now()->toDateString());
+            }
+
             $query->with('recipe')
-                  ->orderBy('is_consumed', 'asc')
                   ->orderBy('date', 'desc')
+                  ->orderBy('is_consumed', 'asc')
                   ->orderBy('meal_type', 'asc');
 
-            $result       = UserMealScheduleResource::collection($query->paginate(10)->withQueryString());
+            $paginated    = $query->paginate(5)->withQueryString();
+            $result       = UserMealScheduleResource::collection($paginated)->response()->getData(true);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

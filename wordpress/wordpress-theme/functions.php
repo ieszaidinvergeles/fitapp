@@ -37,6 +37,7 @@ function voltgym_required_pages(): array
         'forgot-password'        => 'Forgot Password',
         'logout'                 => 'Logout',
         'client-dashboard'       => 'Client Dashboard',
+        'client-memberships'     => 'Memberships',
         'client-classes'         => 'Classes',
         'client-bookings'        => 'My Bookings',
         'client-routines'        => 'My Routines',
@@ -44,9 +45,12 @@ function voltgym_required_pages(): array
         'client-meal-schedule'   => 'Meal Schedule',
         'client-settings'        => 'Settings',
         'client-metrics'         => 'My Metrics',
+        'client-notifications'   => 'Notifications',
+        'client-favorites'       => 'My Favorites',
         'client-diet-plans'      => 'Diet Plans',
         'client-exercises'       => 'Exercises',
         'client-recipes'         => 'Recipes',
+        'client-equipment'       => 'Equipment Vault',
         'staff-dashboard'        => 'Staff Dashboard',
         'staff-attendance'       => 'Attendance',
         'staff-manage-classes'   => 'Manage Classes',
@@ -381,6 +385,48 @@ function api_post(string $endpoint, array $body = [], bool $auth = false): array
 }
 
 /**
+ * Send a POST request with a file (multipart/form-data).
+ */
+function api_post_file(string $endpoint, string $fieldName, string $filePath, string $fileName, bool $auth = false): array
+{
+    $url = API_BASE . $endpoint;
+    $headers = ['Accept: application/json'];
+
+    if ($auth && isset($_SESSION['token'])) {
+        $headers[] = 'Authorization: Bearer ' . $_SESSION['token'];
+    }
+
+    $ch = curl_init($url);
+    if ($ch === false) {
+        return ['result' => false, 'message' => ['general' => 'Could not initialize HTTP client (cURL).']];
+    }
+
+    $cfile = new CURLFile($filePath, mime_content_type($filePath), $fileName);
+    $data = [$fieldName => $cfile];
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST,           true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER,     $headers);
+    curl_setopt($ch, CURLOPT_POSTFIELDS,     $data);
+    curl_setopt($ch, CURLOPT_TIMEOUT,        15);
+
+    $raw      = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($raw === false) {
+        return ['result' => false, 'message' => ['general' => 'Could not connect to the API.']];
+    }
+
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded)) {
+        return ['result' => false, 'message' => ['general' => "API returned non-JSON (HTTP $httpCode)."]];
+    }
+
+    return $decoded;
+}
+
+/**
  * Send a PUT request to the API.
  *
  * @param string $endpoint API path.
@@ -661,24 +707,85 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
     $GLOBALS['hide_global_header'] = true;
     $GLOBALS['hide_global_footer'] = true;
     
-    $user = $_SESSION['user'] ?? [];
+    // Fetch fresh user data and notifications from dashboard (most reliable source)
+    if (is_logged_in()) {
+        $dashResponse = api_get('/dashboard', auth: true);
+        $dashResult = $dashResponse['result'] ?? [];
+        $user = !empty($dashResult['user']) ? $dashResult['user'] : ($_SESSION['user'] ?? []);
+        $GLOBALS['unread_notifications_count'] = $dashResult['unread_notifications_count'] ?? 0;
+    } else {
+        $user = $_SESSION['user'] ?? [];
+    }
     
     voltgym_get_header();
     ?>
-    <header class="fixed top-0 z-40 w-full bg-[#0d0f08] flex justify-between items-center px-6 py-4 border-b border-surface-container-high border-opacity-50">
+    <header class="fixed top-0 z-40 w-full bg-[#0d0f08]/80 backdrop-blur-md flex justify-between items-center px-6 py-4 border-b border-white/5">
         <div class="flex items-center gap-4">
-            <button id="open-client-menu" type="button" class="text-[#d4fb00] hover:bg-zinc-800 transition-colors p-2 rounded-lg active:scale-95 duration-150">
+            <button id="open-client-menu" type="button" class="text-[#d4fb00] hover:bg-white/5 transition-colors p-2 rounded-xl active:scale-95 duration-150">
                 <span class="material-symbols-outlined text-2xl">menu</span>
             </button>
             <h1 class="text-3xl font-black italic text-[#d4fb00] tracking-tighter font-headline uppercase">VOLT</h1>
         </div>
-        <div class="flex items-center gap-6">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary-container bg-surface-container-high text-primary-container font-headline font-bold">
-                <?= strtoupper(substr(h($user['full_name'] ?? $user['username'] ?? 'U'), 0, 1)) ?>
+        <div class="flex items-center gap-4 relative">
+            <!-- Profile Dropdown Trigger -->
+            <button id="profile-dropdown-btn" class="flex items-center gap-3 p-1 pr-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95 relative">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center border-2 border-[#d4fb00]/30 bg-surface-container-high text-[#d4fb00] font-headline font-black text-sm relative">
+                    <?= strtoupper(substr(h($user['username'] ?? 'U'), 0, 1)) ?>
+                    
+                    <?php if (($GLOBALS['unread_notifications_count'] ?? 0) > 0): ?>
+                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-error rounded-full border-2 border-[#0d0f08] animate-pulse shadow-[0_0_10px_rgba(255,69,58,0.5)]"></span>
+                    <?php endif; ?>
+                </div>
+                <span class="material-symbols-outlined text-zinc-500 text-sm transition-transform duration-300" id="profile-arrow">expand_more</span>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="profile-dropdown-menu" class="hidden absolute top-full right-0 mt-3 w-56 bg-[#1a1c14] border border-white/10 rounded-[1.5rem] shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div class="p-4 border-b border-white/5 bg-white/5">
+                    <p class="text-[10px] text-[#d4fb00] font-black uppercase tracking-widest mb-0.5">@<?= h($user['username'] ?? 'athlete') ?></p>
+                    <p class="text-sm font-bold text-white truncate"><?= h($user['full_name'] ?? 'Athlete Profile') ?></p>
+                </div>
+                <div class="p-2">
+                    <a href="<?= esc_url(home_url('/?pagename=client-memberships')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:bg-[#d4fb00] hover:text-black transition-all group">
+                        <span class="material-symbols-outlined text-lg opacity-50 group-hover:opacity-100">workspace_premium</span>
+                        My Membership
+                    </a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-metrics')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:bg-[#d4fb00] hover:text-black transition-all group">
+                        <span class="material-symbols-outlined text-lg opacity-50 group-hover:opacity-100">straighten</span>
+                        Body Metrics
+                    </a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-favorites')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:bg-[#d4fb00] hover:text-black transition-all group">
+                        <span class="material-symbols-outlined text-lg opacity-50 group-hover:opacity-100">star</span>
+                        My Favorites
+                    </a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-friends')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:bg-[#d4fb00] hover:text-black transition-all group">
+                        <span class="material-symbols-outlined text-lg opacity-50 group-hover:opacity-100">group</span>
+                        My Friends
+                    </a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-notifications')); ?>" class="flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:bg-[#d4fb00] hover:text-black transition-all group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-lg opacity-50 group-hover:opacity-100">notifications</span>
+                            Notifications
+                        </div>
+                        <?php 
+                        // Try to get unread count from global data if available
+                        $globalNotifCount = $GLOBALS['unread_notifications_count'] ?? 0;
+                        if ($globalNotifCount > 0): ?>
+                            <span class="bg-error text-white text-[10px] px-1.5 py-0.5 rounded-full"><?= (int)$globalNotifCount ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <a href="<?= esc_url(home_url('/?pagename=client-settings')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-zinc-400 hover:bg-[#d4fb00] hover:text-black transition-all group">
+                        <span class="material-symbols-outlined text-lg opacity-50 group-hover:opacity-100">settings</span>
+                        Account Settings
+                    </a>
+                </div>
+                <div class="p-2 border-t border-white/5">
+                    <a href="<?= esc_url(home_url('/?pagename=logout')); ?>" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-error/70 hover:bg-error/10 hover:text-error transition-all group">
+                        <span class="material-symbols-outlined text-lg opacity-50 group-hover:opacity-100">logout</span>
+                        Sign Out
+                    </a>
+                </div>
             </div>
-            <a href="<?php echo esc_url(home_url('/?pagename=logout')); ?>" class="text-zinc-500 hover:text-error transition-colors">
-                <span class="material-symbols-outlined">logout</span>
-            </a>
         </div>
     </header>
 
@@ -691,7 +798,7 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
             </button>
         </div>
         <nav class="space-y-2 flex-1">
-            <?php 
+            <?php
             $activePage = $GLOBALS['active'] ?? '';
             $linkClass = "block px-4 py-3 rounded-xl font-bold uppercase tracking-wider text-xs transition-colors ";
             $inactiveCls = $linkClass . "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface";
@@ -708,23 +815,24 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
                 <?php endif; ?>
             <?php else: ?>
                 <a href="<?= esc_url(home_url('/?pagename=client-dashboard')) ?>" class="<?= $activePage === 'dashboard' ? $activeCls : $inactiveCls ?>">Dashboard</a>
+
+                <a href="<?= esc_url(home_url('/?pagename=client-memberships')) ?>" class="<?= $activePage === 'client-memberships' ? $activeCls : $inactiveCls ?>">Memberships</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-classes')) ?>" class="<?= $activePage === 'classes' ? $activeCls : $inactiveCls ?>">Classes</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-bookings')) ?>" class="<?= $activePage === 'bookings' ? $activeCls : $inactiveCls ?>">Bookings</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-routines')) ?>" class="<?= $activePage === 'routines' ? $activeCls : $inactiveCls ?>">Routines</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-equipment')) ?>" class="<?= $activePage === 'equipment' ? $activeCls : $inactiveCls ?>">Equipment</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-recipes')) ?>" class="<?= $activePage === 'recipes' ? $activeCls : $inactiveCls ?>">Recipes</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-diet-plans')) ?>" class="<?= $activePage === 'diet-plans' ? $activeCls : $inactiveCls ?>">Diet Plans</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-meal-schedule')) ?>" class="<?= $activePage === 'meals' ? $activeCls : $inactiveCls ?>">Meals</a>
-                <a href="<?= esc_url(home_url('/?pagename=client-settings')) ?>" class="<?= $activePage === 'settings' ? $activeCls : $inactiveCls ?>">Settings</a>
             <?php endif; ?>
         </nav>
-        <div class="mt-4 pt-4 border-t border-outline-variant/30">
-            <a href="<?= esc_url(home_url('/?pagename=logout')) ?>" class="block px-4 py-3 rounded-xl hover:bg-error-container/20 text-error hover:text-error transition-colors font-bold uppercase tracking-wider text-xs">Logout</a>
-        </div>
+
     </aside>
 
     <main class="pt-24 pb-32 px-6 max-w-7xl mx-auto min-h-screen">
         <?php if ($title !== 'Member Dashboard'): ?>
             <div class="mb-8">
-                <h1 class="font-headline font-black text-4xl uppercase tracking-tighter italic"><?= h($title) ?></h1>
+                <h1 class="font-headline font-black text-6xl md:text-8xl uppercase tracking-tighter italic"><?= h($title) ?></h1>
                 <div class="h-1 w-12 bg-primary-container mt-2"></div>
             </div>
         <?php endif; ?>
@@ -748,23 +856,52 @@ function wp_app_page_end(bool $staffNav = false): void
     ?>
     <script>
     (() => {
+        // Sidebar logic
         const overlay = document.getElementById('client-menu-overlay');
         const drawer = document.getElementById('client-menu-drawer');
         const openBtn = document.getElementById('open-client-menu');
         const closeBtn = document.getElementById('close-client-menu');
-        if (!overlay || !drawer || !openBtn || !closeBtn) return;
+        if (overlay && drawer && openBtn && closeBtn) {
+            const open = () => {
+                overlay.classList.remove('hidden');
+                setTimeout(() => drawer.classList.remove('-translate-x-full'), 10);
+            };
+            const close = () => {
+                drawer.classList.add('-translate-x-full');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            };
+            openBtn.addEventListener('click', open);
+            closeBtn.addEventListener('click', close);
+            overlay.addEventListener('click', close);
+        }
 
-        const open = () => {
-            overlay.classList.remove('hidden');
-            drawer.classList.remove('-translate-x-full');
-        };
-        const close = () => {
-            overlay.classList.add('hidden');
-            drawer.classList.add('-translate-x-full');
-        };
-        openBtn.addEventListener('click', open);
-        closeBtn.addEventListener('click', close);
-        overlay.addEventListener('click', close);
+        // Profile Dropdown logic
+        const profileBtn = document.getElementById('profile-dropdown-btn');
+        const profileMenu = document.getElementById('profile-dropdown-menu');
+        const profileArrow = document.getElementById('profile-arrow');
+
+        if (profileBtn && profileMenu) {
+            const toggleMenu = (e) => {
+                e.stopPropagation();
+                const isHidden = profileMenu.classList.contains('hidden');
+                if (isHidden) {
+                    profileMenu.classList.remove('hidden');
+                    profileArrow.style.transform = 'rotate(180deg)';
+                } else {
+                    profileMenu.classList.add('hidden');
+                    profileArrow.style.transform = 'rotate(0deg)';
+                }
+            };
+
+            const closeMenu = () => {
+                profileMenu.classList.add('hidden');
+                profileArrow.style.transform = 'rotate(0deg)';
+            };
+
+            profileBtn.addEventListener('click', toggleMenu);
+            document.addEventListener('click', closeMenu);
+            profileMenu.addEventListener('click', (e) => e.stopPropagation());
+        }
     })();
     </script>
     <?php
@@ -947,3 +1084,37 @@ if (!function_exists('wp_redirect')) {
 //     }
 //     return true;
 // }
+
+/**
+ * Convert a date string into a human-readable "time ago" format.
+ *
+ * @param string $datetime Date string compatible with strtotime().
+ * @return string
+ */
+function time_ago(string $datetime): string
+{
+    $time = strtotime($datetime);
+    $diff = time() - $time;
+    
+    if ($diff < 1) return 'just now';
+    
+    $intervals = [
+        31536000 => 'year',
+        2592000  => 'month',
+        604800   => 'week',
+        86400    => 'day',
+        3600     => 'hour',
+        60       => 'minute',
+        1        => 'second',
+    ];
+
+    foreach ($intervals as $secs => $label) {
+        $div = $diff / $secs;
+        if ($div >= 1) {
+            $round = round($div);
+            return $round . ' ' . $label . ($round > 1 ? 's' : '') . ' ago';
+        }
+    }
+    
+    return $datetime;
+}

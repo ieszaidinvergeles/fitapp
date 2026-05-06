@@ -29,6 +29,9 @@ class BodyMetricResource extends JsonResource
             'height_cm'        => $this->height_cm,
             'body_fat_pct'     => $this->body_fat_pct,
             'muscle_mass_pct'  => $this->muscle_mass_pct,
+            'bmi'              => $this->weight_kg && $this->height_cm 
+                                    ? round($this->weight_kg / (($this->height_cm/100) ** 2), 1) 
+                                    : null,
         ];
     }
 }

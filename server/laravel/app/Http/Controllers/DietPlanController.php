@@ -7,6 +7,7 @@ use App\Http\Requests\StoreDietPlanRequest;
 use App\Http\Requests\UpdateDietPlanRequest;
 use App\Http\Resources\DietPlanResource;
 use App\Models\DietPlan;
+use App\Models\UserFavorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -33,14 +34,48 @@ class DietPlanController extends Controller
     }
 
     /** @return JsonResponse */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $result       = false;
         $messageArray = ['general' => 'Could not retrieve diet plans.'];
         try {
             $this->authorize('viewAny', DietPlan::class);
-            $paginated = DietPlan::paginate(10)->withQueryString();
-            $result    = DietPlanResource::collection($paginated)->response()->getData(true);
+            
+            $query = DietPlan::query();
+
+            if ($request->has('favorites')) {
+                $user = $request->user() ?: auth('sanctum')->user();
+                if (!$user) {
+                    return response()->json(['result' => ['data' => []], 'message' => ['general' => 'Unauthorized']]);
+                }
+                $favoriteIds = \Illuminate\Support\Facades\DB::table('user_favorites')
+                    ->where('user_id', $user->id)
+                    ->where('entity_type', 'diet_plan')
+                    ->pluck('entity_id');
+                $query->whereIn('id', $favoriteIds);
+            }
+
+            $paginated = $query->paginate(5)->withQueryString();
+
+            // Pre-calculate favorites
+            $userFavs = [];
+            $activeUser = $request->user() ?: auth('sanctum')->user();
+            if ($activeUser) {
+                $userFavs = \Illuminate\Support\Facades\DB::table('user_favorites')
+                    ->where('user_id', $activeUser->id)
+                    ->where('entity_type', 'diet_plan')
+                    ->pluck('entity_id')
+                    ->toArray();
+            }
+
+            foreach ($paginated as $plan) {
+                $plan->is_favorite_flag = in_array($plan->id, $userFavs);
+            }
+
+            $result = DietPlanResource::collection($paginated)
+                ->response()
+                ->getData(true);
+
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -171,6 +206,51 @@ class DietPlanController extends Controller
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
+        return response()->json(['result' => $result, 'message' => $messageArray]);
+    }
+
+    /**
+     * Toggles a diet plan as a favorite for the authenticated user.
+     *
+     * @param  Request  $request
+     * @param  int      $id
+     * @return JsonResponse
+     */
+    public function favorite(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not update favorites.'];
+
+        try {
+            $userId = $request->user()->id;
+            $plan = DietPlan::findOrFail($id);
+            
+            $exists = \Illuminate\Support\Facades\DB::table('user_favorites')
+                ->where('user_id', $userId)
+                ->where('entity_type', 'diet_plan')
+                ->where('entity_id', $id)
+                ->exists();
+
+            if ($exists) {
+                \Illuminate\Support\Facades\DB::table('user_favorites')
+                    ->where('user_id', $userId)
+                    ->where('entity_type', 'diet_plan')
+                    ->where('entity_id', $id)
+                    ->delete();
+                $messageArray = ['general' => 'Removed from favorites.'];
+            } else {
+                \Illuminate\Support\Facades\DB::table('user_favorites')->insert([
+                    'user_id'     => $userId,
+                    'entity_type' => 'diet_plan',
+                    'entity_id'   => $id,
+                ]);
+                $messageArray = ['general' => 'Added to favorites.'];
+            }
+            $result = true;
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
         return response()->json(['result' => $result, 'message' => $messageArray]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\UserFavorite;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,6 +29,7 @@ class DietPlanResource extends JsonResource
             'cover_image_url'  => $this->cover_image_url
                                     ? route('diet-plans.image', ['id' => $this->id])
                                     : null,
+            'is_favorite'      => $this->is_favorite_flag ?? false,
         ];
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRoutineRequest;
 use App\Http\Requests\UpdateRoutineRequest;
 use App\Http\Resources\RoutineResource;
 use App\Models\Routine;
+use App\Models\UserFavorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -47,13 +48,49 @@ class RoutineController extends Controller
      *
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $result      = false;
         $messageArray = ['general' => 'Could not retrieve routines.'];
 
         try {
-            $result      = RoutineResource::collection(Routine::paginate(10)->withQueryString());
+            $this->authorize('viewAny', Routine::class);
+            
+            $query = Routine::withCount('exercises');
+
+            if ($request->has('favorites')) {
+                $user = $request->user() ?: auth('sanctum')->user();
+                if (!$user) {
+                    return response()->json(['result' => ['data' => []], 'message' => ['general' => 'Unauthorized']]);
+                }
+                $favoriteIds = \Illuminate\Support\Facades\DB::table('user_favorites')
+                    ->where('user_id', $user->id)
+                    ->where('entity_type', 'routine')
+                    ->pluck('entity_id');
+                $query->whereIn('id', $favoriteIds);
+            }
+
+            $paginated = $query->paginate(6)->withQueryString();
+
+            // Pre-calculate favorites to avoid N+1 queries in the Resource
+            $userFavs = [];
+            $activeUser = $request->user() ?: auth('sanctum')->user();
+            if ($activeUser) {
+                $userFavs = \Illuminate\Support\Facades\DB::table('user_favorites')
+                    ->where('user_id', $activeUser->id)
+                    ->where('entity_type', 'routine')
+                    ->pluck('entity_id')
+                    ->toArray();
+            }
+
+            foreach ($paginated as $routine) {
+                $routine->is_favorite_flag = in_array($routine->id, $userFavs);
+            }
+
+            $result = RoutineResource::collection($paginated)
+                ->response()
+                ->getData(true);
+            
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -74,7 +111,8 @@ class RoutineController extends Controller
         $messageArray = ['general' => 'Could not retrieve routine.'];
 
         try {
-            $result      = new RoutineResource(Routine::with('orderedExercises')->findOrFail($id));
+            $routine     = Routine::with('orderedExercises')->findOrFail($id);
+            $result      = (new RoutineResource($routine))->response()->getData(true);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
@@ -381,6 +419,51 @@ class RoutineController extends Controller
 
             $result       = true;
             $messageArray = ['general' => 'Image deleted.'];
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
+        return response()->json(['result' => $result, 'message' => $messageArray]);
+    }
+
+    /**
+     * Toggles a routine as a favorite for the authenticated user.
+     *
+     * @param  Request  $request
+     * @param  int      $id
+     * @return JsonResponse
+     */
+    public function favorite(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not update favorites.'];
+
+        try {
+            $userId = $request->user()->id;
+            $routine = Routine::findOrFail($id);
+            
+            $exists = \Illuminate\Support\Facades\DB::table('user_favorites')
+                ->where('user_id', $userId)
+                ->where('entity_type', 'routine')
+                ->where('entity_id', $id)
+                ->exists();
+
+            if ($exists) {
+                \Illuminate\Support\Facades\DB::table('user_favorites')
+                    ->where('user_id', $userId)
+                    ->where('entity_type', 'routine')
+                    ->where('entity_id', $id)
+                    ->delete();
+                $messageArray = ['general' => 'Removed from favorites.'];
+            } else {
+                \Illuminate\Support\Facades\DB::table('user_favorites')->insert([
+                    'user_id'     => $userId,
+                    'entity_type' => 'routine',
+                    'entity_id'   => $id,
+                ]);
+                $messageArray = ['general' => 'Added to favorites.'];
+            }
+            $result = true;
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }

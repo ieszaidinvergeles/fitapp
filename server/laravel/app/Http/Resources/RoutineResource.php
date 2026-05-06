@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\UserFavorite;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -32,10 +33,14 @@ class RoutineResource extends JsonResource
             'cover_image_url'          => $this->cover_image_url
                                             ? route('routines.image', ['id' => $this->id])
                                             : null,
+            'is_favorite'              => $this->is_favorite_flag ?? false,
             'creator_id'               => $this->creator_id,
             'associated_diet_plan_id'  => $this->associated_diet_plan_id,
+            'exercises_count'          => $this->exercises_count ?? 0,
             'creator'                  => new UserResource($this->whenLoaded('creator')),
-            'exercises'                => ExerciseResource::collection($this->whenLoaded('exercises')),
+            'exercises'                => ExerciseResource::collection(
+                $this->whenLoaded('orderedExercises') ?? $this->whenLoaded('exercises')
+            ),
         ];
     }
 }
