@@ -729,8 +729,12 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
         <div class="flex items-center gap-4 relative">
             <!-- Profile Dropdown Trigger -->
             <button id="profile-dropdown-btn" class="flex items-center gap-3 p-1 pr-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all active:scale-95 relative">
-                <div class="w-9 h-9 rounded-full flex items-center justify-center border-2 border-[#d4fb00]/30 bg-surface-container-high text-[#d4fb00] font-headline font-black text-sm relative">
-                    <?= strtoupper(substr(h($user['username'] ?? 'U'), 0, 1)) ?>
+                <div class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center border-2 border-[#d4fb00]/30 bg-surface-container-high text-[#d4fb00] font-headline font-black text-sm relative">
+                    <?php if (!empty($user['profile_photo_url'])): ?>
+                        <img src="<?= esc_url($user['profile_photo_url']) ?>" class="w-full h-full object-cover">
+                    <?php else: ?>
+                        <?= strtoupper(substr(h($user['username'] ?? 'U'), 0, 1)) ?>
+                    <?php endif; ?>
                     
                     <?php if (($GLOBALS['unread_notifications_count'] ?? 0) > 0): ?>
                         <span class="absolute -top-1 -right-1 w-3 h-3 bg-error rounded-full border-2 border-[#0d0f08] animate-pulse shadow-[0_0_10px_rgba(255,69,58,0.5)]"></span>

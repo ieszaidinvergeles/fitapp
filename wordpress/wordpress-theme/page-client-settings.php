@@ -65,6 +65,7 @@ $settings = $settingsResponse['result'] ?? [];
 // Fetch Booking History for precise stats
 $bookingsResponse = api_get('/bookings?include_past=1&per_page=100', auth: true);
 $allBookings = $bookingsResponse['result']['data'] ?? $bookingsResponse['result'] ?? [];
+if (!is_array($allBookings)) { $allBookings = []; }
 
 $classesCompleted = 0;
 $streak = 0;
@@ -103,7 +104,8 @@ if (!empty($activityDates)) {
 
 // Check for "Today's Activity" (Classes or Meals)
 $mealsResponse = api_get("/meal-schedule?date=$today", auth: true);
-$mealsToday = count($mealsResponse['result']['data'] ?? $mealsResponse['result'] ?? []);
+$mealsData = $mealsResponse['result']['data'] ?? $mealsResponse['result'] ?? [];
+$mealsToday = is_array($mealsData) ? count($mealsData) : 0;
 $hasActivityToday = isset($activityDays[$today]) || $mealsToday > 0;
 
 // Fetch Dashboard data for stats and user info (most reliable source)
