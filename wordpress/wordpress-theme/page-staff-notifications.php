@@ -1,0 +1,366 @@
+<?php
+/*
+Template Name: Staff Notifications
+*/
+require_once 'functions.php';
+require_advanced();
+
+$page = max(1, (int)($_GET['page_num'] ?? 1));
+$per_page = 10;
+
+$flash_success = '';
+$flash_error = '';
+
+$notice = $_GET['notice'] ?? '';
+if ($notice === 'deleted') {
+    $flash_success = 'Notificación eliminada correctamente.';
+} elseif ($notice === 'created') {
+    $flash_success = 'Notificación creada correctamente.';
+} elseif ($notice === 'updated') {
+    $flash_success = 'Notificación actualizada correctamente.';
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
+    $notification_id = (int)($_POST['notification_id'] ?? 0);
+
+    if ($notification_id > 0) {
+        $delete_response = api_delete('/notifications/' . $notification_id, auth: true);
+
+        if (($delete_response['result'] ?? false) !== false) {
+            wp_safe_redirect(home_url('/?pagename=staff-notifications&notice=deleted'));
+            exit;
+        }
+
+        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar la notificación.';
+    }
+}
+
+function notification_extract_list(array $response): array
+{
+    if (($response['result'] ?? false) === false) {
+        return [];
+    }
+
+    if (!empty($response['result']['data']) && is_array($response['result']['data'])) {
+        return $response['result']['data'];
+    }
+
+    if (!empty($response['result']) && is_array($response['result'])) {
+        return $response['result'];
+    }
+
+    return [];
+}
+
+function notification_value(array $notification, array $keys, $default = '-')
+{
+    foreach ($keys as $key) {
+        if (isset($notification[$key]) && $notification[$key] !== null && $notification[$key] !== '') {
+            return $notification[$key];
+        }
+    }
+
+    return $default;
+}
+
+function notification_page_url(int $page): string
+{
+    return home_url('/?pagename=staff-notifications&page_num=' . $page);
+}
+
+function notification_format_date($raw): string
+{
+    if (!$raw || $raw === '-' || $raw === '—') {
+        return '-';
+    }
+
+    $ts = strtotime((string)$raw);
+
+    if (!$ts) {
+        return (string)$raw;
+    }
+
+    return date('d/m/Y H:i', $ts);
+}
+
+function notification_label($value): string
+{
+    $value = trim((string)$value);
+
+    if ($value === '' || $value === '-' || $value === '—') {
+        return '-';
+    }
+
+    return ucwords(str_replace('_', ' ', $value));
+}
+
+/*
+|--------------------------------------------------------------------------
+| Cargar todas las notificaciones
+|--------------------------------------------------------------------------
+| Recorremos páginas por si la API devuelve resultados paginados.
+*/
+$all_notifications = [];
+$seen_ids = [];
+$listResp = ['result' => []];
+
+for ($api_page = 1; $api_page <= 50; $api_page++) {
+    $response = api_get('/notifications?page=' . $api_page, auth: true);
+
+    if (($response['result'] ?? null) === false) {
+        $listResp = $response;
+        break;
+    }
+
+    $items = notification_extract_list($response);
+
+    if (empty($items)) {
+        break;
+    }
+
+    $added_this_page = 0;
+
+    foreach ($items as $item) {
+        $id = (int)($item['id'] ?? 0);
+
+        if ($id > 0 && isset($seen_ids[$id])) {
+            continue;
+        }
+
+        if ($id > 0) {
+            $seen_ids[$id] = true;
+        }
+
+        $all_notifications[] = $item;
+        $added_this_page++;
+    }
+
+    $listResp = $response;
+
+    if ($added_this_page === 0 || count($items) < 10) {
+        break;
+    }
+}
+
+usort($all_notifications, function ($a, $b) {
+    return strtotime((string)($b['created_at'] ?? '')) <=> strtotime((string)($a['created_at'] ?? ''));
+});
+
+$total = count($all_notifications);
+$last_page = max(1, (int)ceil($total / $per_page));
+
+if ($page > $last_page) {
+    $page = $last_page;
+}
+
+$current_page = $page;
+$offset = ($current_page - 1) * $per_page;
+$notifications = array_slice($all_notifications, $offset, $per_page);
+
+$from = $total > 0 ? $offset + 1 : 0;
+$to = $total > 0 ? min($total, $offset + count($notifications)) : 0;
+
+wp_app_page_start('Notifications', true);
+?>
+
+<?php if (($listResp['result'] ?? null) === false): ?>
+    <?php show_error(api_message($listResp)); ?>
+<?php endif; ?>
+
+<?php if ($flash_success): ?>
+    <?php show_success($flash_success); ?>
+<?php endif; ?>
+
+<?php if ($flash_error): ?>
+    <?php show_error($flash_error); ?>
+<?php endif; ?>
+
+<div class="space-y-6 pb-28">
+
+    <section class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-lg font-bold">Notification List</h2>
+            <p class="text-sm text-on-surface-variant">
+                Gestiona avisos del sistema, mensajes globales y notificaciones por gimnasio.
+            </p>
+
+            <?php if ($total > 0): ?>
+                <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-container">
+                    <?= h((string)$total) ?> NOTIFICATIONS REGISTERED · PAGE <?= h((string)$current_page) ?> OF <?= h((string)$last_page) ?>
+                </p>
+            <?php endif; ?>
+        </div>
+
+        <a
+            href="<?= esc_url(home_url('/?pagename=staff-create-notification')) ?>"
+            class="inline-flex w-full sm:w-auto items-center justify-center gap-2 self-start rounded-full bg-primary-container px-5 py-3 text-sm font-black uppercase tracking-wide text-on-primary-container shadow-[0_10px_30px_rgba(212,251,0,0.18)] transition-all duration-200 hover:scale-[1.01] hover:brightness-105 whitespace-nowrap"
+        >
+            <span class="text-base leading-none">+</span>
+            <span>Create notification</span>
+        </a>
+    </section>
+
+    <section class="space-y-3">
+        <?php foreach ($notifications as $notification): ?>
+            <?php
+            $notification_id = (int)($notification['id'] ?? 0);
+
+            $title = notification_value($notification, ['title', 'subject', 'name'], 'Notification');
+            $message = notification_value($notification, ['message', 'body', 'content', 'description'], '');
+            $audience = notification_label(notification_value($notification, ['target_audience', 'audience', 'role'], '-'));
+            $type = notification_label(notification_value($notification, ['type', 'category', 'notification_type'], 'System'));
+            $status = notification_label(notification_value($notification, ['status', 'state'], 'Pending'));
+            $created_at = notification_format_date(notification_value($notification, ['created_at', 'date'], '-'));
+
+            $related_gym = '-';
+            if (!empty($notification['gym']) && is_array($notification['gym'])) {
+                $related_gym = $notification['gym']['name'] ?? '-';
+            } elseif (!empty($notification['related_gym']) && is_array($notification['related_gym'])) {
+                $related_gym = $notification['related_gym']['name'] ?? '-';
+            } else {
+                $related_gym = notification_value($notification, ['related_gym_id', 'gym_id'], '-');
+            }
+            ?>
+
+            <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+                    <div class="flex min-w-0 flex-1 gap-4">
+                        <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-outline-variant/20 bg-surface-container-high">
+                            <span class="material-symbols-outlined text-4xl text-primary-container">notifications_active</span>
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="text-lg font-bold break-words">
+                                    <?= h($title) ?>
+                                </p>
+
+                                <span class="rounded-full bg-primary-container/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-primary-container">
+                                    #<?= h((string)$notification_id) ?>
+                                </span>
+
+                                <span class="rounded-full border border-outline-variant/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-on-surface-variant">
+                                    <?= h($type) ?>
+                                </span>
+                            </div>
+
+                            <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                Audience:
+                                <span class="font-semibold text-on-surface"><?= h($audience) ?></span>
+                                · Gym:
+                                <span class="font-semibold text-on-surface"><?= h((string)$related_gym) ?></span>
+                                · Status:
+                                <span class="font-semibold text-on-surface"><?= h($status) ?></span>
+                            </p>
+
+                            <?php if ($message): ?>
+                                <p class="mt-1 line-clamp-2 text-sm text-on-surface-variant break-words">
+                                    <?= h((string)$message) ?>
+                                </p>
+                            <?php else: ?>
+                                <p class="mt-1 text-sm italic text-on-surface-variant">
+                                    No message available.
+                                </p>
+                            <?php endif; ?>
+
+                            <p class="mt-1 text-xs text-on-surface-variant">
+                                Created: <?= h($created_at) ?>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 self-start lg:max-w-[320px] lg:justify-end">
+                        <a
+                            href="<?= esc_url(home_url('/?pagename=staff-view-notification&id=' . $notification_id)) ?>"
+                            class="inline-flex items-center justify-center rounded-lg border border-outline-variant/30 px-3 py-2 text-sm transition hover:bg-surface-container-high"
+                        >
+                            View
+                        </a>
+
+                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar esta notificación?');">
+                            <input type="hidden" name="action_type" value="delete">
+                            <input type="hidden" name="notification_id" value="<?= $notification_id ?>">
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center rounded-lg border border-error/40 px-3 py-2 text-sm text-error transition hover:bg-error/10"
+                            >
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </article>
+        <?php endforeach; ?>
+
+        <?php if (!$notifications): ?>
+            <div class="rounded-xl border border-outline-variant/20 bg-surface-container p-4">
+                <p class="text-on-surface-variant">No notifications found.</p>
+            </div>
+        <?php endif; ?>
+    </section>
+
+    <?php if ($last_page > 1): ?>
+        <section class="flex flex-col gap-4 rounded-xl border border-outline-variant/20 bg-surface-container p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm text-on-surface-variant">
+                Showing
+                <span class="font-bold text-on-surface"><?= h((string)$from) ?></span>
+                -
+                <span class="font-bold text-on-surface"><?= h((string)$to) ?></span>
+                of
+                <span class="font-bold text-on-surface"><?= h((string)$total) ?></span>
+                notifications
+            </p>
+
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <?php if ($current_page > 1): ?>
+                    <a
+                        href="<?= esc_url(notification_page_url($current_page - 1)) ?>"
+                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                    >
+                        ← Previous
+                    </a>
+                <?php else: ?>
+                    <span class="rounded-full border border-outline-variant/10 px-4 py-2 text-sm font-bold text-on-surface-variant/40">
+                        ← Previous
+                    </span>
+                <?php endif; ?>
+
+                <?php
+                $start = max(1, $current_page - 2);
+                $end = min($last_page, $current_page + 2);
+                ?>
+
+                <?php for ($i = $start; $i <= $end; $i++): ?>
+                    <a
+                        href="<?= esc_url(notification_page_url($i)) ?>"
+                        class="rounded-full border px-4 py-2 text-sm font-bold transition <?= $i === $current_page
+                            ? 'border-primary-container bg-primary-container text-on-primary-container shadow-[0_0_18px_rgba(212,251,0,0.22)]'
+                            : 'border-outline-variant/30 hover:bg-surface-container-high' ?>"
+                    >
+                        <?= h((string)$i) ?>
+                    </a>
+                <?php endfor; ?>
+
+                <?php if ($current_page < $last_page): ?>
+                    <a
+                        href="<?= esc_url(notification_page_url($current_page + 1)) ?>"
+                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                    >
+                        Next →
+                    </a>
+                <?php else: ?>
+                    <span class="rounded-full border border-outline-variant/10 px-4 py-2 text-sm font-bold text-on-surface-variant/40">
+                        Next →
+                    </span>
+                <?php endif; ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
+</div>
+
+<?php
+wp_app_page_end(true);
+?>
