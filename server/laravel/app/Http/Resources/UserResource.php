@@ -33,7 +33,7 @@ class UserResource extends JsonResource
             'dni'                      => $this->dni,
             'birth_date'               => $this->birth_date?->toDateString(),
             'profile_photo_url'        => $this->profile_photo_url
-                                            ? url('uploads/' . $this->profile_photo_url)
+                                            ? \url('uploads/' . $this->profile_photo_url)
                                             : null,
             'membership_status'        => $this->membership_status,
             'cancellation_strikes'     => $this->cancellation_strikes,

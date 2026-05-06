@@ -33,7 +33,7 @@ class RecipeResource extends JsonResource
             'calories'          => $this->calories,
             'macros'            => $this->macros_json,
             'image_url'   => $this->image_url
-                                ? url('uploads/' . $this->image_url)
+                                ? \url('uploads/' . $this->image_url)
                                 : null,
         ];
     }

@@ -26,7 +26,7 @@ class EquipmentResource extends JsonResource
             'name'                => $this->name,
             'description'         => $this->description,
             'image_url'           => $this->image_url
-                                        ? url('uploads/' . $this->image_url)
+                                        ? \url('uploads/' . $this->image_url)
                                         : null,
             'is_home_accessible'  => $this->is_home_accessible,
         ];

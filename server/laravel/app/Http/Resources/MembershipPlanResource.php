@@ -28,7 +28,7 @@ class MembershipPlanResource extends JsonResource
             'price'              => $this->price,
             'allow_partner_link' => $this->allow_partner_link,
             'badge_image_url'    => $this->badge_image_url
-                                        ? url('uploads/' . $this->badge_image_url)
+                                        ? \url('uploads/' . $this->badge_image_url)
                                         : null,
         ];
     }

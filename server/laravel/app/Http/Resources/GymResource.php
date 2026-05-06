@@ -31,7 +31,7 @@ class GymResource extends JsonResource
             'location_coords' => $this->location_coords,
             'phone'           => $this->phone,
             'logo_url'        => $this->logo_url
-                                    ? url('uploads/' . $this->logo_url)
+                                    ? \url('uploads/' . $this->logo_url)
                                     : null,
             'manager_id'      => $this->manager_id,
             'manager'         => new UserResource($this->whenLoaded('manager')),

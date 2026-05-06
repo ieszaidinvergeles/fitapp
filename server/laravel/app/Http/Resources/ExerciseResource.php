@@ -27,7 +27,7 @@ class ExerciseResource extends JsonResource
             'description'         => $this->description,
             'target_muscle_group' => $this->target_muscle_group,
             'image_url'           => $this->image_url
-                                        ? url('uploads/' . $this->image_url)
+                                        ? \url('uploads/' . $this->image_url)
                                         : null,
             'video_url'           => $this->video_url,
             'sets'                => $this->pivot->recommended_sets ?? null,

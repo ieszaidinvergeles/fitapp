@@ -31,7 +31,7 @@ class RoutineResource extends JsonResource
             'difficulty_level'         => $this->difficulty_level,
             'estimated_duration_min'   => $this->estimated_duration_min,
             'cover_image_url'          => $this->cover_image_url
-                                            ? url('uploads/' . $this->cover_image_url)
+                                            ? \url('uploads/' . $this->cover_image_url)
                                             : null,
             'is_favorite'              => $this->is_favorite_flag ?? false,
             'creator_id'               => $this->creator_id,

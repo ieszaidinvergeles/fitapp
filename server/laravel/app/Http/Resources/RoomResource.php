@@ -29,7 +29,7 @@ class RoomResource extends JsonResource
             'name'      => $this->name,
             'capacity'  => $this->capacity,
             'image_url' => $this->image_url
-                            ? url('uploads/' . $this->image_url)
+                            ? \url('uploads/' . $this->image_url)
                             : null,
             'gym'       => new GymResource($this->whenLoaded('gym')),
         ];

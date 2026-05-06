@@ -46,7 +46,7 @@ class DietPlanController extends Controller
             if ($request->has('favorites')) {
                 $user = $request->user() ?: Auth::guard('sanctum')->user();
                 if (!$user) {
-                    return response()->json(['result' => ['data' => []], 'message' => ['general' => 'Unauthorized']]);
+                    return \response()->json(['result' => ['data' => []], 'message' => ['general' => 'Unauthorized']]);
                 }
                 $favoriteIds = DB::table('user_favorites')
                     ->where('user_id', $user->id)
@@ -80,7 +80,7 @@ class DietPlanController extends Controller
         } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /** @return JsonResponse */
@@ -96,7 +96,7 @@ class DietPlanController extends Controller
         } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /** @return JsonResponse */
@@ -116,7 +116,7 @@ class DietPlanController extends Controller
         } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /** @return JsonResponse */
@@ -137,7 +137,7 @@ class DietPlanController extends Controller
         } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /** @return JsonResponse */
@@ -155,7 +155,7 @@ class DietPlanController extends Controller
         } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /** @return JsonResponse */
@@ -185,7 +185,7 @@ class DietPlanController extends Controller
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /** @return JsonResponse */
@@ -211,7 +211,7 @@ class DietPlanController extends Controller
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /** @return Response|JsonResponse */
@@ -220,11 +220,11 @@ class DietPlanController extends Controller
         try {
             $plan = DietPlan::findOrFail($id);
             if (!$plan->cover_image_url) {
-                return response()->json(['result' => false, 'message' => ['general' => 'No image found.']], 404);
+                return \response()->json(['result' => false, 'message' => ['general' => 'No image found.']], 404);
             }
             return $this->imageService->stream($plan->cover_image_url);
         } catch (Exception $e) {
-            return response()->json(['result' => false, 'message' => ['general' => $e->getMessage()]], 404);
+            return \response()->json(['result' => false, 'message' => ['general' => $e->getMessage()]], 404);
         }
     }
 
@@ -244,7 +244,7 @@ class DietPlanController extends Controller
         } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /** @return JsonResponse */
@@ -262,7 +262,7 @@ class DietPlanController extends Controller
         } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
     /**
@@ -307,6 +307,6 @@ class DietPlanController extends Controller
             $messageArray = ['general' => $e->getMessage()];
         }
 
-        return response()->json(['result' => $result, 'message' => $messageArray]);
+        return \response()->json(['result' => $result, 'message' => $messageArray]);
     }
 }

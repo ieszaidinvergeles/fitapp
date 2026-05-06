@@ -2,10 +2,8 @@
 
 namespace App\Http\Resources;
 
-use App\Models\UserFavorite;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\RecipeResource;
 
 /**
  * Transforms a DietPlan model into a standardized API JSON response.
@@ -28,7 +26,7 @@ class DietPlanResource extends JsonResource
             'name'             => $this->name,
             'goal_description' => $this->goal_description,
             'cover_image_url'  => $this->cover_image_url
-                                    ? url('uploads/' . $this->cover_image_url)
+                                    ? \url('uploads/' . $this->cover_image_url)
                                     : null,
             'is_favorite'      => $this->is_favorite_flag ?? false,
             'recipes'          => RecipeResource::collection($this->whenLoaded('recipes')),

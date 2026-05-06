@@ -27,7 +27,7 @@ class ActivityResource extends JsonResource
             'description'     => $this->description,
             'intensity_level' => $this->intensity_level,
             'image_url'       => $this->image_url
-                                    ? url('uploads/' . $this->image_url)
+                                    ? \url('uploads/' . $this->image_url)
                                     : null,
         ];
     }
