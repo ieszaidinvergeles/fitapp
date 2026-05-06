@@ -21,6 +21,14 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+/**
+ * Enable support for Post Thumbnails on posts and pages.
+ * Necessary for Custom Post Types to show the Featured Image field.
+ */
+add_action('after_setup_theme', function() {
+    add_theme_support('post-thumbnails');
+});
+
 // ─────────────────────────────────────────────────────────────────
 // WORDPRESS PAGE AUTO-PROVISIONING
 // Creates all required pages in the WP database if they don't exist.
@@ -50,6 +58,7 @@ function voltgym_required_pages(): array
         'client-diet-plans'      => 'Diet Plans',
         'client-exercises'       => 'Exercises',
         'client-recipes'         => 'Recipes',
+        'client-catalog'         => 'Catalog',
         'client-equipment'       => 'Equipment Vault',
         'staff-dashboard'        => 'Staff Dashboard',
         'staff-attendance'       => 'Attendance',
@@ -824,6 +833,7 @@ function wp_app_page_start(string $title, bool $staffNav = false): void
                 <a href="<?= esc_url(home_url('/?pagename=client-classes')) ?>" class="<?= $activePage === 'classes' ? $activeCls : $inactiveCls ?>">Classes</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-bookings')) ?>" class="<?= $activePage === 'bookings' ? $activeCls : $inactiveCls ?>">Bookings</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-routines')) ?>" class="<?= $activePage === 'routines' ? $activeCls : $inactiveCls ?>">Routines</a>
+                <a href="<?= esc_url(home_url('/?pagename=client-catalog')) ?>" class="<?= $activePage === 'client-catalog' ? $activeCls : $inactiveCls ?>">Catalog</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-equipment')) ?>" class="<?= $activePage === 'equipment' ? $activeCls : $inactiveCls ?>">Equipment</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-recipes')) ?>" class="<?= $activePage === 'recipes' ? $activeCls : $inactiveCls ?>">Recipes</a>
                 <a href="<?= esc_url(home_url('/?pagename=client-diet-plans')) ?>" class="<?= $activePage === 'diet-plans' ? $activeCls : $inactiveCls ?>">Diet Plans</a>
