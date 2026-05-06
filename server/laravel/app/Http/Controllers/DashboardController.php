@@ -40,7 +40,7 @@ class DashboardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not load dashboard.'];
 
         try {

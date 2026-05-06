@@ -38,7 +38,7 @@ class RecipeController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve recipes.'];
 
         try {
@@ -72,7 +72,7 @@ class RecipeController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve recipe.'];
 
         try {
@@ -96,7 +96,7 @@ class RecipeController extends Controller
      */
     public function store(StoreRecipeRequest $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not create recipe.'];
 
         try {
@@ -127,7 +127,7 @@ class RecipeController extends Controller
      */
     public function update(UpdateRecipeRequest $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update recipe.'];
 
         try {
@@ -158,7 +158,7 @@ class RecipeController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete recipe.'];
 
         try {
@@ -207,7 +207,7 @@ class RecipeController extends Controller
      */
     public function uploadImage(Request $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not upload image.'];
 
         try {
@@ -237,7 +237,7 @@ class RecipeController extends Controller
      */
     public function deleteImage(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete image.'];
 
         try {

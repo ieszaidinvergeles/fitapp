@@ -25,7 +25,7 @@ class UserMealScheduleController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve meal schedule.'];
 
         try {
@@ -72,7 +72,7 @@ class UserMealScheduleController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve meal entry.'];
 
         try {
@@ -96,7 +96,7 @@ class UserMealScheduleController extends Controller
      */
     public function store(StoreUserMealScheduleRequest $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not create meal entry.'];
 
         try {
@@ -124,7 +124,7 @@ class UserMealScheduleController extends Controller
      */
     public function update(UpdateUserMealScheduleRequest $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update meal entry.'];
 
         try {
@@ -149,7 +149,7 @@ class UserMealScheduleController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete meal entry.'];
 
         try {

@@ -25,7 +25,7 @@ class StaffAttendanceController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve attendance records.'];
 
         try {
@@ -57,7 +57,7 @@ class StaffAttendanceController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve attendance record.'];
 
         try {
@@ -81,7 +81,7 @@ class StaffAttendanceController extends Controller
      */
     public function clockIn(Request $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not clock in.'];
 
         try {
@@ -111,7 +111,7 @@ class StaffAttendanceController extends Controller
      */
     public function clockOut(Request $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not clock out.'];
 
         try {
@@ -135,7 +135,7 @@ class StaffAttendanceController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete attendance record.'];
 
         try {

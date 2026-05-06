@@ -25,7 +25,7 @@ class BodyMetricController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve body metrics.'];
 
         try {
@@ -56,7 +56,7 @@ class BodyMetricController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve body metric.'];
 
         try {
@@ -80,7 +80,7 @@ class BodyMetricController extends Controller
      */
     public function store(StoreBodyMetricRequest $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not create body metric.'];
 
         try {
@@ -105,7 +105,7 @@ class BodyMetricController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete body metric.'];
 
         try {

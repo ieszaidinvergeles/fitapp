@@ -15,6 +15,7 @@ services:
       - ./docker/nginx/ssl-init.sh:/docker-entrypoint.d/99-ssl-init.sh:ro
       - ./ssl_certs:/etc/nginx/ssl:rw
       - ../server/laravel:/var/www/laravel:ro
+      - laravel_images:/var/www/laravel/public/uploads/images:ro
       - wordpress_app:/var/www/wordpress:ro
       - ../wordpress/wordpress-theme:/var/www/wordpress/wp-content/themes/voltgym:ro
     depends_on:
@@ -47,7 +48,7 @@ services:
     volumes:
       - ../server/laravel:/var/www/laravel
       - ./docker/laravel/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
-      - laravel_images:/var/www/laravel/storage/app/private/images
+      - laravel_images:/var/www/laravel/public/uploads/images
     depends_on:
       mysql:
         condition: service_healthy
@@ -76,7 +77,7 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - ../server/laravel:/var/www/laravel
-      - laravel_images:/var/www/laravel/storage/app/private/images
+      - laravel_images:/var/www/laravel/public/uploads/images
     depends_on:
       - laravel
       - redis
@@ -107,7 +108,7 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - ../server/laravel:/var/www/laravel
-      - laravel_images:/var/www/laravel/storage/app/private/images
+      - laravel_images:/var/www/laravel/public/uploads/images
     depends_on:
       - laravel
     networks:

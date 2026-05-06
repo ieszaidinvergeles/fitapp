@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property int         $estimated_duration_min
  * @property int|null    $associated_diet_plan_id
  * @property string|null $cover_image_url
+ * @property bool        $is_favorite_flag
  *
  * @property-read \App\Models\User|null                                                   $creator
  * @property-read \App\Models\DietPlan|null                                               $dietPlan

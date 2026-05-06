@@ -87,22 +87,22 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/rooms',                   [RoomController::class, 'index']);
     Route::get('/rooms/{id}',              [RoomController::class, 'show']);
 
+    // ─── Public image streaming (no auth required) ──────────────────────────
+
+    Route::get('/users/{id}/photo',            [UserController::class,         'showPhoto'])->name('users.photo');
+    Route::get('/exercises/{id}/image',        [ExerciseController::class,     'showImage'])->name('exercises.image');
+    Route::get('/equipment/{id}/image',        [EquipmentController::class,    'showImage'])->name('equipment.image');
+    Route::get('/recipes/{id}/image',          [RecipeController::class,       'showImage'])->name('recipes.image');
+    Route::get('/routines/{id}/image',         [RoutineController::class,      'showImage'])->name('routines.image');
+    Route::get('/diet-plans/{id}/image',       [DietPlanController::class,     'showImage'])->name('diet-plans.image');
+    Route::get('/rooms/{id}/image',            [RoomController::class,         'showImage'])->name('rooms.image');
+    Route::get('/activities/{id}/image',       [ActivityController::class,     'showImage'])->name('activities.image');
+    Route::get('/membership-plans/{id}/image', [MembershipPlanController::class,'showImage'])->name('membership-plans.image');
+    Route::get('/gyms/{id}/logo',              [GymController::class,          'showLogo'])->name('gyms.logo');
+
     // ─── Authenticated endpoints ─────────────────────────────────────────────
 
     Route::middleware('auth:sanctum')->group(function (): void {
-
-        // ─── Private image streaming (all authenticated users) ────────────────
-
-        Route::get('/users/{id}/photo',            [UserController::class,         'showPhoto'])->name('users.photo');
-        Route::get('/exercises/{id}/image',        [ExerciseController::class,     'showImage'])->name('exercises.image');
-        Route::get('/equipment/{id}/image',        [EquipmentController::class,    'showImage'])->name('equipment.image');
-        Route::get('/recipes/{id}/image',          [RecipeController::class,       'showImage'])->name('recipes.image');
-        Route::get('/routines/{id}/image',         [RoutineController::class,      'showImage'])->name('routines.image');
-        Route::get('/diet-plans/{id}/image',       [DietPlanController::class,     'showImage'])->name('diet-plans.image');
-        Route::get('/rooms/{id}/image',            [RoomController::class,         'showImage'])->name('rooms.image');
-        Route::get('/activities/{id}/image',       [ActivityController::class,     'showImage'])->name('activities.image');
-        Route::get('/membership-plans/{id}/image', [MembershipPlanController::class,'showImage'])->name('membership-plans.image');
-        Route::get('/gyms/{id}/logo',              [GymController::class,          'showLogo'])->name('gyms.logo');
 
         // Aggregate Dashboards
         Route::get('/dashboard',        [DashboardController::class,      'index']);

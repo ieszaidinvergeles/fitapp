@@ -37,7 +37,7 @@ class GymController extends Controller
      */
     public function index(): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve gyms.'];
 
         try {
@@ -58,7 +58,7 @@ class GymController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve gym.'];
 
         try {
@@ -82,7 +82,7 @@ class GymController extends Controller
      */
     public function store(StoreGymRequest $request): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not create gym.'];
 
         try {
@@ -114,7 +114,7 @@ class GymController extends Controller
      */
     public function update(UpdateGymRequest $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update gym.'];
 
         try {
@@ -145,7 +145,7 @@ class GymController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete gym.'];
 
         try {
@@ -172,7 +172,7 @@ class GymController extends Controller
      */
     public function assignManager(Request $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not assign manager.'];
 
         try {
@@ -218,7 +218,7 @@ class GymController extends Controller
      */
     public function uploadLogo(Request $request, int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not upload logo.'];
 
         try {
@@ -248,7 +248,7 @@ class GymController extends Controller
      */
     public function deleteLogo(int $id): JsonResponse
     {
-        $result       = false;
+        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete logo.'];
 
         try {
