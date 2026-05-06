@@ -93,7 +93,7 @@ wp_app_page_start('Create User', true);
                         type="text"
                         name="full_name"
                         class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        value="<?= h(form_value('full_name', '')) ?>"
+                        value="<?= h(form_value('full_name', ''), '') ?>"
                         required
                     >
                 </div>
@@ -104,7 +104,7 @@ wp_app_page_start('Create User', true);
                         type="text"
                         name="username"
                         class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        value="<?= h(form_value('username', '')) ?>"
+                        value="<?= h(form_value('username', ''), '') ?>"
                         required
                     >
                 </div>
@@ -115,7 +115,7 @@ wp_app_page_start('Create User', true);
                         type="email"
                         name="email"
                         class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        value="<?= h(form_value('email', '')) ?>"
+                        value="<?= h(form_value('email', ''), '')?>"
                         required
                     >
                 </div>
@@ -127,7 +127,7 @@ wp_app_page_start('Create User', true);
                         name="dni"
                         maxlength="9"
                         class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        value="<?= h(form_value('dni', '')) ?>"
+                        value="<?= h(form_value('dni', ''), '')?>"
                         required
                     >
                 </div>
@@ -138,7 +138,7 @@ wp_app_page_start('Create User', true);
                         type="date"
                         name="birth_date"
                         class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        value="<?= h(form_value('birth_date', '')) ?>"
+                        value="<?= h(form_value('birth_date', ''), '')?>"
                         required
                     >
                 </div>
@@ -227,15 +227,39 @@ wp_app_page_start('Create User', true);
                 </div>
             </div>
 
-            <label class="flex items-center gap-3 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3">
-                <input
-                    type="checkbox"
-                    name="is_blocked_from_booking"
-                    value="1"
-                    class="h-4 w-4 rounded border-outline-variant/30 bg-surface text-primary focus:ring-primary-container"
-                    <?= !empty($_POST['is_blocked_from_booking']) ? 'checked' : '' ?>
-                >
-                <span class="text-sm font-medium text-on-surface">Blocked from booking</span>
+            <label
+                for="isBlockedToggle"
+                class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-4 transition hover:border-primary-container/30 hover:bg-surface-container-highest"
+            >
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-error/10 text-error">
+                        <span class="material-symbols-outlined text-[20px]">block</span>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-semibold text-on-surface">
+                            Block from booking
+                        </p>
+                        <p class="text-xs text-on-surface-variant">
+                            Prevent this user from booking classes until this option is disabled.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="relative shrink-0">
+                    <input
+                        id="isBlockedToggle"
+                        type="checkbox"
+                        name="is_blocked_from_booking"
+                        value="1"
+                        class="peer sr-only"
+                        <?= !empty($_POST['is_blocked_from_booking']) ? 'checked' : '' ?>
+                    >
+
+                    <span class="block h-7 w-14 rounded-full bg-surface transition-colors duration-200 peer-checked:bg-error"></span>
+
+                    <span class="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-on-surface-variant shadow-md transition-all duration-200 peer-checked:left-8 peer-checked:bg-white"></span>
+                </div>
             </label>
 
             <div class="flex flex-col gap-3 pt-2 sm:flex-row">

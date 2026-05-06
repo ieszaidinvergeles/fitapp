@@ -23,19 +23,33 @@ if (!$routine_data || !is_array($routine_data)) {
 
 function routine_edit_value(string $key, array $routine_data, $default = '')
 {
-    return $_POST[$key] ?? ($routine_data[$key] ?? $default);
+    $value = $_POST[$key] ?? ($routine_data[$key] ?? $default);
+
+    if ($value === '-' || $value === '—') {
+        return '';
+    }
+
+    return $value;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payload = [
-        'name' => trim((string)($_POST['name'] ?? '')),
+        'name' => trim((string)($_POST['routine_name'] ?? '')),
         'difficulty_level' => trim((string)($_POST['difficulty_level'] ?? '')),
-        'goal' => trim((string)($_POST['goal'] ?? '')),
         'description' => trim((string)($_POST['description'] ?? '')),
+        'estimated_duration_min' => !empty($_POST['estimated_duration_min']) ? (int)$_POST['estimated_duration_min'] : null,
     ];
 
+    /*
+     * Si más adelante el backend acepta goal, se puede activar.
+     * Ahora mismo la tabla/API de routines no parece tener campo goal.
+     */
+    if (!empty($_POST['goal'])) {
+        $payload['goal'] = trim((string)$_POST['goal']);
+    }
+
     $payload = array_filter($payload, function ($value) {
-        return $value !== '';
+        return $value !== '' && $value !== null && $value !== '-' && $value !== '—';
     });
 
     $update_response = api_put('/routines/' . $routine_id, $payload, auth: true);
@@ -60,7 +74,7 @@ wp_app_page_start('Edit Routine', true);
     <?php show_error($flash_error); ?>
 <?php endif; ?>
 
-<div class="space-y-6">
+<div class="space-y-6 pb-28">
 
     <section class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -130,15 +144,15 @@ wp_app_page_start('Edit Routine', true);
                 <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">Routine name</label>
                 <input
                     type="text"
-                    name="name"
-                    value="<?= h(routine_edit_value('name', $routine_data)) ?>"
+                    name="routine_name"
+                    value="<?= h($_POST['routine_name'] ?? ($routine_data['name'] ?? ''), '') ?>"
                     class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
                     placeholder="Example: Full Body Starter"
                     required
                 >
             </div>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">Difficulty</label>
@@ -153,7 +167,20 @@ wp_app_page_start('Edit Routine', true);
                         <option value="beginner" <?= $difficulty === 'beginner' ? 'selected' : '' ?>>Beginner</option>
                         <option value="intermediate" <?= $difficulty === 'intermediate' ? 'selected' : '' ?>>Intermediate</option>
                         <option value="advanced" <?= $difficulty === 'advanced' ? 'selected' : '' ?>>Advanced</option>
+                        <option value="expert" <?= $difficulty === 'expert' ? 'selected' : '' ?>>Expert</option>
                     </select>
+                </div>
+
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">Duration</label>
+                    <input
+                        type="number"
+                        name="estimated_duration_min"
+                        min="1"
+                        value="<?= h($_POST['estimated_duration_min'] ?? ($routine_data['estimated_duration_min'] ?? ''), '') ?>"
+                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
+                        placeholder="Example: 45"
+                    >
                 </div>
 
                 <div>
@@ -161,9 +188,9 @@ wp_app_page_start('Edit Routine', true);
                     <input
                         type="text"
                         name="goal"
-                        value="<?= h(routine_edit_value('goal', $routine_data)) ?>"
+                        value="<?= h(routine_edit_value('goal', $routine_data), '') ?>"
                         class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Example: Strength, Cardio, Hypertrophy"
+                        placeholder="Example: Strength, Cardio"
                     >
                 </div>
 
@@ -174,9 +201,14 @@ wp_app_page_start('Edit Routine', true);
                 <textarea
                     name="description"
                     rows="5"
+                    maxlength="280"
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
                     placeholder="Describe brevemente para qué sirve esta rutina..."
-                ><?= h(routine_edit_value('description', $routine_data)) ?></textarea>
+                ><?= h(routine_edit_value('description', $routine_data), '') ?></textarea>
+
+                <p class="mt-1 text-xs text-on-surface-variant">
+                    Máximo 280 caracteres.
+                </p>
             </div>
 
             <div class="flex flex-col gap-3 pt-2 sm:flex-row">

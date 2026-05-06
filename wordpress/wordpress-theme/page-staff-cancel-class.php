@@ -21,7 +21,7 @@ function cancel_class_value(string $key, $default = '')
     return $_POST[$key] ?? $default;
 }
 
-function cancel_class_field(array $data = null, array $paths = [], $default = '-')
+function cancel_class_field(array $data = null, array $paths = [], $default = '')
 {
     if (!$data) {
         return $default;
@@ -142,12 +142,6 @@ $class_location = $room['name']
     ?? $class_data['location']
     ?? 'No location';
 
-$class_attendance = $class_data['bookings_count']
-    ?? $class_data['students_count']
-    ?? $class_data['attendees_count']
-    ?? $class_data['capacity_used']
-    ?? '0';
-
 $class_instructor = $instructor_data['full_name']
     ?? $instructor_data['username']
     ?? $instructor_data['email']
@@ -238,14 +232,6 @@ wp_app_page_start('Cancel Class', true);
 
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-error text-xl">groups</span>
-                        <span class="text-on-surface-variant text-[11px] uppercase font-bold tracking-widest">Attendance</span>
-                    </div>
-                    <p class="font-headline text-base font-semibold text-right"><?= h((string)$class_attendance) ?> Students</p>
-                </div>
-
-                <div class="flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-error text-xl">person</span>
                         <span class="text-on-surface-variant text-[11px] uppercase font-bold tracking-widest">Instructor</span>
                     </div>
@@ -268,12 +254,12 @@ wp_app_page_start('Cancel Class', true);
                     rows="4"
                     class="w-full resize-none rounded-xl border border-error/20 bg-surface-container-highest p-5 text-on-surface placeholder:text-on-surface-variant/40 transition-all focus:border-error focus:ring-1 focus:ring-error"
                     placeholder="e.g., Facility maintenance, Coach illness..."
-                ><?= h(cancel_class_value('reason', '')) ?></textarea>
+                ><?= h(cancel_class_value('reason', ''), '') ?></textarea>
 
                 <div class="flex items-start gap-3 rounded-lg border border-error/20 bg-error-container/10 p-3">
                     <span class="material-symbols-outlined mt-0.5 text-error text-lg">info</span>
                     <p class="text-[10px] font-medium uppercase tracking-tight leading-relaxed text-error/80">
-                        Este mensaje se enviará inmediatamente a los alumnos afectados si tu backend tiene notificaciones activas.
+                        Este mensaje se enviará inmediatamente a los alumnos afectados.
                     </p>
                 </div>
             </div>

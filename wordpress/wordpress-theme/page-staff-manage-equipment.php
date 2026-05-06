@@ -74,6 +74,13 @@ if (!function_exists('equipment_page_url')) {
     }
 }
 
+if (!function_exists('equipment_home_access_label')) {
+    function equipment_home_access_label(array $item): string
+    {
+        return !empty($item['is_home_accessible']) ? 'Available for home workouts' : 'Gym only';
+    }
+}
+
 /*
 |--------------------------------------------------------------------------
 | Cargar todo el equipamiento
@@ -190,9 +197,8 @@ wp_app_page_start('Manage Equipment', true);
 
             $name = equipment_value($item, ['name', 'title', 'equipment_name'], 'Equipment');
             $description = equipment_value($item, ['description', 'notes', 'details'], '');
-            $type = equipment_value($item, ['type', 'category', 'equipment_type'], '-');
-            $status = equipment_value($item, ['status', 'condition', 'state'], '-');
-            $quantity = equipment_value($item, ['quantity', 'stock', 'amount'], '-');
+            $has_home_access = !empty($item['is_home_accessible']);
+            $home_access_label = equipment_home_access_label($item);
 
             $image = $item['image_url']
                 ?? $item['cover_image_url']
@@ -224,13 +230,10 @@ wp_app_page_start('Manage Equipment', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Type:
-                                <span class="font-semibold text-on-surface"><?= h((string)$type) ?></span>
-                                · Status:
-                                <span class="font-semibold text-on-surface"><?= h((string)$status) ?></span>
-                                · Quantity:
-                                <span class="font-semibold text-on-surface"><?= h((string)$quantity) ?></span>
+                            <p class="mt-1">
+                                <span class="inline-flex rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide <?= $has_home_access ? 'border-primary-container/30 text-on-surface-variant bg-surface-container-high' : 'border-outline-variant/30 text-on-surface-variant bg-surface-container-high' ?>">
+                                    <?= h($home_access_label) ?>                                                                                               
+                                </span>
                             </p>
 
                             <?php if ($description): ?>

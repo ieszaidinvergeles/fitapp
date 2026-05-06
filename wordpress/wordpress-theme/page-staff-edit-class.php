@@ -275,15 +275,39 @@ wp_app_page_start('Edit Class', true);
                 >
             </div>
 
-            <label class="flex items-center gap-3 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3">
-                <input
-                    type="checkbox"
-                    name="is_cancelled"
-                    value="1"
-                    class="h-4 w-4 rounded border-outline-variant/30 bg-surface text-primary focus:ring-primary-container"
-                    <?= $form_is_cancelled ? 'checked' : '' ?>
-                >
-                <span>Cancelled</span>
+            <label
+                for="isCancelledToggle"
+                class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-4 transition hover:border-primary-container/30"
+            >
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-container/10 text-primary-container">
+                        <span class="material-symbols-outlined text-[20px]">event_busy</span>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-semibold text-on-surface">
+                            Create as cancelled
+                        </p>
+                        <p class="text-xs text-on-surface-variant">
+                            Marca esta opción si la clase debe crearse ya cancelada.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="relative shrink-0">
+                    <input
+                        id="isCancelledToggle"
+                        type="checkbox"
+                        name="is_cancelled"
+                        value="1"
+                        class="peer sr-only"
+                        <?= !empty($_POST['is_cancelled']) ? 'checked' : '' ?>
+                    >
+
+                    <span class="block h-7 w-14 rounded-full bg-surface transition-colors duration-200 peer-checked:bg-primary-container"></span>
+
+                    <span class="pointer-events-none absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow-md transition-all duration-200 peer-checked:left-8"></span>
+                </div>
             </label>
 
             <div class="flex flex-wrap gap-2">
