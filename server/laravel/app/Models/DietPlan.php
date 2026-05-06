@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Represents a nutritional diet plan that can be associated with routines.
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $cover_image_url
  *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Routine> $routines
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Recipe> $recipes
  */
 class DietPlan extends Model
 {
@@ -37,5 +39,16 @@ class DietPlan extends Model
     public function routines(): HasMany
     {
         return $this->hasMany(Routine::class, 'associated_diet_plan_id');
+    }
+
+    /**
+     * Relationship: all recipes in this diet plan.
+     *
+     * @return BelongsToMany
+     */
+    public function recipes(): BelongsToMany
+    {
+        return $this->belongsToMany(Recipe::class, 'diet_plan_recipes')
+                    ->withPivot('meal_type');
     }
 }

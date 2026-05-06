@@ -170,8 +170,10 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware('advanced')->group(function (): void {
 
             // DietPlan
-            Route::get('/diet-plans',          [DietPlanController::class, 'index']);
-            Route::get('/diet-plans/{id}',     [DietPlanController::class, 'show']);
+            Route::get('/diet-plans',             [DietPlanController::class, 'index']);
+            Route::get('/diet-plans/{id}',        [DietPlanController::class, 'show']);
+            Route::post('/diet-plans/{id}/recipes', [DietPlanController::class, 'addRecipe']);
+            Route::delete('/diet-plans/{id}/recipes', [DietPlanController::class, 'removeRecipe']);
 
             // Exercises (write)
             Route::post('/exercises',         [ExerciseController::class, 'store']);

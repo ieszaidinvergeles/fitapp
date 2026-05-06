@@ -30,6 +30,7 @@ class DietPlanResource extends JsonResource
                                     ? url('uploads/' . $this->cover_image_url)
                                     : null,
             'is_favorite'      => $this->is_favorite_flag ?? false,
+            'recipes'          => RecipeResource::collection($this->whenLoaded('recipes')),
         ];
     }
 }

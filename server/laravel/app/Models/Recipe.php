@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * Represents a nutritional recipe that can be scheduled in user meal plans.
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $image_url
  *
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UserMealSchedule> $mealSchedules
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\DietPlan>        $dietPlans
  */
 class Recipe extends Model
 {
@@ -55,6 +57,17 @@ class Recipe extends Model
     public function mealSchedules(): HasMany
     {
         return $this->hasMany(UserMealSchedule::class);
+    }
+
+    /**
+     * Relationship: all diet plans that include this recipe.
+     *
+     * @return BelongsToMany
+     */
+    public function dietPlans(): BelongsToMany
+    {
+        return $this->belongsToMany(DietPlan::class, 'diet_plan_recipes')
+                    ->withPivot('meal_type');
     }
 
     /**

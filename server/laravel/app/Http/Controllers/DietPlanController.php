@@ -89,7 +89,7 @@ class DietPlanController extends Controller
         $result       = false;
         $messageArray = ['general' => 'Could not retrieve diet plan.'];
         try {
-            $plan         = DietPlan::findOrFail($id);
+            $plan         = DietPlan::with('recipes')->findOrFail($id);
             $this->authorize('view', $plan);
             $result       = new DietPlanResource($plan);
             $messageArray = ['general' => 'OK'];
@@ -155,6 +155,62 @@ class DietPlanController extends Controller
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
+        return response()->json(['result' => $result, 'message' => $messageArray]);
+    }
+
+    /** @return JsonResponse */
+    public function addRecipe(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not add recipe to plan.'];
+
+        try {
+            $plan = DietPlan::findOrFail($id);
+            $this->authorize('update', $plan);
+
+            $request->validate([
+                'recipe_id' => 'required|exists:recipes,id',
+                'meal_type' => 'required|in:breakfast,lunch,dinner,snack,pre_workout,post_workout',
+            ]);
+
+            $plan->recipes()->syncWithoutDetaching([
+                $request->input('recipe_id') => [
+                    'meal_type' => $request->input('meal_type'),
+                ],
+            ]);
+
+            $result       = true;
+            $messageArray = ['general' => 'Recipe added to plan.'];
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
+        return response()->json(['result' => $result, 'message' => $messageArray]);
+    }
+
+    /** @return JsonResponse */
+    public function removeRecipe(Request $request, int $id): JsonResponse
+    {
+        $result       = false;
+        $messageArray = ['general' => 'Could not remove recipe from plan.'];
+
+        try {
+            $plan = DietPlan::findOrFail($id);
+            $this->authorize('update', $plan);
+
+            $request->validate([
+                'recipe_id' => 'required|exists:recipes,id',
+                'meal_type' => 'required|in:breakfast,lunch,dinner,snack,pre_workout,post_workout',
+            ]);
+
+            $plan->recipes()->wherePivot('meal_type', $request->input('meal_type'))->detach($request->input('recipe_id'));
+
+            $result       = true;
+            $messageArray = ['general' => 'Recipe removed from plan.'];
+        } catch (\Exception $e) {
+            $messageArray = ['general' => $e->getMessage()];
+        }
+
         return response()->json(['result' => $result, 'message' => $messageArray]);
     }
 
