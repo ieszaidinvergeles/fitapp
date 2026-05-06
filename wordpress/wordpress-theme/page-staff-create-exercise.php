@@ -49,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_exercise_submi
         'name' => trim((string)($_POST['exercise_name'] ?? '')),
         'description' => trim((string)($_POST['description'] ?? '')),
         'target_muscle_group' => trim((string)($_POST['target_muscle_group'] ?? '')),
-        'image_url' => trim((string)($_POST['image_url'] ?? '')),
         'video_url' => trim((string)($_POST['video_url'] ?? '')),
     ];
 
@@ -57,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_exercise_submi
         return $value !== '' && $value !== '-' && $value !== '—';
     });
 
-    $create_response = api_post('/exercises', $payload, auth: true);
+    $create_response = fitapp_api_multipart_post('/exercises', $payload, $_FILES['image'] ?? null, 'image', true);
 
     if (($create_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_exercises_url . '&notice=created');
@@ -93,7 +92,7 @@ wp_app_page_start('Create Exercise', true);
     </section>
 
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-        <form method="post" action="<?= esc_url($create_exercise_url) ?>" class="space-y-6">
+        <form method="post" action="<?= esc_url($create_exercise_url) ?>" enctype="multipart/form-data" class="space-y-6">
 
             <input type="hidden" name="create_exercise_submit" value="1">
 
@@ -153,38 +152,7 @@ wp_app_page_start('Create Exercise', true);
                 </p>
             </div>
 
-            <div>
-                <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Exercise image URL
-                </label>
-
-                <input
-                    id="exerciseImageUrl"
-                    type="url"
-                    name="image_url"
-                    value="<?= h(exercise_create_value('image_url')) ?>"
-                    class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="https://example.com/exercise.jpg"
-                >
-
-                <div
-                    id="imagePreviewWrap"
-                    class="mt-4 flex h-[180px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container"
-                >
-                    <div id="imagePreviewPlaceholder" class="flex flex-col items-center justify-center text-center text-on-surface-variant">
-                        <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60">image</span>
-                        <span class="text-xs font-bold">Image preview</span>
-                        <span class="mt-1 text-[11px] text-on-surface-variant/70">Optional</span>
-                    </div>
-
-                    <img
-                        id="imagePreview"
-                        src=""
-                        alt="Exercise image preview"
-                        class="hidden h-full w-full object-cover"
-                    >
-                </div>
-            </div>
+            <?php fitapp_render_image_dropzone('Exercise image', 'Upload exercise image', 'exerciseImageInput', 'exerciseDropzone', 'image', '', 'Exercise image preview', 'fitness_center'); ?>
 
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
@@ -220,6 +188,8 @@ wp_app_page_start('Create Exercise', true);
     </section>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('exerciseImageInput', 'exerciseDropzone'); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

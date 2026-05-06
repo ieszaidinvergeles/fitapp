@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_room_submit'])) 
         return $value !== '' && $value !== null && $value !== '-' && $value !== '—';
     });
 
-    $update_response = api_put('/rooms/' . $room_id, $payload, auth: true);
+    $update_response = fitapp_api_multipart_update('/rooms/' . $room_id, $payload, $_FILES['image'] ?? null, 'image', true);
 
     if (($update_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_rooms_url . '&notice=updated');
@@ -94,6 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_room_submit'])) 
 }
 
 wp_app_page_start('Edit Room', true);
+$current_image = fitapp_public_asset_url($room['image_url'] ?? '');
 ?>
 
 <?php if ($flash_error): ?>
@@ -120,10 +121,12 @@ wp_app_page_start('Edit Room', true);
 
     <?php if ($room): ?>
         <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-            <form method="post" action="<?= esc_url($edit_room_url) ?>" class="space-y-6">
+            <form method="post" action="<?= esc_url($edit_room_url) ?>" enctype="multipart/form-data" class="space-y-6">
 
                 <input type="hidden" name="edit_room_submit" value="1">
                 <input type="hidden" name="room_id" value="<?= (int)$room_id ?>">
+
+                <?php fitapp_render_image_dropzone('Room image', 'Change room image', 'roomImageInput', 'roomDropzone', 'image', $current_image, 'Room image preview', 'meeting_room'); ?>
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
@@ -242,6 +245,8 @@ wp_app_page_start('Edit Room', true);
     <?php endif; ?>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('roomImageInput', 'roomDropzone'); ?>
 
 <?php
 wp_app_page_end(true);

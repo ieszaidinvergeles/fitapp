@@ -149,13 +149,6 @@ $current_page = $page;
 $offset = ($current_page - 1) * $per_page;
 $exercises = array_slice($all_exercises, $offset, $per_page);
 
-$default_images = [
-    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=600&auto=format&fit=crop',
-];
-
 wp_app_page_start('Manage Exercises', true);
 ?>
 
@@ -206,11 +199,11 @@ wp_app_page_start('Manage Exercises', true);
             $muscle_group = format_exercise_muscle_group($muscle_group_raw);
             $description = exercise_value($exercise, ['description', 'instructions'], '');
 
-            $image = $exercise['image_url']
+            $image = fitapp_public_asset_url($exercise['image_url']
                 ?? $exercise['cover_image_url']
                 ?? $exercise['image']
                 ?? $exercise['photo_url']
-                ?? $default_images[$index % count($default_images)];
+                ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -218,11 +211,7 @@ wp_app_page_start('Manage Exercises', true);
 
                     <div class="flex min-w-0 flex-1 gap-4">
                         <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <img
-                                src="<?= esc_url($image) ?>"
-                                alt="<?= h($name) ?>"
-                                class="h-full w-full object-cover"
-                            >
+                            <?php fitapp_render_image_or_placeholder($image, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'fitness_center', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">

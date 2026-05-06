@@ -191,13 +191,6 @@ $recipes = array_slice($all_recipes, $offset, $per_page);
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($recipes)) : 0;
 
-$default_images = [
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600&auto=format&fit=crop',
-];
-
 wp_app_page_start('Manage Recipes', true);
 ?>
 
@@ -269,8 +262,7 @@ wp_app_page_start('Manage Recipes', true);
 
             $macros = recipe_macros_label($macros_raw);
 
-            $image = $recipe['image_url']
-                ?? $default_images[$index % count($default_images)];
+            $image = fitapp_public_asset_url($recipe['image_url'] ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -278,11 +270,7 @@ wp_app_page_start('Manage Recipes', true);
 
                     <div class="flex min-w-0 flex-1 gap-4">
                         <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <img
-                                src="<?= esc_url($image) ?>"
-                                alt="<?= h($name) ?>"
-                                class="h-full w-full object-cover"
-                            >
+                            <?php fitapp_render_image_or_placeholder($image, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'restaurant', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">

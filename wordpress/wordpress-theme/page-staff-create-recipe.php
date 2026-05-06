@@ -53,7 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_recipe_submit'
         'calories' => $_POST['calories'] !== '' ? (int)$_POST['calories'] : null,
         'macros_json' => !empty($macros) ? json_encode($macros) : '',
         'type' => trim((string)($_POST['type'] ?? '')),
-        'image_url' => trim((string)($_POST['image_url'] ?? '')),
     ];
 
     $payload = array_filter($payload, function ($value) {
@@ -64,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_recipe_submit'
         return $value !== '' && $value !== null && $value !== '-' && $value !== '—';
     });
 
-    $create_response = api_post('/recipes', $payload, auth: true);
+    $create_response = fitapp_api_multipart_post('/recipes', $payload, $_FILES['image'] ?? null, 'image', true);
 
     if (($create_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_recipes_url . '&notice=created');
@@ -100,7 +99,7 @@ wp_app_page_start('Create Recipe', true);
     </section>
 
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-        <form method="post" action="" class="space-y-6">
+        <form method="post" action="" enctype="multipart/form-data" class="space-y-6">
 
             <input type="hidden" name="create_recipe_submit" value="1">
 
@@ -257,38 +256,7 @@ wp_app_page_start('Create Recipe', true);
 
             </div>
 
-            <div>
-                <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Recipe image URL
-                </label>
-
-                <input
-                    id="recipeImageUrl"
-                    type="url"
-                    name="image_url"
-                    value="<?= h(recipe_create_value('image_url')) ?>"
-                    class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="https://example.com/recipe.jpg"
-                >
-
-                <div
-                    id="imagePreviewWrap"
-                    class="mt-4 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container"
-                >
-                    <div id="imagePreviewPlaceholder" class="flex flex-col items-center justify-center text-center text-on-surface-variant">
-                        <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60">restaurant</span>
-                        <span class="text-xs font-bold">Image preview</span>
-                        <span class="mt-1 text-[11px] text-on-surface-variant/70">Optional</span>
-                    </div>
-
-                    <img
-                        id="imagePreview"
-                        src=""
-                        alt="Recipe image preview"
-                        class="hidden h-full w-full object-cover"
-                    >
-                </div>
-            </div>
+            <?php fitapp_render_image_dropzone('Recipe image', 'Upload recipe image', 'recipeImageInput', 'recipeDropzone', 'image', '', 'Recipe image preview', 'restaurant'); ?>
 
             <div class="flex flex-col gap-3 pt-2 sm:flex-row">
                 <button
@@ -310,6 +278,8 @@ wp_app_page_start('Create Recipe', true);
     </section>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('recipeImageInput', 'recipeDropzone'); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

@@ -10,7 +10,7 @@ use App\Models\Routine;
 use App\Models\UserFavorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles CRUD, management, and image operations for routines.

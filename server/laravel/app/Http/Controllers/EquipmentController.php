@@ -9,7 +9,7 @@ use App\Http\Resources\EquipmentResource;
 use App\Models\Equipment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles CRUD and image operations for equipment.

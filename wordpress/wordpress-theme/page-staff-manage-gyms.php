@@ -129,13 +129,6 @@ $gyms = array_slice($all_gyms, $offset, $per_page);
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($gyms)) : 0;
 
-$default_images = [
-    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop',
-];
-
 wp_app_page_start('Manage Gyms', true);
 ?>
 
@@ -191,8 +184,7 @@ wp_app_page_start('Manage Gyms', true);
                 $manager = $gym['manager']['full_name'] ?? $gym['manager']['username'] ?? $gym['manager']['email'] ?? '';
             }
 
-            $image = $gym['logo_url']
-                ?? $default_images[$index % count($default_images)];
+            $image = fitapp_public_asset_url($gym['logo_url'] ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -200,11 +192,7 @@ wp_app_page_start('Manage Gyms', true);
 
                     <div class="flex min-w-0 flex-1 gap-4">
                         <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <img
-                                src="<?= esc_url($image) ?>"
-                                alt="<?= h($name) ?>"
-                                class="h-full w-full object-cover"
-                            >
+                            <?php fitapp_render_image_or_placeholder($image, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'location_city', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">

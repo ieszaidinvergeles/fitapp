@@ -67,7 +67,7 @@ if (($recipe_response['result'] ?? false) !== false && is_array($recipe_response
 }
 
 $macros = recipe_decode_macros($recipe['macros_json'] ?? []);
-$current_image = $recipe['image_url'] ?? '';
+$current_image = fitapp_public_asset_url($recipe['image_url'] ?? '');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_recipe_submit'])) {
     $fat = $_POST['fat'] !== '' ? (float)$_POST['fat'] : null;
@@ -96,14 +96,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_recipe_submit'])
         'calories' => $_POST['calories'] !== '' ? (int)$_POST['calories'] : null,
         'macros_json' => !empty($macros_payload) ? json_encode($macros_payload) : '',
         'type' => trim((string)($_POST['type'] ?? '')),
-        'image_url' => trim((string)($_POST['image_url'] ?? '')),
     ];
 
     $payload = array_filter($payload, function ($value) {
         return $value !== '' && $value !== null && $value !== '-' && $value !== '—';
     });
 
-    $update_response = api_put('/recipes/' . $recipe_id, $payload, auth: true);
+    $update_response = fitapp_api_multipart_update('/recipes/' . $recipe_id, $payload, $_FILES['image'] ?? null, 'image', true);
 
     if (($update_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_recipes_url . '&notice=updated');
@@ -140,7 +139,7 @@ wp_app_page_start('Edit Recipe', true);
 
     <?php if ($recipe): ?>
         <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-            <form method="post" action="<?= esc_url($edit_recipe_url) ?>" class="space-y-6">
+            <form method="post" action="<?= esc_url($edit_recipe_url) ?>" enctype="multipart/form-data" class="space-y-6">
 
                 <input type="hidden" name="edit_recipe_submit" value="1">
                 <input type="hidden" name="recipe_id" value="<?= (int)$recipe_id ?>">
@@ -298,38 +297,7 @@ wp_app_page_start('Edit Recipe', true);
 
                 </div>
 
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                        Recipe image URL
-                    </label>
-
-                    <input
-                        id="recipeImageUrl"
-                        type="url"
-                        name="image_url"
-                        value="<?= h($_POST['image_url'] ?? ($recipe['image_url'] ?? '')) ?>"
-                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="https://example.com/recipe.jpg"
-                    >
-
-                    <div
-                        id="imagePreviewWrap"
-                        class="mt-4 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container"
-                    >
-                        <div id="imagePreviewPlaceholder" class="<?= $current_image ? 'hidden' : 'flex' ?> flex-col items-center justify-center text-center text-on-surface-variant">
-                            <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60">restaurant</span>
-                            <span class="text-xs font-bold">Image preview</span>
-                            <span class="mt-1 text-[11px] text-on-surface-variant/70">Optional</span>
-                        </div>
-
-                        <img
-                            id="imagePreview"
-                            src="<?= esc_url($current_image) ?>"
-                            alt="Recipe image preview"
-                            class="<?= $current_image ? '' : 'hidden' ?> h-full w-full object-cover"
-                        >
-                    </div>
-                </div>
+                <?php fitapp_render_image_dropzone('Recipe image', 'Change recipe image', 'recipeImageInput', 'recipeDropzone', 'image', $current_image, 'Recipe image preview', 'restaurant'); ?>
 
                 <div class="flex flex-col gap-3 pt-2 sm:flex-row">
                     <button
@@ -352,6 +320,8 @@ wp_app_page_start('Edit Recipe', true);
     <?php endif; ?>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('recipeImageInput', 'recipeDropzone'); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

@@ -68,6 +68,7 @@ $name = room_view_value($room, ['name', 'title', 'room_name'], 'Room');
 $capacity = room_view_value($room, ['capacity', 'capacity_limit', 'max_capacity'], '-');
 $floor = room_view_value($room, ['floor', 'floor_number'], '-');
 $description = room_view_value($room, ['description', 'notes'], 'No description available.');
+$image_url = fitapp_public_asset_url(room_view_value($room, ['image_url', 'cover_image_url', 'image', 'photo_url'], ''));
 
 $gym_id = (int)($room['gym_id'] ?? $room['gym']['id'] ?? 0);
 $gym = $room['gym'] ?? ($gyms_by_id[$gym_id] ?? []);
@@ -118,13 +119,11 @@ wp_app_page_start('View Room', true);
         <section class="overflow-hidden rounded-3xl border border-outline-variant/20 bg-surface-container shadow-lg">
             <div class="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)]">
 
-                <div class="flex min-h-[260px] items-center justify-center border-b border-outline-variant/20 bg-surface-container-high p-8 lg:border-b-0 lg:border-r">
-                    <div class="flex flex-col items-center justify-center text-center">
-                        <span class="material-symbols-outlined mb-4 text-7xl text-primary-container">meeting_room</span>
-                        <p class="text-xs font-black uppercase tracking-[0.25em] text-on-surface-variant">
-                            Room Space
-                        </p>
-                    </div>
+                <div class="relative min-h-[260px] overflow-hidden border-b border-outline-variant/20 bg-surface-container-high lg:border-b-0 lg:border-r">
+                    <?php fitapp_render_image_or_placeholder((string)$image_url, (string)$name, 'absolute inset-0 h-full w-full object-cover', 'absolute inset-0 min-h-[260px] flex-col items-center justify-center p-8 text-center text-on-surface-variant', 'meeting_room', 'No image'); ?>
+                    <?php if ($image_url): ?>
+                        <div class="absolute inset-0 bg-gradient-to-t from-background/80 via-background/15 to-transparent"></div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="p-5 sm:p-8">

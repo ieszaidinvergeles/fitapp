@@ -451,6 +451,394 @@ function api_delete(string $endpoint, bool $auth = false): array
     return fitapp_request('DELETE', $endpoint, null, $auth);
 }
 
+function fitapp_has_uploaded_file(?array $file): bool
+{
+    return $file
+        && !empty($file['tmp_name'])
+        && is_uploaded_file($file['tmp_name'])
+        && (int)($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK;
+}
+
+function fitapp_upload_error_message(?array $file): ?string
+{
+    if (!$file) {
+        return null;
+    }
+
+    $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+
+    if ($error === UPLOAD_ERR_OK || $error === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    return match ($error) {
+        UPLOAD_ERR_INI_SIZE,
+        UPLOAD_ERR_FORM_SIZE => 'La imagen es demasiado grande. Sube una imagen de maximo 2 MB.',
+        UPLOAD_ERR_PARTIAL => 'La imagen no se subio completa. Intentalo otra vez.',
+        UPLOAD_ERR_NO_TMP_DIR => 'Falta la carpeta temporal de subida en PHP.',
+        UPLOAD_ERR_CANT_WRITE => 'No se pudo guardar la imagen temporalmente.',
+        UPLOAD_ERR_EXTENSION => 'Una extension de PHP bloqueo la subida de la imagen.',
+        default => 'No se pudo subir la imagen. Intentalo con otro archivo.',
+    };
+}
+
+function fitapp_image_proxy_url(string $folder, int $id): string
+{
+    return home_url('/?fitapp_image_proxy=1&folder=' . rawurlencode($folder) . '&id=' . $id);
+}
+
+function fitapp_image_proxy_endpoint(string $folder, int $id): ?string
+{
+    $map = [
+        'activities'       => '/activities/' . $id . '/image',
+        'diet_plans'       => '/diet-plans/' . $id . '/image',
+        'equipment'        => '/equipment/' . $id . '/image',
+        'exercises'        => '/exercises/' . $id . '/image',
+        'gyms'             => '/gyms/' . $id . '/logo',
+        'membership_plans' => '/membership-plans/' . $id . '/image',
+        'recipes'          => '/recipes/' . $id . '/image',
+        'rooms'            => '/rooms/' . $id . '/image',
+        'routines'         => '/routines/' . $id . '/image',
+        'users'            => '/users/' . $id . '/photo',
+    ];
+
+    return $map[$folder] ?? null;
+}
+
+function fitapp_public_asset_url($url): string
+{
+    $url = trim((string)$url);
+
+    if (
+        $url === ''
+        || $url === '-'
+        || $url === '&mdash;'
+        || $url === '&#8212;'
+        || $url === '—'
+        || $url === 'â€”'
+        || $url === 'Ã¢â‚¬â€'
+    ) {
+        return '';
+    }
+
+    $path = parse_url($url, PHP_URL_PATH) ?: $url;
+    if (preg_match('~/uploads/images/([^/]+)/(\d+)\.[a-z0-9]+$~i', $path, $matches)) {
+        return fitapp_image_proxy_url((string)$matches[1], (int)$matches[2]);
+    }
+
+    if (str_starts_with($url, 'http://nginx:8000')) {
+        return 'http://localhost:8000' . substr($url, strlen('http://nginx:8000'));
+    }
+
+    if (preg_match('~^https?://(localhost|127\.0\.0\.1)/uploads/~i', $url)) {
+        return preg_replace('~^https?://(localhost|127\.0\.0\.1)~i', 'http://localhost:8000', $url);
+    }
+
+    if (str_starts_with($url, '/uploads/')) {
+        return 'http://localhost:8000' . $url;
+    }
+
+    if (str_starts_with($url, 'uploads/')) {
+        return 'http://localhost:8000/' . $url;
+    }
+
+    return $url;
+}
+
+function fitapp_handle_image_proxy(): void
+{
+    if (empty($_GET['fitapp_image_proxy'])) {
+        return;
+    }
+
+    $folder = preg_replace('/[^a-z0-9_]/i', '', (string)($_GET['folder'] ?? ''));
+    $id = (int)($_GET['id'] ?? 0);
+    $endpoint = $id > 0 ? fitapp_image_proxy_endpoint($folder, $id) : null;
+
+    if (!$endpoint) {
+        http_response_code(404);
+        exit;
+    }
+
+    $headers = ['Accept: image/*'];
+    if (!empty($_SESSION['token'])) {
+        $headers[] = 'Authorization: Bearer ' . $_SESSION['token'];
+    }
+
+    $ch = curl_init(API_BASE . $endpoint);
+    if ($ch === false) {
+        http_response_code(500);
+        exit;
+    }
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+    $body = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $contentType = (string)(curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?: 'application/octet-stream');
+    curl_close($ch);
+
+    if ($body === false || $status < 200 || $status >= 300) {
+        http_response_code($status >= 400 ? $status : 404);
+        exit;
+    }
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    header('Content-Type: ' . $contentType);
+    header('Cache-Control: private, max-age=300');
+    echo $body;
+    exit;
+}
+
+add_action('init', 'fitapp_handle_image_proxy');
+
+function fitapp_render_image_or_placeholder(
+    string $url,
+    string $alt,
+    string $imageClass = 'h-full w-full object-cover',
+    string $placeholderClass = 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant',
+    string $icon = 'image',
+    string $label = 'No image'
+): void {
+    $visibleState = $url !== '' ? 'hidden' : 'flex';
+    ?>
+    <?php if ($url !== ''): ?>
+        <img
+            src="<?= esc_url($url) ?>"
+            alt="<?= h($alt) ?>"
+            class="<?= h($imageClass) ?>"
+            onerror="this.classList.add('hidden'); if (this.nextElementSibling) this.nextElementSibling.classList.remove('hidden');"
+        >
+    <?php endif; ?>
+
+    <div class="<?= h($visibleState . ' ' . $placeholderClass) ?>">
+        <span class="material-symbols-outlined mb-1 text-3xl text-primary-container/70"><?= h($icon) ?></span>
+        <span class="text-[10px] font-black uppercase tracking-wide text-on-surface-variant"><?= h($label) ?></span>
+    </div>
+    <?php
+}
+
+function fitapp_api_multipart_request(
+    string $endpoint,
+    array $fields = [],
+    ?array $file = null,
+    string $fileField = 'image',
+    bool $auth = false,
+    string $method = 'POST'
+): array {
+    $url = API_BASE . $endpoint;
+    $headers = ['Accept: application/json'];
+
+    if ($auth && isset($_SESSION['token'])) {
+        $headers[] = 'Authorization: Bearer ' . $_SESSION['token'];
+    }
+
+    $postFields = $fields;
+    $method = strtoupper($method);
+
+    $uploadError = fitapp_upload_error_message($file);
+    if ($uploadError !== null) {
+        return ['result' => false, 'message' => ['general' => $uploadError]];
+    }
+
+    if ($method !== 'POST') {
+        $postFields['_method'] = $method;
+    }
+
+    if (fitapp_has_uploaded_file($file)) {
+        $postFields[$fileField] = new CURLFile(
+            $file['tmp_name'],
+            ($file['type'] ?? '') ?: (mime_content_type($file['tmp_name']) ?: 'application/octet-stream'),
+            ($file['name'] ?? '') ?: $fileField
+        );
+    }
+
+    $ch = curl_init($url);
+    if ($ch === false) {
+        return ['result' => false, 'message' => ['general' => 'Could not initialize HTTP client (cURL).']];
+    }
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+
+    $raw = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr = curl_error($ch);
+    curl_close($ch);
+
+    if ($raw === false) {
+        $detail = $curlErr !== '' ? " cURL: {$curlErr}" : '';
+        return ['result' => false, 'message' => ['general' => 'Could not connect to the API.' . $detail]];
+    }
+
+    $decoded = json_decode($raw, true);
+
+    if (!is_array($decoded)) {
+        return ['result' => false, 'message' => ['general' => "API returned non-JSON (HTTP $httpCode)."]];
+    }
+
+    return $decoded;
+}
+
+function fitapp_api_multipart_post(string $endpoint, array $fields = [], ?array $file = null, string $fileField = 'image', bool $auth = false): array
+{
+    return fitapp_api_multipart_request($endpoint, $fields, $file, $fileField, $auth, 'POST');
+}
+
+function fitapp_api_multipart_update(string $endpoint, array $fields = [], ?array $file = null, string $fileField = 'image', bool $auth = false): array
+{
+    return fitapp_api_multipart_request($endpoint, $fields, $file, $fileField, $auth, 'PUT');
+}
+
+function fitapp_render_image_dropzone(
+    string $label,
+    string $uploadText,
+    string $inputId,
+    string $dropzoneId,
+    string $inputName = 'image',
+    string $currentImage = '',
+    string $previewAlt = 'Image preview',
+    string $icon = 'image'
+): void {
+    $previewId = $inputId . 'Preview';
+    $placeholderId = $inputId . 'Placeholder';
+    $removeId = $inputId . 'Remove';
+    ?>
+    <div>
+        <label class="mb-1.5 block text-sm font-medium text-on-surface-variant"><?= h($label) ?></label>
+
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_180px]">
+            <label
+                id="<?= h($dropzoneId) ?>"
+                class="flex min-h-[150px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high px-4 py-6 text-center transition hover:border-primary-container hover:bg-surface-container-highest"
+            >
+                <span class="material-symbols-outlined mb-2 text-4xl text-primary-container">upload</span>
+                <span class="text-sm font-bold text-on-surface"><?= h($uploadText) ?></span>
+                <span class="mt-1 text-xs text-on-surface-variant">JPG, PNG, WEBP or GIF</span>
+                <span class="mt-1 text-[11px] text-on-surface-variant/70">Click or drag and drop</span>
+
+                <input
+                    id="<?= h($inputId) ?>"
+                    type="file"
+                    name="<?= h($inputName) ?>"
+                    accept="image/*"
+                    class="hidden"
+                >
+            </label>
+
+            <div
+                class="group relative flex h-[150px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container hover:bg-surface-container-highest"
+            >
+                <div id="<?= h($placeholderId) ?>" class="<?= $currentImage ? 'hidden' : 'flex' ?> flex-col items-center justify-center text-center text-on-surface-variant">
+                    <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60"><?= h($icon) ?></span>
+                    <span class="text-xs font-bold">No image selected</span>
+                </div>
+
+                <img
+                    id="<?= h($previewId) ?>"
+                    src="<?= esc_url($currentImage) ?>"
+                    alt="<?= h($previewAlt) ?>"
+                    class="<?= $currentImage ? '' : 'hidden' ?> h-full w-full object-cover"
+                >
+
+                <button
+                    id="<?= h($removeId) ?>"
+                    type="button"
+                    class="absolute inset-0 <?= $currentImage ? 'flex' : 'hidden' ?> items-center justify-center bg-black/55 opacity-0 transition group-hover:opacity-100"
+                >
+                    <span class="material-symbols-outlined rounded-full bg-error p-2 text-white">close</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+
+function fitapp_render_image_dropzone_script(string $inputId, string $dropzoneId): void
+{
+    $previewId = $inputId . 'Preview';
+    $placeholderId = $inputId . 'Placeholder';
+    $removeId = $inputId . 'Remove';
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('<?= h($inputId) ?>');
+        const dropzone = document.getElementById('<?= h($dropzoneId) ?>');
+        const preview = document.getElementById('<?= h($previewId) ?>');
+        const placeholder = document.getElementById('<?= h($placeholderId) ?>');
+        const removeBtn = document.getElementById('<?= h($removeId) ?>');
+
+        if (!input || !dropzone || !preview || !placeholder || !removeBtn) return;
+
+        function clearPreview() {
+            input.value = '';
+            preview.removeAttribute('src');
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            removeBtn.classList.add('hidden');
+            removeBtn.classList.remove('flex');
+        }
+
+        function setPreview(file) {
+            if (!file) {
+                clearPreview();
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+                clearPreview();
+                alert('Please select a valid image file.');
+                return;
+            }
+
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            removeBtn.classList.remove('hidden');
+            removeBtn.classList.add('flex');
+        }
+
+        input.addEventListener('change', function () {
+            const file = input.files && input.files[0];
+            setPreview(file);
+        });
+
+        dropzone.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            dropzone.classList.add('border-primary-container', 'bg-surface-container-highest');
+        });
+
+        dropzone.addEventListener('dragleave', function () {
+            dropzone.classList.remove('border-primary-container', 'bg-surface-container-highest');
+        });
+
+        dropzone.addEventListener('drop', function (event) {
+            event.preventDefault();
+            dropzone.classList.remove('border-primary-container', 'bg-surface-container-highest');
+
+            const file = event.dataTransfer.files && event.dataTransfer.files[0];
+            if (!file) return;
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            input.files = dataTransfer.files;
+            setPreview(file);
+        });
+
+        removeBtn.addEventListener('click', clearPreview);
+    });
+    </script>
+    <?php
+}
+
 // ─────────────────────────────────────────────────────────────────
 // AUTHENTICATION GUARDS
 // ─────────────────────────────────────────────────────────────────

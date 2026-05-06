@@ -191,6 +191,7 @@ wp_app_page_start('Rooms', true);
             $name = room_value($room, ['name', 'title', 'room_name'], 'Room');
             $capacity = room_value($room, ['capacity', 'capacity_limit', 'max_capacity'], '-');
             $floor = room_value($room, ['floor', 'floor_number'], '-');
+            $image_url = fitapp_public_asset_url(room_value($room, ['image_url', 'cover_image_url', 'image', 'photo_url'], ''));
 
             $gym_id = (int)($room['gym_id'] ?? $room['gym']['id'] ?? 0);
             $gym = $room['gym'] ?? ($gyms_by_id[$gym_id] ?? []);
@@ -203,8 +204,8 @@ wp_app_page_start('Rooms', true);
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
                     <div class="flex min-w-0 flex-1 gap-4">
-                        <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <span class="material-symbols-outlined text-4xl text-primary-container">meeting_room</span>
+                        <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
+                            <?php fitapp_render_image_or_placeholder((string)$image_url, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'meeting_room', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">

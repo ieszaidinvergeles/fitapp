@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_room_submit'])
         return $value !== '' && $value !== null && $value !== '-' && $value !== '—';
     });
 
-    $create_response = api_post('/rooms', $payload, auth: true);
+    $create_response = fitapp_api_multipart_post('/rooms', $payload, $_FILES['image'] ?? null, 'image', true);
 
     if (($create_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_rooms_url . '&notice=created');
@@ -90,9 +90,11 @@ wp_app_page_start('Create Room', true);
     </section>
 
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-        <form method="post" action="<?= esc_url($create_room_url) ?>" class="space-y-6">
+        <form method="post" action="<?= esc_url($create_room_url) ?>" enctype="multipart/form-data" class="space-y-6">
 
             <input type="hidden" name="create_room_submit" value="1">
+
+            <?php fitapp_render_image_dropzone('Room image', 'Upload room image', 'roomImageInput', 'roomDropzone', 'image', '', 'Room image preview', 'meeting_room'); ?>
 
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
@@ -203,6 +205,8 @@ wp_app_page_start('Create Room', true);
     </section>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('roomImageInput', 'roomDropzone'); ?>
 
 <?php
 wp_app_page_end(true);

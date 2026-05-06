@@ -48,14 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_gym_submit'])) {
         'city' => trim((string)($_POST['city'] ?? '')),
         'phone' => trim((string)($_POST['phone'] ?? '')),
         'location_coords' => trim((string)($_POST['location_coords'] ?? '')),
-        'logo_url' => trim((string)($_POST['logo_url'] ?? '')),
     ];
 
     $payload = array_filter($payload, function ($value) {
         return $value !== '' && $value !== '-' && $value !== '—';
     });
 
-    $update_response = api_put('/gyms/' . $gym_id, $payload, auth: true);
+    $update_response = fitapp_api_multipart_update('/gyms/' . $gym_id, $payload, $_FILES['logo'] ?? null, 'logo', true);
 
     if (($update_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_gyms_url . '&notice=updated');
@@ -65,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_gym_submit'])) {
     $flash_error = api_message($update_response) ?: 'No se pudo actualizar el gimnasio.';
 }
 
-$current_image = gym_edit_value($gym, 'logo_url');
+$current_image = fitapp_public_asset_url(gym_edit_value($gym, 'logo_url'));
 
 wp_app_page_start('Edit Gym', true);
 ?>
@@ -94,7 +93,7 @@ wp_app_page_start('Edit Gym', true);
 
     <?php if ($gym): ?>
         <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-            <form method="post" action="<?= esc_url($edit_gym_url) ?>" class="space-y-6">
+            <form method="post" action="<?= esc_url($edit_gym_url) ?>" enctype="multipart/form-data" class="space-y-6">
 
                 <input type="hidden" name="edit_gym_submit" value="1">
                 <input type="hidden" name="gym_id" value="<?= (int)$gym_id ?>">
@@ -174,37 +173,7 @@ wp_app_page_start('Edit Gym', true);
                     >
                 </div>
 
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                        Gym image URL
-                    </label>
-
-                    <input
-                        id="gymLogoUrl"
-                        name="logo_url"
-                        value="<?= h($_POST['logo_url'] ?? ($gym['logo_url'] ?? '')) ?>"
-                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="https://example.com/gym.jpg"
-                    >
-
-                    <div
-                        id="imagePreviewWrap"
-                        class="mt-4 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container"
-                    >
-                        <div id="imagePreviewPlaceholder" class="<?= $current_image ? 'hidden' : 'flex' ?> flex-col items-center justify-center text-center text-on-surface-variant">
-                            <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60">location_city</span>
-                            <span class="text-xs font-bold">Image preview</span>
-                            <span class="mt-1 text-[11px] text-on-surface-variant/70">Optional</span>
-                        </div>
-
-                        <img
-                            id="imagePreview"
-                            src="<?= esc_url($current_image) ?>"
-                            alt="Gym image preview"
-                            class="<?= $current_image ? '' : 'hidden' ?> h-full w-full object-cover"
-                        >
-                    </div>
-                </div>
+                <?php fitapp_render_image_dropzone('Gym logo', 'Change gym logo', 'gymLogoInput', 'gymLogoDropzone', 'logo', $current_image, 'Gym logo preview', 'location_city'); ?>
 
                 <div class="flex flex-col gap-3 pt-2 sm:flex-row">
                     <button
@@ -227,6 +196,8 @@ wp_app_page_start('Edit Gym', true);
     <?php endif; ?>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('gymLogoInput', 'gymLogoDropzone'); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

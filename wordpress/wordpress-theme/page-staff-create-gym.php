@@ -28,14 +28,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_gym_submit']))
         'city' => trim((string)($_POST['city'] ?? '')),
         'phone' => trim((string)($_POST['phone'] ?? '')),
         'location_coords' => trim((string)($_POST['location_coords'] ?? '')),
-        'logo_url' => trim((string)($_POST['logo_url'] ?? '')),
     ];
 
     $payload = array_filter($payload, function ($value) {
         return $value !== '' && $value !== '-' && $value !== '—';
     });
 
-    $create_response = api_post('/gyms', $payload, auth: true);
+    $create_response = fitapp_api_multipart_post('/gyms', $payload, $_FILES['logo'] ?? null, 'logo', true);
 
     if (($create_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_gyms_url . '&notice=created');
@@ -71,7 +70,7 @@ wp_app_page_start('Create Gym', true);
     </section>
 
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-        <form method="post" action="<?= esc_url($create_gym_url) ?>" class="space-y-6">
+        <form method="post" action="<?= esc_url($create_gym_url) ?>" enctype="multipart/form-data" class="space-y-6">
 
             <input type="hidden" name="create_gym_submit" value="1">
 
@@ -150,38 +149,7 @@ wp_app_page_start('Create Gym', true);
                 >
             </div>
 
-            <div>
-                <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Gym logo URL
-                </label>
-
-                <input
-                    id="gymLogoUrl"
-                    type="url"
-                    name="logo_url"
-                    value="<?= h(gym_create_value('logo_url')) ?>"
-                    class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="https://example.com/gym.jpg"
-                >
-
-                <div
-                    id="imagePreviewWrap"
-                    class="mt-4 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container"
-                >
-                    <div id="imagePreviewPlaceholder" class="flex flex-col items-center justify-center text-center text-on-surface-variant">
-                        <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60">location_city</span>
-                        <span class="text-xs font-bold">Image preview</span>
-                        <span class="mt-1 text-[11px] text-on-surface-variant/70">Optional</span>
-                    </div>
-
-                    <img
-                        id="imagePreview"
-                        src=""
-                        alt="Gym image preview"
-                        class="hidden h-full w-full object-cover"
-                    >
-                </div>
-            </div>
+            <?php fitapp_render_image_dropzone('Gym logo', 'Upload gym logo', 'gymLogoInput', 'gymLogoDropzone', 'logo', '', 'Gym logo preview', 'location_city'); ?>
 
             <div class="flex flex-col gap-3 pt-2 sm:flex-row">
                 <button
@@ -203,6 +171,8 @@ wp_app_page_start('Create Gym', true);
     </section>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('gymLogoInput', 'gymLogoDropzone'); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

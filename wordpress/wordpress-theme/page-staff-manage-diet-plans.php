@@ -67,20 +67,6 @@ if (!function_exists('diet_plan_value')) {
     }
 }
 
-if (!function_exists('diet_plan_default_image')) {
-    function diet_plan_default_image(int $index): string
-    {
-        $default_images = [
-            'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=600&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=600&auto=format&fit=crop',
-        ];
-
-        return $default_images[$index % count($default_images)];
-    }
-}
-
 /*
  * IMPORTANTE:
  * El backend de diet_plans parece devolver lista simple, no paginación real.
@@ -192,11 +178,11 @@ wp_app_page_start('Manage Diet Plans', true);
             $name = diet_plan_value($plan, ['name', 'title'], 'Diet Plan');
             $goal_description = diet_plan_value($plan, ['goal_description', 'description', 'notes', 'summary'], 'No description available.');
 
-            $image = $plan['cover_image_url']
+            $image = fitapp_public_asset_url($plan['cover_image_url']
                 ?? $plan['image_url']
                 ?? $plan['image']
                 ?? $plan['photo_url']
-                ?? diet_plan_default_image($real_index);
+                ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -204,11 +190,7 @@ wp_app_page_start('Manage Diet Plans', true);
 
                     <div class="flex min-w-0 flex-1 gap-4">
                         <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <img
-                                src="<?= esc_url($image) ?>"
-                                alt="<?= h($name) ?>"
-                                class="h-full w-full object-cover"
-                            >
+                            <?php fitapp_render_image_or_placeholder($image, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'restaurant', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">

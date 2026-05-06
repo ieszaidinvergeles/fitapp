@@ -42,7 +42,7 @@ $address = gym_view_value($gym, ['address'], '-');
 $city = gym_view_value($gym, ['city'], '-');
 $phone = gym_view_value($gym, ['phone'], '-');
 $location_coords = gym_view_value($gym, ['location_coords'], '-');
-$logo_url = gym_view_value($gym, ['logo_url'], '');
+$logo_url = fitapp_public_asset_url(gym_view_value($gym, ['logo_url'], ''));
 $manager_id = gym_view_value($gym, ['manager_id'], '-');
 
 $manager_name = '-';
@@ -52,8 +52,6 @@ if (!empty($gym['manager']) && is_array($gym['manager'])) {
         ?? $gym['manager']['email']
         ?? '-';
 }
-
-$default_image = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop';
 
 wp_app_page_start('View Gym', true);
 ?>
@@ -100,11 +98,7 @@ wp_app_page_start('View Gym', true);
         <section class="overflow-hidden rounded-3xl border border-outline-variant/20 bg-surface-container shadow-lg">
 
             <div class="relative h-[280px] overflow-hidden bg-surface-container-high">
-                <img
-                    src="<?= esc_url($logo_url ?: $default_image) ?>"
-                    alt="<?= h($name) ?>"
-                    class="h-full w-full object-cover opacity-70"
-                >
+                <?php fitapp_render_image_or_placeholder($logo_url, (string)$name, 'h-full w-full object-cover opacity-70', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'location_city', 'No image'); ?>
 
                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent"></div>
 

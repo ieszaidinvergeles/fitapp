@@ -22,11 +22,8 @@ function view_routine_value(array $data = null, string $key, $default = '-')
 }
 
 $routine_response = api_get('/routines/' . $routine_id, auth: true);
-$routine = (($routine_response['result'] ?? false) !== false) ? $routine_response['result'] : null;
-echo '<pre>';
-print_r($routine);
-echo '</pre>';
-die();
+$routine_result = (($routine_response['result'] ?? false) !== false) ? $routine_response['result'] : null;
+$routine = is_array($routine_result) ? ($routine_result['data'] ?? $routine_result) : null;
 
 if (!$routine || !is_array($routine)) {
     wp_redirect(home_url('/?pagename=staff-manage-routines'));
@@ -38,6 +35,13 @@ $difficulty = view_routine_value($routine, 'difficulty_level', '-');
 $goal = view_routine_value($routine, 'goal', '-');
 $description = view_routine_value($routine, 'description', 'No description available.');
 $duration = view_routine_value($routine, 'estimated_duration_min', '-');
+$image_url = fitapp_public_asset_url(
+    $routine['cover_image_url']
+    ?? $routine['image_url']
+    ?? $routine['image']
+    ?? $routine['photo_url']
+    ?? ''
+);
 
 $exercises = $routine['ordered_exercises']
     ?? $routine['orderedExercises']
@@ -81,11 +85,8 @@ wp_app_page_start('View Routine', true);
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
         <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
 
-            <div class="flex h-[150px] w-full shrink-0 items-center justify-center rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high sm:w-[180px]">
-                <div class="flex flex-col items-center justify-center text-center text-on-surface-variant">
-                    <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60">fitness_center</span>
-                    <span class="text-xs font-bold">Routine</span>
-                </div>
+            <div class="flex h-[150px] w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high sm:w-[180px]">
+                <?php fitapp_render_image_or_placeholder((string)$image_url, (string)$routine_name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'fitness_center', 'No image'); ?>
             </div>
 
             <div class="min-w-0 flex-1 space-y-4">
@@ -144,10 +145,10 @@ wp_app_page_start('View Routine', true);
                 $exercise_description = $exercise['description'] ?? '-';
 
                 $pivot = $exercise['pivot'] ?? [];
-                $sets = $pivot['recommended_sets'] ?? '-';
-                $reps = $pivot['recommended_reps'] ?? '-';
-                $rest = $pivot['rest_seconds'] ?? '-';
-                $order = $pivot['order_index'] ?? ($index + 1);
+                $sets = $exercise['sets'] ?? ($pivot['recommended_sets'] ?? '-');
+                $reps = $exercise['reps'] ?? ($pivot['recommended_reps'] ?? '-');
+                $rest = $exercise['rest'] ?? ($pivot['rest_seconds'] ?? '-');
+                $order = $exercise['order'] ?? ($pivot['order_index'] ?? ($index + 1));
                 ?>
 
                 <article class="rounded-2xl border border-outline-variant/20 bg-surface-container p-4">

@@ -9,7 +9,7 @@ use App\Http\Resources\GymResource;
 use App\Models\Gym;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles CRUD and management operations for gyms.

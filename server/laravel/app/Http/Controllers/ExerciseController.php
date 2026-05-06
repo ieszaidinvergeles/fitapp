@@ -9,7 +9,7 @@ use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles CRUD and image operations for exercises.

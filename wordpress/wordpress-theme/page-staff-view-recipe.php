@@ -69,14 +69,12 @@ $ingredients = view_recipe_value($recipe, ['ingredients'], '-');
 $preparation_steps = view_recipe_value($recipe, ['preparation_steps'], '-');
 $calories = view_recipe_value($recipe, ['calories'], '-');
 $type = view_recipe_type_label(view_recipe_value($recipe, ['type'], '-'));
-$image_url = view_recipe_value($recipe, ['image_url'], '');
+$image_url = fitapp_public_asset_url(view_recipe_value($recipe, ['image_url'], ''));
 
 $macros = view_recipe_decode_macros($recipe['macros_json'] ?? []);
 $protein = $macros['protein'] ?? '-';
 $carbs = $macros['carbs'] ?? '-';
 $fat = $macros['fat'] ?? '-';
-
-$default_image = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1200&auto=format&fit=crop';
 
 wp_app_page_start('View Recipe', true);
 ?>
@@ -124,11 +122,7 @@ wp_app_page_start('View Recipe', true);
             <div class="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)]">
 
                 <div class="relative min-h-[300px] border-b border-outline-variant/20 bg-surface-container-high lg:border-b-0 lg:border-r">
-                    <img
-                        src="<?= esc_url($image_url ?: $default_image) ?>"
-                        alt="<?= h($name) ?>"
-                        class="absolute inset-0 h-full w-full object-cover"
-                    >
+                    <?php fitapp_render_image_or_placeholder($image_url, (string)$name, 'absolute inset-0 h-full w-full object-cover', 'absolute inset-0 h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'restaurant', 'No image'); ?>
                     <div class="absolute inset-0 bg-gradient-to-t from-background/85 via-background/25 to-transparent"></div>
 
                     <div class="absolute bottom-0 left-0 p-5">
