@@ -221,6 +221,13 @@ voltgym_get_header();
                                     </p>
                                 </div>
                             </div>
+
+                            <a
+                                href="<?= esc_url(home_url('/?pagename=staff-class-bookings&id=' . (int)($c['id'] ?? 0))) ?>"
+                                class="inline-flex items-center justify-center rounded-full border border-outline-variant/30 px-4 py-2 text-xs font-black uppercase tracking-widest text-on-surface transition hover:border-primary-container hover:text-primary-container"
+                            >
+                                View
+                            </a>
                         </div>
                     <?php endforeach; ?>
                 </div>

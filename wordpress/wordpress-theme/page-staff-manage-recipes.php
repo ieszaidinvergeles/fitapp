@@ -1,6 +1,6 @@
 <?php
 /*
-Template Name: Staff Notifications
+Template Name: Staff Manage Recipes
 */
 require_once 'functions.php';
 require_advanced();
@@ -13,29 +13,29 @@ $flash_error = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Notificación eliminada correctamente.';
+    $flash_success = 'Receta eliminada correctamente.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Notificación creada correctamente.';
+    $flash_success = 'Receta creada correctamente.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Notificación actualizada correctamente.';
+    $flash_success = 'Receta actualizada correctamente.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
-    $notification_id = (int)($_POST['notification_id'] ?? 0);
+    $recipe_id = (int)($_POST['recipe_id'] ?? 0);
 
-    if ($notification_id > 0) {
-        $delete_response = api_delete('/notifications/' . $notification_id, auth: true);
+    if ($recipe_id > 0) {
+        $delete_response = api_delete('/recipes/' . $recipe_id, auth: true);
 
         if (($delete_response['result'] ?? false) !== false) {
-            wp_safe_redirect(home_url('/?pagename=staff-notifications&notice=deleted'));
+            wp_safe_redirect(home_url('/?pagename=staff-manage-recipes&notice=deleted'));
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar la notificación.';
+        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar la receta.';
     }
 }
 
-function notification_extract_list(array $response): array
+function recipe_extract_list(array $response): array
 {
     if (($response['result'] ?? false) === false) {
         return [];
@@ -52,67 +52,102 @@ function notification_extract_list(array $response): array
     return [];
 }
 
-function notification_value(array $notification, array $keys, $default = '-')
+function recipe_value(array $recipe, array $keys, $default = '-')
 {
     foreach ($keys as $key) {
-        if (isset($notification[$key]) && $notification[$key] !== null && $notification[$key] !== '') {
-            return $notification[$key];
+        if (isset($recipe[$key]) && $recipe[$key] !== null && $recipe[$key] !== '') {
+            return $recipe[$key];
         }
     }
 
     return $default;
 }
 
-function notification_page_url(int $page): string
+function recipe_page_url(int $page): string
 {
-    return home_url('/?pagename=staff-notifications&page_num=' . $page);
+    return home_url('/?pagename=staff-manage-recipes&page_num=' . $page);
 }
 
-function notification_format_date($raw): string
+function recipe_short_text($value, int $limit = 90): string
 {
-    if (!$raw || $raw === '-' || $raw === '—') {
+    $text = trim((string)$value);
+
+    if ($text === '' || $text === '-' || $text === '—') {
         return '-';
     }
 
-    $ts = strtotime((string)$raw);
-
-    if (!$ts) {
-        return (string)$raw;
+    if (function_exists('mb_strlen') && mb_strlen($text) > $limit) {
+        return mb_substr($text, 0, $limit) . '...';
     }
 
-    return date('d/m/Y H:i', $ts);
+    if (strlen($text) > $limit) {
+        return substr($text, 0, $limit) . '...';
+    }
+
+    return $text;
 }
 
-function notification_label($value): string
+function recipe_macros_label($macros): string
 {
-    $value = trim((string)$value);
+    if (is_string($macros)) {
+        $decoded = json_decode($macros, true);
+        $macros = is_array($decoded) ? $decoded : [];
+    }
 
-    if ($value === '' || $value === '-' || $value === '—') {
+    if (!is_array($macros) || !$macros) {
         return '-';
     }
 
-    return ucwords(str_replace('_', ' ', $value));
+    $fat = $macros['fat'] ?? null;
+    $carbs = $macros['carbs'] ?? null;
+    $protein = $macros['protein'] ?? null;
+
+    $parts = [];
+
+    if ($protein !== null) {
+        $parts[] = 'P: ' . $protein . 'g';
+    }
+
+    if ($carbs !== null) {
+        $parts[] = 'C: ' . $carbs . 'g';
+    }
+
+    if ($fat !== null) {
+        $parts[] = 'F: ' . $fat . 'g';
+    }
+
+    return $parts ? implode(' · ', $parts) : '-';
+}
+
+function recipe_type_label($type): string
+{
+    $type = trim((string)$type);
+
+    if ($type === '' || $type === '-') {
+        return '-';
+    }
+
+    return ucwords(str_replace('_', ' ', $type));
 }
 
 /*
 |--------------------------------------------------------------------------
-| Cargar todas las notificaciones
+| Cargar todas las recetas
 |--------------------------------------------------------------------------
-| Recorremos páginas por si la API devuelve resultados paginados.
 */
-$all_notifications = [];
+$all_recipes = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
 for ($api_page = 1; $api_page <= 50; $api_page++) {
-    $response = api_get('/notifications?page=' . $api_page, auth: true);
+    $response = api_get('/recipes?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
         $listResp = $response;
         break;
     }
 
-    $items = notification_extract_list($response);
+    $items = recipe_extract_list($response);
 
     if (empty($items)) {
         break;
@@ -131,7 +166,7 @@ for ($api_page = 1; $api_page <= 50; $api_page++) {
             $seen_ids[$id] = true;
         }
 
-        $all_notifications[] = $item;
+        $all_recipes[] = $item;
         $added_this_page++;
     }
 
@@ -142,11 +177,7 @@ for ($api_page = 1; $api_page <= 50; $api_page++) {
     }
 }
 
-usort($all_notifications, function ($a, $b) {
-    return strtotime((string)($b['created_at'] ?? '')) <=> strtotime((string)($a['created_at'] ?? ''));
-});
-
-$total = count($all_notifications);
+$total = count($all_recipes);
 $last_page = max(1, (int)ceil($total / $per_page));
 
 if ($page > $last_page) {
@@ -155,12 +186,19 @@ if ($page > $last_page) {
 
 $current_page = $page;
 $offset = ($current_page - 1) * $per_page;
-$notifications = array_slice($all_notifications, $offset, $per_page);
+$recipes = array_slice($all_recipes, $offset, $per_page);
 
 $from = $total > 0 ? $offset + 1 : 0;
-$to = $total > 0 ? min($total, $offset + count($notifications)) : 0;
+$to = $total > 0 ? min($total, $offset + count($recipes)) : 0;
 
-wp_app_page_start('Notifications', true);
+$default_images = [
+    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600&auto=format&fit=crop',
+];
+
+wp_app_page_start('Manage Recipes', true);
 ?>
 
 <?php if (($listResp['result'] ?? null) === false): ?>
@@ -179,65 +217,82 @@ wp_app_page_start('Notifications', true);
 
     <section class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h2 class="text-lg font-bold">Notification List</h2>
+            <h2 class="text-lg font-bold">Recipe List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona avisos del sistema, mensajes globales y notificaciones por gimnasio.
+                Gestiona recetas, ingredientes, pasos de preparación, calorías y macros.
             </p>
 
             <?php if ($total > 0): ?>
                 <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-container">
-                    <?= h((string)$total) ?> NOTIFICATIONS REGISTERED · PAGE <?= h((string)$current_page) ?> OF <?= h((string)$last_page) ?>
+                    <?= h((string)$total) ?> RECIPES REGISTERED · PAGE <?= h((string)$current_page) ?> OF <?= h((string)$last_page) ?>
                 </p>
             <?php endif; ?>
         </div>
 
         <a
-            href="<?= esc_url(home_url('/?pagename=staff-create-notification')) ?>"
+            href="<?= esc_url(home_url('/?pagename=staff-create-recipe')) ?>"
             class="inline-flex w-full sm:w-auto items-center justify-center gap-2 self-start rounded-full bg-primary-container px-5 py-3 text-sm font-black uppercase tracking-wide text-on-primary-container shadow-[0_10px_30px_rgba(212,251,0,0.18)] transition-all duration-200 hover:scale-[1.01] hover:brightness-105 whitespace-nowrap"
         >
             <span class="text-base leading-none">+</span>
-            <span>Create notification</span>
+            <span>Create recipe</span>
         </a>
     </section>
 
     <section class="space-y-3">
-        <?php foreach ($notifications as $notification): ?>
+        <?php foreach ($recipes as $index => $recipe): ?>
             <?php
-            $notification_id = (int)($notification['id'] ?? 0);
+            $recipe_id = (int)($recipe['id'] ?? 0);
 
-            $title = notification_value($notification, ['title', 'subject', 'name'], 'Notification');
-            $message = notification_value($notification, ['message', 'body', 'content', 'description'], '');
-            $audience = notification_label(notification_value($notification, ['target_audience', 'audience', 'role'], '-'));
-            $type = notification_label(notification_value($notification, ['type', 'category', 'notification_type'], 'System'));
-            $status = notification_label(notification_value($notification, ['status', 'state'], 'Pending'));
-            $created_at = notification_format_date(notification_value($notification, ['created_at', 'date'], '-'));
+            // Cargar detalle completo de la receta
+            if ($recipe_id > 0) {
+                $detail_response = api_get('/recipes/' . $recipe_id, auth: true);
 
-            $related_gym = '-';
-            if (!empty($notification['gym']) && is_array($notification['gym'])) {
-                $related_gym = $notification['gym']['name'] ?? '-';
-            } elseif (!empty($notification['related_gym']) && is_array($notification['related_gym'])) {
-                $related_gym = $notification['related_gym']['name'] ?? '-';
-            } else {
-                $related_gym = notification_value($notification, ['related_gym_id', 'gym_id'], '-');
+                if (($detail_response['result'] ?? false) !== false && is_array($detail_response['result'] ?? null)) {
+                    $recipe = array_replace_recursive($recipe, $detail_response['result']);
+                }
             }
+
+            $name = recipe_value($recipe, ['name'], 'Recipe');
+            $description = recipe_value($recipe, ['description'], '');
+            $ingredients = recipe_value($recipe, ['ingredients'], '');
+            $preparation_steps = recipe_value($recipe, ['preparation_steps'], '');
+            $calories = recipe_value($recipe, ['calories'], '-');
+            $type = recipe_type_label(recipe_value($recipe, ['type'], '-'));
+
+            $macros_raw = $recipe['macros_json'] ?? [];
+
+            if (is_string($macros_raw)) {
+                $clean_macros = str_replace("'", '"', $macros_raw);
+                $decoded_macros = json_decode($clean_macros, true);
+                $macros_raw = is_array($decoded_macros) ? $decoded_macros : [];
+            }
+
+            $macros = recipe_macros_label($macros_raw);
+
+            $image = $recipe['image_url']
+                ?? $default_images[$index % count($default_images)];
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
                     <div class="flex min-w-0 flex-1 gap-4">
-                        <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <span class="material-symbols-outlined text-4xl text-primary-container">notifications_active</span>
+                        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
+                            <img
+                                src="<?= esc_url($image) ?>"
+                                alt="<?= h($name) ?>"
+                                class="h-full w-full object-cover"
+                            >
                         </div>
 
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-2">
                                 <p class="text-lg font-bold break-words">
-                                    <?= h($title) ?>
+                                    <?= h($name) ?>
                                 </p>
 
                                 <span class="rounded-full bg-primary-container/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-primary-container">
-                                    #<?= h((string)$notification_id) ?>
+                                    #<?= h((string)$recipe_id) ?>
                                 </span>
 
                                 <span class="rounded-full border border-outline-variant/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-on-surface-variant">
@@ -246,41 +301,48 @@ wp_app_page_start('Notifications', true);
                             </div>
 
                             <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Audience:
-                                <span class="font-semibold text-on-surface"><?= h($audience) ?></span>
-                                · Gym:
-                                <span class="font-semibold text-on-surface"><?= h((string)$related_gym) ?></span>
-                                · Status:
-                                <span class="font-semibold text-on-surface"><?= h($status) ?></span>
+                                Calories:
+                                <span class="font-semibold text-on-surface"><?= h((string)$calories) ?></span>
+                                · Macros:
+                                <span class="font-semibold text-on-surface"><?= h($macros) ?></span>
                             </p>
 
-                            <?php if ($message): ?>
+                            <?php if ($description && $description !== '-'): ?>
                                 <p class="mt-1 line-clamp-2 text-sm text-on-surface-variant break-words">
-                                    <?= h((string)$message) ?>
-                                </p>
-                            <?php else: ?>
-                                <p class="mt-1 text-sm italic text-on-surface-variant">
-                                    No message available.
+                                    <?= h(recipe_short_text($description, 120)) ?>
                                 </p>
                             <?php endif; ?>
 
-                            <p class="mt-1 text-xs text-on-surface-variant">
-                                Created: <?= h($created_at) ?>
+                            <p class="mt-1 text-xs text-on-surface-variant break-words">
+                                Ingredients:
+                                <span class="text-on-surface"><?= h(recipe_short_text($ingredients, 100)) ?></span>
+                            </p>
+
+                            <p class="mt-1 text-xs text-on-surface-variant break-words">
+                                Steps:
+                                <span class="text-on-surface"><?= h(recipe_short_text($preparation_steps, 100)) ?></span>
                             </p>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap gap-2 self-start lg:max-w-[320px] lg:justify-end">
                         <a
-                            href="<?= esc_url(home_url('/?pagename=staff-view-notification&id=' . $notification_id)) ?>"
+                            href="<?= esc_url(home_url('/?pagename=staff-edit-recipe&id=' . $recipe_id)) ?>"
+                            class="inline-flex items-center justify-center rounded-lg border border-outline-variant/30 px-3 py-2 text-sm transition hover:bg-surface-container-high"
+                        >
+                            Edit
+                        </a>
+
+                        <a
+                            href="<?= esc_url(home_url('/?pagename=staff-view-recipe&id=' . $recipe_id)) ?>"
                             class="inline-flex items-center justify-center rounded-lg border border-outline-variant/30 px-3 py-2 text-sm transition hover:bg-surface-container-high"
                         >
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar esta notificación?');">
+                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar esta receta?');">
                             <input type="hidden" name="action_type" value="delete">
-                            <input type="hidden" name="notification_id" value="<?= $notification_id ?>">
+                            <input type="hidden" name="recipe_id" value="<?= $recipe_id ?>">
                             <button
                                 type="submit"
                                 class="inline-flex items-center justify-center rounded-lg border border-error/40 px-3 py-2 text-sm text-error transition hover:bg-error/10"
@@ -294,9 +356,9 @@ wp_app_page_start('Notifications', true);
             </article>
         <?php endforeach; ?>
 
-        <?php if (!$notifications): ?>
+        <?php if (!$recipes): ?>
             <div class="rounded-xl border border-outline-variant/20 bg-surface-container p-4">
-                <p class="text-on-surface-variant">No notifications found.</p>
+                <p class="text-on-surface-variant">No recipes found.</p>
             </div>
         <?php endif; ?>
     </section>
@@ -310,13 +372,13 @@ wp_app_page_start('Notifications', true);
                 <span class="font-bold text-on-surface"><?= h((string)$to) ?></span>
                 of
                 <span class="font-bold text-on-surface"><?= h((string)$total) ?></span>
-                notifications
+                recipes
             </p>
 
             <div class="flex flex-wrap items-center justify-center gap-2">
                 <?php if ($current_page > 1): ?>
                     <a
-                        href="<?= esc_url(notification_page_url($current_page - 1)) ?>"
+                        href="<?= esc_url(recipe_page_url($current_page - 1)) ?>"
                         class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
                     >
                         ← Previous
@@ -332,9 +394,22 @@ wp_app_page_start('Notifications', true);
                 $end = min($last_page, $current_page + 2);
                 ?>
 
+                <?php if ($start > 1): ?>
+                    <a
+                        href="<?= esc_url(recipe_page_url(1)) ?>"
+                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                    >
+                        1
+                    </a>
+
+                    <?php if ($start > 2): ?>
+                        <span class="px-1 text-sm text-on-surface-variant">...</span>
+                    <?php endif; ?>
+                <?php endif; ?>
+
                 <?php for ($i = $start; $i <= $end; $i++): ?>
                     <a
-                        href="<?= esc_url(notification_page_url($i)) ?>"
+                        href="<?= esc_url(recipe_page_url($i)) ?>"
                         class="rounded-full border px-4 py-2 text-sm font-bold transition <?= $i === $current_page
                             ? 'border-primary-container bg-primary-container text-on-primary-container shadow-[0_0_18px_rgba(212,251,0,0.22)]'
                             : 'border-outline-variant/30 hover:bg-surface-container-high' ?>"
@@ -343,9 +418,22 @@ wp_app_page_start('Notifications', true);
                     </a>
                 <?php endfor; ?>
 
+                <?php if ($end < $last_page): ?>
+                    <?php if ($end < $last_page - 1): ?>
+                        <span class="px-1 text-sm text-on-surface-variant">...</span>
+                    <?php endif; ?>
+
+                    <a
+                        href="<?= esc_url(recipe_page_url($last_page)) ?>"
+                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                    >
+                        <?= h((string)$last_page) ?>
+                    </a>
+                <?php endif; ?>
+
                 <?php if ($current_page < $last_page): ?>
                     <a
-                        href="<?= esc_url(notification_page_url($current_page + 1)) ?>"
+                        href="<?= esc_url(recipe_page_url($current_page + 1)) ?>"
                         class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
                     >
                         Next →

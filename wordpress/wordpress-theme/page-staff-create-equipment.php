@@ -1,16 +1,16 @@
 <?php
 /*
-Template Name: Staff Create Exercise
+Template Name: Staff Create Equipment
 */
 require_once 'functions.php';
 require_advanced();
 
 $flash_error = '';
 
-$create_exercise_url = home_url('/?pagename=staff-create-exercise');
-$manage_exercises_url = home_url('/?pagename=staff-manage-exercises');
+$create_equipment_url = home_url('/?pagename=staff-create-equipment');
+$manage_equipment_url = home_url('/?pagename=staff-manage-equipment');
 
-function exercise_create_value(string $key, $default = '')
+function equipment_create_value(string $key, $default = '')
 {
     $value = $_POST[$key] ?? $default;
 
@@ -21,53 +21,29 @@ function exercise_create_value(string $key, $default = '')
     return $value;
 }
 
-$muscle_groups = [
-    'chest' => 'Chest',
-    'upper_back' => 'Upper Back',
-    'lower_back' => 'Lower Back',
-    'shoulders' => 'Shoulders',
-    'biceps' => 'Biceps',
-    'triceps' => 'Triceps',
-    'forearms' => 'Forearms',
-    'core' => 'Core',
-    'obliques' => 'Obliques',
-    'quadriceps' => 'Quadriceps',
-    'hamstrings' => 'Hamstrings',
-    'glutes' => 'Glutes',
-    'calves' => 'Calves',
-    'hip_flexors' => 'Hip Flexors',
-    'adductors' => 'Adductors',
-    'abductors' => 'Abductors',
-    'traps' => 'Traps',
-    'lats' => 'Lats',
-    'neck' => 'Neck',
-    'full_body' => 'Full Body',
-];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_exercise_submit'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_equipment_submit'])) {
     $payload = [
-        'name' => trim((string)($_POST['exercise_name'] ?? '')),
+        'name' => trim((string)($_POST['equipment_name'] ?? '')),
         'description' => trim((string)($_POST['description'] ?? '')),
-        'target_muscle_group' => trim((string)($_POST['target_muscle_group'] ?? '')),
         'image_url' => trim((string)($_POST['image_url'] ?? '')),
-        'video_url' => trim((string)($_POST['video_url'] ?? '')),
+        'is_home_accessible' => !empty($_POST['is_home_accessible']),
     ];
 
     $payload = array_filter($payload, function ($value) {
         return $value !== '' && $value !== '-' && $value !== '—';
     });
 
-    $create_response = api_post('/exercises', $payload, auth: true);
+    $create_response = api_post('/equipment', $payload, auth: true);
 
     if (($create_response['result'] ?? false) !== false) {
-        wp_safe_redirect($manage_exercises_url . '&notice=created');
+        wp_safe_redirect($manage_equipment_url . '&notice=created');
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear el ejercicio. Revisa los campos obligatorios.';
+    $flash_error = api_message($create_response) ?: 'No se pudo crear el equipamiento. Revisa los campos obligatorios.';
 }
 
-wp_app_page_start('Create Exercise', true);
+wp_app_page_start('Create Equipment', true);
 ?>
 
 <?php if ($flash_error): ?>
@@ -78,36 +54,36 @@ wp_app_page_start('Create Exercise', true);
 
     <section class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h2 class="text-lg font-bold">Create Exercise</h2>
+            <h2 class="text-lg font-bold">Create Equipment</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea un nuevo ejercicio para usarlo en rutinas y entrenamientos.
+                Crea nuevo equipamiento para el gimnasio.
             </p>
         </div>
 
         <a
-            href="<?= esc_url($manage_exercises_url) ?>"
+            href="<?= esc_url($manage_equipment_url) ?>"
             class="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-outline-variant/30 px-4 py-2.5 text-sm font-semibold text-on-surface transition hover:border-outline/50 hover:bg-surface-container-high"
         >
-            ← Back to exercises
+            ← Back to equipment
         </a>
     </section>
 
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-        <form method="post" action="<?= esc_url($create_exercise_url) ?>" class="space-y-6">
+        <form method="post" action="<?= esc_url($create_equipment_url) ?>" class="space-y-6">
 
-            <input type="hidden" name="create_exercise_submit" value="1">
+            <input type="hidden" name="create_equipment_submit" value="1">
 
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Exercise name
+                    Equipment name
                 </label>
 
                 <input
                     type="text"
-                    name="exercise_name"
-                    value="<?= h(exercise_create_value('exercise_name')) ?>"
+                    name="equipment_name"
+                    value="<?= h(equipment_create_value('equipment_name')) ?>"
                     class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Example: Bench Press"
+                    placeholder="Example: Olympic Barbell"
                     maxlength="80"
                     required
                 >
@@ -115,28 +91,7 @@ wp_app_page_start('Create Exercise', true);
 
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Muscle group
-                </label>
-
-                <?php $selected_group = exercise_create_value('target_muscle_group'); ?>
-
-                <select
-                    name="target_muscle_group"
-                    class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface [color-scheme:dark] focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                >
-                    <option value="">Select muscle group</option>
-
-                    <?php foreach ($muscle_groups as $value => $label): ?>
-                        <option value="<?= h($value) ?>" <?= $selected_group === $value ? 'selected' : '' ?>>
-                            <?= h($label) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div>
-                <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Description / Instructions
+                    Description
                 </label>
 
                 <textarea
@@ -144,32 +99,45 @@ wp_app_page_start('Create Exercise', true);
                     rows="6"
                     maxlength="280"
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Describe cómo realizar el ejercicio, técnica, postura y recomendaciones..."
+                    placeholder="Describe el equipamiento, uso, ubicación o características..."
                     required
-                ><?= h(exercise_create_value('description')) ?></textarea>
+                ><?= h(equipment_create_value('description')) ?></textarea>
 
                 <p class="mt-1 text-xs text-on-surface-variant">
                     Máximo 280 caracteres. Este campo es obligatorio.
                 </p>
             </div>
 
+            <label class="flex items-center gap-3 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3">
+                <input
+                    type="checkbox"
+                    name="is_home_accessible"
+                    value="1"
+                    class="h-4 w-4 rounded border-outline-variant/30 bg-surface text-primary focus:ring-primary-container"
+                    <?= !empty($_POST['is_home_accessible']) ? 'checked' : '' ?>
+                >
+                <span class="text-sm font-medium text-on-surface">
+                    Available for home workouts
+                </span>
+            </label>
+
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Exercise image URL
+                    Equipment image URL
                 </label>
 
                 <input
-                    id="exerciseImageUrl"
+                    id="equipmentImageUrl"
                     type="url"
                     name="image_url"
-                    value="<?= h(exercise_create_value('image_url')) ?>"
+                    value="<?= h(equipment_create_value('image_url')) ?>"
                     class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="https://example.com/exercise.jpg"
+                    placeholder="https://example.com/equipment.jpg"
                 >
 
                 <div
                     id="imagePreviewWrap"
-                    class="mt-4 flex h-[180px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container"
+                    class="mt-4 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container"
                 >
                     <div id="imagePreviewPlaceholder" class="flex flex-col items-center justify-center text-center text-on-surface-variant">
                         <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60">image</span>
@@ -180,24 +148,10 @@ wp_app_page_start('Create Exercise', true);
                     <img
                         id="imagePreview"
                         src=""
-                        alt="Exercise image preview"
+                        alt="Equipment image preview"
                         class="hidden h-full w-full object-cover"
                     >
                 </div>
-            </div>
-
-            <div>
-                <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Video URL
-                </label>
-
-                <input
-                    type="url"
-                    name="video_url"
-                    value="<?= h(exercise_create_value('video_url')) ?>"
-                    class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="https://example.com/video.mp4"
-                >
             </div>
 
             <div class="flex flex-col gap-3 pt-2 sm:flex-row">
@@ -205,11 +159,11 @@ wp_app_page_start('Create Exercise', true);
                     type="submit"
                     class="inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-primary-container px-5 py-3 text-sm font-black uppercase tracking-wide text-on-primary-container shadow-[0_10px_30px_rgba(212,251,0,0.18)] transition-all duration-200 hover:scale-[1.01] hover:brightness-105"
                 >
-                    Create Exercise
+                    Create Equipment
                 </button>
 
                 <a
-                    href="<?= esc_url($manage_exercises_url) ?>"
+                    href="<?= esc_url($manage_equipment_url) ?>"
                     class="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-outline-variant/30 px-5 py-3 text-sm font-semibold text-on-surface transition hover:border-outline/50 hover:bg-surface-container-high"
                 >
                     Cancel
@@ -223,7 +177,7 @@ wp_app_page_start('Create Exercise', true);
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const imageInput = document.getElementById('exerciseImageUrl');
+    const imageInput = document.getElementById('equipmentImageUrl');
     const preview = document.getElementById('imagePreview');
     const placeholder = document.getElementById('imagePreviewPlaceholder');
 
