@@ -34,7 +34,7 @@ class RoomController extends Controller
     /** @return JsonResponse */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve rooms.'];
         try {
             $query = Room::query();
@@ -52,7 +52,7 @@ class RoomController extends Controller
     /** @return JsonResponse */
     public function show(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve room.'];
         try {
             $room         = Room::findOrFail($id);
@@ -68,7 +68,7 @@ class RoomController extends Controller
     /** @return JsonResponse */
     public function store(StoreRoomRequest $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not create room.'];
         try {
             $this->authorize('create', Room::class);
@@ -88,7 +88,7 @@ class RoomController extends Controller
     /** @return JsonResponse */
     public function update(UpdateRoomRequest $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not update room.'];
         try {
             $room = Room::findOrFail($id);
@@ -109,7 +109,7 @@ class RoomController extends Controller
     /** @return JsonResponse */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not delete room.'];
         try {
             $room = Room::findOrFail($id);
@@ -141,7 +141,7 @@ class RoomController extends Controller
     /** @return JsonResponse */
     public function uploadImage(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not upload image.'];
         try {
             $request->validate(['image' => 'required|image|mimes:jpeg,png,webp,gif|max:2048']);
@@ -160,7 +160,7 @@ class RoomController extends Controller
     /** @return JsonResponse */
     public function deleteImage(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not delete image.'];
         try {
             $room = Room::findOrFail($id);

@@ -27,7 +27,7 @@ class GymClassController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve classes.'];
 
         try {
@@ -70,7 +70,7 @@ class GymClassController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve class.'];
 
         try {
@@ -95,7 +95,7 @@ class GymClassController extends Controller
      */
     public function store(StoreGymClassRequest $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not create class.'];
 
         try {
@@ -138,7 +138,7 @@ class GymClassController extends Controller
      */
     public function update(UpdateGymClassRequest $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not update class.'];
 
         try {
@@ -163,7 +163,7 @@ class GymClassController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not delete class.'];
 
         try {
@@ -189,7 +189,7 @@ class GymClassController extends Controller
      */
     public function cancel(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not cancel class.'];
 
         try {
@@ -214,7 +214,7 @@ class GymClassController extends Controller
      */
     public function markAttendance(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not mark attendance.'];
 
         try {

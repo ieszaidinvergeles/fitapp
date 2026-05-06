@@ -27,7 +27,7 @@ class BookingController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve bookings.'];
 
         try {
@@ -82,7 +82,7 @@ class BookingController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve booking.'];
 
         try {
@@ -107,7 +107,7 @@ class BookingController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not create booking.'];
 
         try {
@@ -172,7 +172,7 @@ class BookingController extends Controller
      */
     public function cancel(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not cancel booking.'];
 
         try {
@@ -202,7 +202,7 @@ class BookingController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not delete booking.'];
 
         try {

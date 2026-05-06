@@ -50,7 +50,7 @@ class ExerciseController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve exercises.'];
 
         try {
@@ -77,7 +77,7 @@ class ExerciseController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve exercise.'];
 
         try {
@@ -102,7 +102,7 @@ class ExerciseController extends Controller
      */
     public function store(StoreExerciseRequest $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not create exercise.'];
 
         try {
@@ -134,7 +134,7 @@ class ExerciseController extends Controller
      */
     public function update(UpdateExerciseRequest $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not update exercise.'];
 
         try {
@@ -166,7 +166,7 @@ class ExerciseController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not delete exercise.'];
 
         try {
@@ -217,7 +217,7 @@ class ExerciseController extends Controller
      */
     public function uploadImage(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not upload image.'];
 
         try {
@@ -247,7 +247,7 @@ class ExerciseController extends Controller
      */
     public function deleteImage(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not delete image.'];
 
         try {

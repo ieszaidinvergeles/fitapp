@@ -24,7 +24,7 @@ class UserFavoriteController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve favourites.'];
 
         try {
@@ -53,7 +53,7 @@ class UserFavoriteController extends Controller
      */
     public function store(StoreUserFavoriteRequest $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not add favourite.'];
 
         try {
@@ -89,7 +89,7 @@ class UserFavoriteController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not remove favourite.'];
 
         try {

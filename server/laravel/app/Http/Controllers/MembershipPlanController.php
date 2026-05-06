@@ -51,7 +51,7 @@ class MembershipPlanController extends Controller
      */
     public function index(): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve membership plans.'];
 
         try {
@@ -72,7 +72,7 @@ class MembershipPlanController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve membership plan.'];
 
         try {
@@ -97,7 +97,7 @@ class MembershipPlanController extends Controller
      */
     public function store(StoreMembershipPlanRequest $request): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not create membership plan.'];
 
         try {
@@ -129,7 +129,7 @@ class MembershipPlanController extends Controller
      */
     public function update(UpdateMembershipPlanRequest $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not update membership plan.'];
 
         try {
@@ -161,7 +161,7 @@ class MembershipPlanController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not delete membership plan.'];
 
         try {
@@ -212,7 +212,7 @@ class MembershipPlanController extends Controller
      */
     public function uploadImage(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not upload image.'];
 
         try {
@@ -242,7 +242,7 @@ class MembershipPlanController extends Controller
      */
     public function deleteImage(int $id): JsonResponse
     {
-        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not delete image.'];
 
         try {
