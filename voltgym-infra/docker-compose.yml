@@ -24,6 +24,7 @@ services:
       - ../server/laravel:/var/www/laravel:ro
       - laravel_images:/var/www/laravel/public/uploads/images:ro
       - wordpress_app:/var/www/wordpress:ro
+      - wordpress_uploads:/var/www/wordpress/wp-content/uploads:ro
       - ../wordpress/wordpress-theme:/var/www/wordpress/wp-content/themes/voltgym:ro
     depends_on:
       - laravel
@@ -138,6 +139,7 @@ services:
     volumes:
       - wordpress_app:/var/www/wordpress
       - ../wordpress/wordpress-theme:/var/www/wordpress/wp-content/themes/voltgym
+      - ../wordpress/wordpress-pluggin:/var/www/wordpress/wp-content/plugins
       - wordpress_uploads:/var/www/wordpress/wp-content/uploads
     depends_on:
       mysql:
