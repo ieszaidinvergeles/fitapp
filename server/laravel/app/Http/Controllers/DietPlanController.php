@@ -40,13 +40,13 @@ class DietPlanController extends Controller
         $messageArray = ['general' => 'Could not retrieve diet plans.'];
         try {
             $this->authorize('viewAny', DietPlan::class);
-            
+
             $query = DietPlan::query();
 
             if ($request->has('favorites')) {
                 $user = $request->user() ?: Auth::guard('sanctum')->user();
                 if (!$user) {
-                    return \response()->json(['result' => ['data' => []], 'message' => ['general' => 'Unauthorized']]);
+                    return response()->json(['result' => ['data' => []], 'message' => ['general' => 'Unauthorized']]);
                 }
                 $favoriteIds = DB::table('user_favorites')
                     ->where('user_id', $user->id)
@@ -215,7 +215,7 @@ class DietPlanController extends Controller
     }
 
     /** @return Response|JsonResponse */
-    public function showImage(int $id): Response|JsonResponse
+    public function showImage(int $id)
     {
         try {
             $plan = DietPlan::findOrFail($id);
@@ -278,9 +278,13 @@ class DietPlanController extends Controller
         $messageArray = ['general' => 'Could not update favorites.'];
 
         try {
-            $userId = Auth::user()->id;
+            $user = Auth::user();
+            if (!$user) {
+                return \response()->json(['result' => false, 'message' => ['general' => 'Unauthorized']], 401);
+            }
+            $userId = $user->id;
             $plan = DietPlan::findOrFail($id);
-            
+
             $exists = DB::table('user_favorites')
                 ->where('user_id', $userId)
                 ->where('entity_type', 'diet_plan')
