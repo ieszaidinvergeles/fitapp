@@ -146,7 +146,7 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete diet plan.'];
         try {
             $plan = DietPlan::findOrFail($id);
@@ -164,7 +164,7 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function addRecipe(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not add recipe to plan.'];
 
         try {
@@ -194,7 +194,7 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function removeRecipe(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not remove recipe from plan.'];
 
         try {
@@ -234,7 +234,7 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function uploadImage(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not upload image.'];
         try {
             $request->validate(['image' => 'required|image|mimes:jpeg,png,webp,gif|max:2048']);
@@ -253,7 +253,7 @@ class DietPlanController extends Controller
     /** @return JsonResponse */
     public function deleteImage(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete image.'];
         try {
             $plan = DietPlan::findOrFail($id);
@@ -277,7 +277,7 @@ class DietPlanController extends Controller
      */
     public function favorite(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update favorites.'];
 
         try {

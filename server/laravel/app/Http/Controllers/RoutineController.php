@@ -50,7 +50,7 @@ class RoutineController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve routines.'];
 
         try {
@@ -107,7 +107,7 @@ class RoutineController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve routine.'];
 
         try {
@@ -130,7 +130,7 @@ class RoutineController extends Controller
      */
     public function store(StoreRoutineRequest $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not create routine.'];
 
         try {
@@ -160,7 +160,7 @@ class RoutineController extends Controller
      */
     public function update(UpdateRoutineRequest $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update routine.'];
 
         try {
@@ -192,7 +192,7 @@ class RoutineController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete routine.'];
 
         try {
@@ -219,7 +219,7 @@ class RoutineController extends Controller
      */
     public function addExercise(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not add exercise.'];
 
         try {
@@ -250,7 +250,7 @@ class RoutineController extends Controller
      */
     public function removeExercise(int $routineId, int $exerciseId): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not remove exercise.'];
 
         try {
@@ -274,7 +274,7 @@ class RoutineController extends Controller
      */
     public function reorder(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not reorder exercises.'];
 
         try {
@@ -303,7 +303,7 @@ class RoutineController extends Controller
      */
     public function activate(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not activate routine.'];
 
         try {
@@ -332,7 +332,7 @@ class RoutineController extends Controller
      */
     public function duplicate(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not duplicate routine.'];
 
         try {
@@ -378,7 +378,7 @@ class RoutineController extends Controller
      */
     public function uploadImage(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not upload image.'];
 
         try {
@@ -408,7 +408,7 @@ class RoutineController extends Controller
      */
     public function deleteImage(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete image.'];
 
         try {
@@ -435,7 +435,7 @@ class RoutineController extends Controller
      */
     public function favorite(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update favorites.'];
 
         try {

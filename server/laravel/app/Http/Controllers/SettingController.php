@@ -25,7 +25,7 @@ class SettingController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve settings.'];
 
         try {
@@ -50,7 +50,7 @@ class SettingController extends Controller
      */
     public function update(UpdateSettingRequest $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update settings.'];
 
         try {

@@ -41,7 +41,7 @@ class UserController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve users.'];
         $statusCode   = 200;
 
@@ -76,7 +76,7 @@ class UserController extends Controller
      */
     public function show(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve user.'];
         $statusCode   = 200;
 
@@ -105,7 +105,7 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not create user.'];
         $statusCode   = 200;
 
@@ -147,7 +147,7 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update user.'];
         $statusCode   = 200;
 
@@ -182,7 +182,7 @@ class UserController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete user.'];
         $statusCode   = 200;
 
@@ -212,7 +212,7 @@ class UserController extends Controller
      */
     public function block(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not block user.'];
         $statusCode   = 200;
 
@@ -238,7 +238,7 @@ class UserController extends Controller
      */
     public function unblock(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not unblock user.'];
         $statusCode   = 200;
 
@@ -264,7 +264,7 @@ class UserController extends Controller
      */
     public function resetStrikes(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not reset strikes.'];
         $statusCode   = 200;
 
@@ -356,7 +356,7 @@ class UserController extends Controller
      */
     public function uploadPhoto(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not upload photo.'];
         $statusCode   = 200;
 
@@ -393,7 +393,7 @@ class UserController extends Controller
      */
     public function deletePhoto(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete photo.'];
         $statusCode   = 200;
 

@@ -44,7 +44,7 @@ class StaffDashboardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not load staff dashboard.'];
 
         try {

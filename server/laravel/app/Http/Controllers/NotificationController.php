@@ -26,7 +26,7 @@ class NotificationController extends Controller
      */
     public function clientIndex(Request $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve notifications.'];
 
         try {
@@ -78,7 +78,7 @@ class NotificationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve notifications.'];
 
         try {
@@ -102,7 +102,7 @@ class NotificationController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve notification.'];
 
         try {
@@ -127,7 +127,7 @@ class NotificationController extends Controller
      */
     public function store(StoreNotificationRequest $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not create notification.'];
 
         try {
@@ -199,7 +199,7 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not mark notifications as read.'];
 
         try {
@@ -258,7 +258,7 @@ class NotificationController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete notification.'];
 
         try {

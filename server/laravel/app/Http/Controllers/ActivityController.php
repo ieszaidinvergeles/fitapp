@@ -49,7 +49,7 @@ class ActivityController extends Controller
      */
     public function index(): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve activities.'];
 
         try {
@@ -70,7 +70,7 @@ class ActivityController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not retrieve activity.'];
 
         try {
@@ -95,7 +95,7 @@ class ActivityController extends Controller
      */
     public function store(StoreActivityRequest $request): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not create activity.'];
 
         try {
@@ -127,7 +127,7 @@ class ActivityController extends Controller
      */
     public function update(UpdateActivityRequest $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not update activity.'];
 
         try {
@@ -159,7 +159,7 @@ class ActivityController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete activity.'];
 
         try {
@@ -210,7 +210,7 @@ class ActivityController extends Controller
      */
     public function uploadImage(Request $request, int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not upload image.'];
 
         try {
@@ -240,7 +240,7 @@ class ActivityController extends Controller
      */
     public function deleteImage(int $id): JsonResponse
     {
-        /** @var mixed $result */        $result       = false;
+        /** @var mixed $result */        /** @var mixed $result */        $result       = false;
         $messageArray = ['general' => 'Could not delete image.'];
 
         try {
