@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\UserFavorite;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\RecipeResource;
 
 /**
  * Transforms a DietPlan model into a standardized API JSON response.
