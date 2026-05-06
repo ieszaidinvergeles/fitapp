@@ -7,17 +7,17 @@ use App\Http\Requests\StoreDietPlanRequest;
 use App\Http\Requests\UpdateDietPlanRequest;
 use App\Http\Resources\DietPlanResource;
 use App\Models\DietPlan;
-use App\Models\UserFavorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Exception;
 
 /**
  * Handles CRUD and image operations for diet plans.
  *
  * SRP: Solely responsible for handling HTTP requests related to diet plans.
- * DIP: Depends on ImageServiceInterface (not the concrete class) and delegates
- *      authorization to DietPlanPolicy via the Gate contract.
  */
 class DietPlanController extends Controller
 {
@@ -44,11 +44,11 @@ class DietPlanController extends Controller
             $query = DietPlan::query();
 
             if ($request->has('favorites')) {
-                $user = $request->user() ?: auth('sanctum')->user();
+                $user = $request->user() ?: Auth::guard('sanctum')->user();
                 if (!$user) {
                     return response()->json(['result' => ['data' => []], 'message' => ['general' => 'Unauthorized']]);
                 }
-                $favoriteIds = \Illuminate\Support\Facades\DB::table('user_favorites')
+                $favoriteIds = DB::table('user_favorites')
                     ->where('user_id', $user->id)
                     ->where('entity_type', 'diet_plan')
                     ->pluck('entity_id');
@@ -59,9 +59,9 @@ class DietPlanController extends Controller
 
             // Pre-calculate favorites
             $userFavs = [];
-            $activeUser = $request->user() ?: auth('sanctum')->user();
+            $activeUser = $request->user() ?: Auth::guard('sanctum')->user();
             if ($activeUser) {
-                $userFavs = \Illuminate\Support\Facades\DB::table('user_favorites')
+                $userFavs = DB::table('user_favorites')
                     ->where('user_id', $activeUser->id)
                     ->where('entity_type', 'diet_plan')
                     ->pluck('entity_id')
@@ -77,7 +77,7 @@ class DietPlanController extends Controller
                 ->getData(true);
 
             $messageArray = ['general' => 'OK'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
         return response()->json(['result' => $result, 'message' => $messageArray]);
@@ -93,7 +93,7 @@ class DietPlanController extends Controller
             $this->authorize('view', $plan);
             $result       = new DietPlanResource($plan);
             $messageArray = ['general' => 'OK'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
         return response()->json(['result' => $result, 'message' => $messageArray]);
@@ -113,7 +113,7 @@ class DietPlanController extends Controller
             }
             $result       = new DietPlanResource($plan->fresh());
             $messageArray = ['general' => 'Diet plan created.'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
         return response()->json(['result' => $result, 'message' => $messageArray]);
@@ -134,7 +134,7 @@ class DietPlanController extends Controller
             }
             $result       = new DietPlanResource($plan->fresh());
             $messageArray = ['general' => 'Diet plan updated.'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
         return response()->json(['result' => $result, 'message' => $messageArray]);
@@ -152,7 +152,7 @@ class DietPlanController extends Controller
             $plan->delete();
             $result       = true;
             $messageArray = ['general' => 'Diet plan deleted.'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
         return response()->json(['result' => $result, 'message' => $messageArray]);
@@ -181,7 +181,7 @@ class DietPlanController extends Controller
 
             $result       = true;
             $messageArray = ['general' => 'Recipe added to plan.'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
@@ -207,7 +207,7 @@ class DietPlanController extends Controller
 
             $result       = true;
             $messageArray = ['general' => 'Recipe removed from plan.'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
@@ -223,7 +223,7 @@ class DietPlanController extends Controller
                 return response()->json(['result' => false, 'message' => ['general' => 'No image found.']], 404);
             }
             return $this->imageService->stream($plan->cover_image_url);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['result' => false, 'message' => ['general' => $e->getMessage()]], 404);
         }
     }
@@ -241,7 +241,7 @@ class DietPlanController extends Controller
             $plan->update(['cover_image_url' => $path]);
             $result       = true;
             $messageArray = ['general' => 'Image uploaded.'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
         return response()->json(['result' => $result, 'message' => $messageArray]);
@@ -259,7 +259,7 @@ class DietPlanController extends Controller
             $plan->update(['cover_image_url' => null]);
             $result       = true;
             $messageArray = ['general' => 'Image deleted.'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
         return response()->json(['result' => $result, 'message' => $messageArray]);
@@ -278,24 +278,24 @@ class DietPlanController extends Controller
         $messageArray = ['general' => 'Could not update favorites.'];
 
         try {
-            $userId = $request->user()->id;
+            $userId = Auth::user()->id;
             $plan = DietPlan::findOrFail($id);
             
-            $exists = \Illuminate\Support\Facades\DB::table('user_favorites')
+            $exists = DB::table('user_favorites')
                 ->where('user_id', $userId)
                 ->where('entity_type', 'diet_plan')
                 ->where('entity_id', $id)
                 ->exists();
 
             if ($exists) {
-                \Illuminate\Support\Facades\DB::table('user_favorites')
+                DB::table('user_favorites')
                     ->where('user_id', $userId)
                     ->where('entity_type', 'diet_plan')
                     ->where('entity_id', $id)
                     ->delete();
                 $messageArray = ['general' => 'Removed from favorites.'];
             } else {
-                \Illuminate\Support\Facades\DB::table('user_favorites')->insert([
+                DB::table('user_favorites')->insert([
                     'user_id'     => $userId,
                     'entity_type' => 'diet_plan',
                     'entity_id'   => $id,
@@ -303,7 +303,7 @@ class DietPlanController extends Controller
                 $messageArray = ['general' => 'Added to favorites.'];
             }
             $result = true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $messageArray = ['general' => $e->getMessage()];
         }
 
