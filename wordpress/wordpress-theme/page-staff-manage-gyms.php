@@ -74,6 +74,17 @@ function gym_page_url(int $page): string
     return home_url('/?pagename=staff-manage-gyms&page_num=' . max(1, $page));
 }
 
+function gym_response_has_pagination_meta(array $response): bool
+{
+    $result = is_array($response['result'] ?? null) ? $response['result'] : [];
+    $meta = is_array($result['meta'] ?? null) ? $result['meta'] : [];
+
+    return isset($meta['total'])
+        || isset($meta['last_page'])
+        || isset($result['total'])
+        || isset($result['last_page']);
+}
+
 /*
 |--------------------------------------------------------------------------
 | Cargar gimnasios paginados
@@ -88,6 +99,32 @@ $last_page = $pagination['last_page'];
 $total = $pagination['total'];
 $from = $pagination['from'];
 $to = $pagination['to'];
+$has_next = !empty($pagination['has_next']);
+
+if (!gym_response_has_pagination_meta($listResp)) {
+    $item_count = count($gyms);
+    $current_page = max(1, $page);
+    $from = $item_count > 0 ? (($current_page - 1) * $per_page) + 1 : 0;
+    $to = $item_count > 0 ? $from + $item_count - 1 : 0;
+    $total = $to;
+    $last_page = max(1, $current_page);
+    $has_next = false;
+
+    if ($item_count >= $per_page) {
+        $next_page = $current_page + 1;
+        $next_probe = fitapp_api_get_page('/gyms', $next_page, $per_page, true);
+
+        if (($next_probe['response']['result'] ?? null) !== false) {
+            $next_count = count($next_probe['items']);
+            $has_next = $next_count > 0;
+
+            if ($has_next) {
+                $last_page = $next_page;
+                $total = $to + $next_count;
+            }
+        }
+    }
+}
 
 wp_app_page_start('Manage Gyms', true);
 ?>
@@ -246,7 +283,7 @@ wp_app_page_start('Manage Gyms', true);
         <?php endif; ?>
     </section>
 
-    <?php if ($last_page > 1): ?>
+    <?php if ($last_page > 1 || $current_page > 1 || $has_next): ?>
         <section class="flex flex-col gap-4 rounded-xl border border-outline-variant/20 bg-surface-container p-4 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-on-surface-variant">
                 Showing
@@ -288,7 +325,7 @@ wp_app_page_start('Manage Gyms', true);
                     </a>
                 <?php endfor; ?>
 
-                <?php if ($current_page < $last_page): ?>
+                <?php if ($current_page < $last_page || $has_next): ?>
                     <a
                         href="<?= esc_url(gym_page_url($current_page + 1)) ?>"
                         class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
