@@ -27,10 +27,12 @@ if (($diet_response['result'] ?? false) !== false && is_array($diet_response['re
 }
 
 $name = $diet_plan['name'] ?? 'Diet Plan';
-$goal_description = $diet_plan['goal_description'] ?? 'No description available.';
-$cover_image_url = $diet_plan['cover_image_url'] ?? '';
-
-$default_image = 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1200&auto=format&fit=crop';
+$goal_description = $diet_plan['goal_description'] ?? '';
+$cover_image_url = fitapp_public_asset_url($diet_plan['cover_image_url']
+    ?? $diet_plan['image_url']
+    ?? $diet_plan['image']
+    ?? $diet_plan['photo_url']
+    ?? '');
 
 wp_app_page_start('View Diet Plan', true);
 ?>
@@ -77,11 +79,7 @@ wp_app_page_start('View Diet Plan', true);
         <section class="overflow-hidden rounded-3xl border border-outline-variant/20 bg-surface-container shadow-lg">
 
             <div class="relative h-[280px] overflow-hidden bg-surface-container-high">
-                <img
-                    src="<?= esc_url($cover_image_url ?: $default_image) ?>"
-                    alt="<?= h($name) ?>"
-                    class="h-full w-full object-cover opacity-70"
-                >
+                <?php fitapp_render_image_or_placeholder($cover_image_url, (string)$name, 'h-full w-full object-cover opacity-70', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'restaurant', 'No image'); ?>
 
                 <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent"></div>
 
@@ -103,7 +101,7 @@ wp_app_page_start('View Diet Plan', true);
                     </p>
 
                     <p class="mt-3 text-sm leading-7 text-on-surface-variant">
-                        <?= h($goal_description) ?>
+                        <?= h($goal_description, 'No description available.') ?>
                     </p>
                 </div>
 

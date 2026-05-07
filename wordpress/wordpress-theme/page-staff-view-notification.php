@@ -15,10 +15,16 @@ if ($notification_id <= 0) {
     exit;
 }
 
-function view_notification_value(array $notification, array $keys, $default = '-')
+function view_notification_value(array $notification, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($notification[$key]) && $notification[$key] !== null && $notification[$key] !== '') {
+        if (!isset($notification[$key]) || $notification[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$notification[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $notification[$key];
         }
     }
@@ -30,8 +36,8 @@ function view_notification_label($value): string
 {
     $value = trim((string)$value);
 
-    if ($value === '' || $value === '-' || $value === '—') {
-        return '-';
+    if ($value === '' || $value === '-' || $value === '—' || $value === 'â€”' || strtoupper($value) === 'NULL') {
+        return '';
     }
 
     return ucwords(str_replace('_', ' ', $value));
@@ -39,8 +45,8 @@ function view_notification_label($value): string
 
 function view_notification_date($raw): string
 {
-    if (!$raw || $raw === '-' || $raw === '—') {
-        return '-';
+    if (!$raw || $raw === '-' || $raw === '—' || $raw === 'â€”' || strtoupper((string)$raw) === 'NULL') {
+        return '';
     }
 
     $ts = strtotime((string)$raw);
@@ -64,9 +70,9 @@ if (($response['result'] ?? false) !== false && is_array($response['result'] ?? 
 $title = view_notification_value($notification, ['title', 'subject', 'name'], 'Notification');
 
 $message = view_notification_value($notification, [
+    'body',
     'message',
     'content',
-    'body',
     'description',
     'text'
 ], 'No message available.');
@@ -75,7 +81,7 @@ $audience = view_notification_label(view_notification_value($notification, [
     'target_audience',
     'audience',
     'role'
-], '-'));
+], ''));
 
 $type = view_notification_label(view_notification_value($notification, [
     'type',
@@ -91,17 +97,26 @@ $status = view_notification_label(view_notification_value($notification, [
 $created_at = view_notification_date(view_notification_value($notification, [
     'created_at',
     'date'
-], '-'));
+], ''));
 
-$related_gym = '-';
+$related_gym = '';
 
 if (!empty($notification['gym']) && is_array($notification['gym'])) {
-    $related_gym = $notification['gym']['name'] ?? '-';
+    $related_gym = $notification['gym']['name'] ?? '';
 } elseif (!empty($notification['related_gym']) && is_array($notification['related_gym'])) {
-    $related_gym = $notification['related_gym']['name'] ?? '-';
+    $related_gym = $notification['related_gym']['name'] ?? '';
 } else {
-    $related_gym = view_notification_value($notification, ['related_gym_id', 'gym_id'], '-');
+    $related_gym_id = (int)view_notification_value($notification, ['related_gym_id', 'gym_id'], 0);
+    $related_gym = $related_gym_id > 0 ? 'Gym #' . $related_gym_id : '';
 }
+
+$notification_detail_cards = [
+    ['label' => 'Audience', 'value' => h($audience, 'Global')],
+    ['label' => 'Type', 'value' => h($type, 'System')],
+    ['label' => 'Status', 'value' => h($status, 'Pending'), 'pill' => true],
+    ['label' => 'Related gym', 'value' => h((string)$related_gym, 'No gym assigned')],
+    ['label' => 'Created date', 'value' => h($created_at, 'Pending')],
+];
 
 wp_app_page_start('View Notification', true);
 ?>
@@ -136,84 +151,54 @@ wp_app_page_start('View Notification', true);
     </section>
 
     <?php if ($notification): ?>
-        <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-5 sm:p-7 shadow-lg">
-
-            <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
-
-                <div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-outline-variant/20 bg-surface-container-high">
-                    <span class="material-symbols-outlined text-5xl text-primary-container">
-                        notifications_active
-                    </span>
-                </div>
-
-                <div class="min-w-0 flex-1 space-y-4">
-
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Type
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h($type) ?>
-                            </p>
-                        </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Audience
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h($audience) ?>
-                            </p>
-                        </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Status
-                            </p>
-                            <p class="mt-2 inline-flex rounded-full bg-primary-container/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary-container">
-                                <?= h($status) ?>
-                            </p>
-                        </div>
-
+        <section class="space-y-4">
+            <article class="rounded-3xl border border-outline-variant/20 bg-surface-container p-5 shadow-lg sm:p-7">
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
+                    <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-outline-variant/20 bg-surface-container-high">
+                        <span class="material-symbols-outlined text-5xl text-primary-container">notifications_active</span>
                     </div>
 
-                    <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-5">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-black uppercase tracking-[0.2em] text-primary-container">
+                            Notification
+                        </p>
+
+                        <h3 class="mt-2 text-2xl font-black uppercase tracking-tight break-words">
+                            <?= h($title) ?>
+                        </h3>
+
+                        <div class="mt-5 rounded-2xl border border-outline-variant/20 bg-surface-container-high p-5">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                                Message
+                            </p>
+
+                            <p class="mt-3 whitespace-pre-line break-words text-sm leading-7 text-on-surface-variant">
+                                <?= h($message, 'No message available.') ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <?php foreach ($notification_detail_cards as $card): ?>
+                    <article class="rounded-2xl border border-outline-variant/20 bg-surface-container p-4">
                         <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                            Message
+                            <?= h($card['label']) ?>
                         </p>
 
-                        <p class="mt-3 whitespace-pre-line text-sm leading-7 text-on-surface-variant">
-                            <?= h($message) ?>
-                        </p>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Related gym
+                        <?php if (!empty($card['pill'])): ?>
+                            <p class="mt-2 inline-flex rounded-full bg-primary-container/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary-container">
+                                <?= $card['value'] ?>
                             </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h((string)$related_gym) ?>
+                        <?php else: ?>
+                            <p class="mt-2 text-sm font-bold break-words">
+                                <?= $card['value'] ?>
                             </p>
-                        </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Created
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h($created_at) ?>
-                            </p>
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
-
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
+            </section>
         </section>
     <?php endif; ?>
 

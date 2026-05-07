@@ -45,14 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_diet_plan_submit
     $payload = [
         'name' => trim((string)($_POST['diet_plan_name'] ?? '')),
         'goal_description' => trim((string)($_POST['goal_description'] ?? '')),
-        'cover_image_url' => trim((string)($_POST['cover_image_url'] ?? '')),
     ];
 
     $payload = array_filter($payload, function ($value) {
         return $value !== '' && $value !== '-' && $value !== '—';
     });
 
-    $update_response = api_put('/diet-plans/' . $diet_plan_id, $payload, auth: true);
+    $update_response = fitapp_api_multipart_update('/diet-plans/' . $diet_plan_id, $payload, $_FILES['image'] ?? null, 'image', true);
 
     if (($update_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_diet_plans_url . '&notice=updated');
@@ -62,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_diet_plan_submit
     $flash_error = api_message($update_response) ?: 'No se pudo actualizar el plan de dieta.';
 }
 
-$current_image = diet_edit_value($diet_plan, 'cover_image_url');
+$current_image = fitapp_public_asset_url(diet_edit_value($diet_plan, 'cover_image_url'));
 
 wp_app_page_start('Edit Diet Plan', true);
 ?>
@@ -91,7 +90,7 @@ wp_app_page_start('Edit Diet Plan', true);
 
     <?php if ($diet_plan): ?>
         <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-            <form method="post" action="<?= esc_url($edit_diet_plan_url) ?>" class="space-y-6">
+            <form method="post" action="<?= esc_url($edit_diet_plan_url) ?>" enctype="multipart/form-data" class="space-y-6">
 
                 <input type="hidden" name="edit_diet_plan_submit" value="1">
                 <input type="hidden" name="diet_plan_id" value="<?= (int)$diet_plan_id ?>">
@@ -131,38 +130,7 @@ wp_app_page_start('Edit Diet Plan', true);
                     </p>
                 </div>
 
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                        Cover image URL
-                    </label>
-
-                    <input
-                        id="dietImageUrl"
-                        type="url"
-                        name="cover_image_url"
-                        value="<?= h($_POST['cover_image_url'] ?? ($diet_plan['cover_image_url'] ?? '')) ?>"
-                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="https://example.com/diet-plan.jpg"
-                    >
-
-                    <div
-                        id="imagePreviewWrap"
-                        class="mt-4 flex h-[190px] items-center justify-center overflow-hidden rounded-2xl border border-dashed border-outline-variant/30 bg-surface-container-high transition hover:border-primary-container"
-                    >
-                        <div id="imagePreviewPlaceholder" class="<?= $current_image ? 'hidden' : 'flex' ?> flex-col items-center justify-center text-center text-on-surface-variant">
-                            <span class="material-symbols-outlined mb-2 text-4xl text-on-surface-variant/60">restaurant</span>
-                            <span class="text-xs font-bold">Image preview</span>
-                            <span class="mt-1 text-[11px] text-on-surface-variant/70">Optional</span>
-                        </div>
-
-                        <img
-                            id="imagePreview"
-                            src="<?= esc_url($current_image) ?>"
-                            alt="Diet plan image preview"
-                            class="<?= $current_image ? '' : 'hidden' ?> h-full w-full object-cover"
-                        >
-                    </div>
-                </div>
+                <?php fitapp_render_image_dropzone('Cover image', 'Change diet plan image', 'dietImageInput', 'dietDropzone', 'image', $current_image, 'Diet plan image preview', 'restaurant'); ?>
 
                 <div class="flex flex-col gap-3 pt-2 sm:flex-row">
                     <button
@@ -185,6 +153,8 @@ wp_app_page_start('Edit Diet Plan', true);
     <?php endif; ?>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('dietImageInput', 'dietDropzone'); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

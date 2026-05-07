@@ -72,18 +72,16 @@ $gyms = room_extract_list($gyms_response);
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_room_submit'])) {
     $payload = [
-        'name' => trim((string)($_POST['room_name'] ?? '')),
-        'gym_id' => !empty($_POST['gym_id']) ? (int)$_POST['gym_id'] : null,
+        'name'     => trim((string)($_POST['room_name'] ?? '')),
+        'gym_id'   => !empty($_POST['gym_id']) ? (int)$_POST['gym_id'] : null,
         'capacity' => !empty($_POST['capacity']) ? (int)$_POST['capacity'] : null,
-        'floor' => trim((string)($_POST['floor'] ?? '')),
-        'description' => trim((string)($_POST['description'] ?? '')),
     ];
 
     $payload = array_filter($payload, function ($value) {
-        return $value !== '' && $value !== null && $value !== '-' && $value !== '—';
+        return $value !== '' && $value !== null;
     });
 
-    $update_response = api_put('/rooms/' . $room_id, $payload, auth: true);
+    $update_response = fitapp_api_multipart_update('/rooms/' . $room_id, $payload, $_FILES['image'] ?? null, 'image', true);
 
     if (($update_response['result'] ?? false) !== false) {
         wp_safe_redirect($manage_rooms_url . '&notice=updated');
@@ -94,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_room_submit'])) 
 }
 
 wp_app_page_start('Edit Room', true);
+$current_image = fitapp_public_asset_url($room['image_url'] ?? '');
 ?>
 
 <?php if ($flash_error): ?>
@@ -120,10 +119,12 @@ wp_app_page_start('Edit Room', true);
 
     <?php if ($room): ?>
         <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-            <form method="post" action="<?= esc_url($edit_room_url) ?>" class="space-y-6">
+            <form method="post" action="<?= esc_url($edit_room_url) ?>" enctype="multipart/form-data" class="space-y-6">
 
                 <input type="hidden" name="edit_room_submit" value="1">
                 <input type="hidden" name="room_id" value="<?= (int)$room_id ?>">
+
+                <?php fitapp_render_image_dropzone('Room image', 'Change room image', 'roomImageInput', 'roomDropzone', 'image', $current_image, 'Room image preview', 'meeting_room'); ?>
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
@@ -171,54 +172,20 @@ wp_app_page_start('Edit Room', true);
                     </select>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                            Capacity
-                        </label>
-
-                        <input
-                            type="number"
-                            name="capacity"
-                            min="1"
-                            value="<?= h($_POST['capacity'] ?? ($room['capacity'] ?? '')) ?>"
-                            class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                            placeholder="Example: 25"
-                            required
-                        >
-                    </div>
-
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                            Floor
-                        </label>
-
-                        <input
-                            type="text"
-                            name="floor"
-                            value="<?= h($_POST['floor'] ?? ($room['floor'] ?? '')) ?>"
-                            class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                            placeholder="Example: Main floor"
-                        >
-                    </div>
-                </div>
-
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                        Description
+                        Capacity
                     </label>
 
-                    <textarea
-                        name="description"
-                        rows="5"
-                        maxlength="280"
-                        class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Describe la sala, su uso principal o características..."
-                    ><?= h($_POST['description'] ?? ($room['description'] ?? '')) ?></textarea>
-
-                    <p class="mt-1 text-xs text-on-surface-variant">
-                        Opcional. Máximo 280 caracteres.
-                    </p>
+                    <input
+                        type="number"
+                        name="capacity"
+                        min="1"
+                        value="<?= h($_POST['capacity'] ?? ($room['capacity'] ?? '')) ?>"
+                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
+                        placeholder="Example: 25"
+                        required
+                    >
                 </div>
 
                 <div class="flex flex-col gap-3 pt-2 sm:flex-row">
@@ -242,6 +209,8 @@ wp_app_page_start('Edit Room', true);
     <?php endif; ?>
 
 </div>
+
+<?php fitapp_render_image_dropzone_script('roomImageInput', 'roomDropzone'); ?>
 
 <?php
 wp_app_page_end(true);

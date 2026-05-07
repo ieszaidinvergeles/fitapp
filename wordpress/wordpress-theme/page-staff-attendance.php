@@ -47,13 +47,14 @@ function attendance_is_empty_time($value): bool
         || $value === ''
         || $value === '-'
         || $value === '—'
+        || $value === 'â€”'
         || strtoupper((string)$value) === 'NULL';
 }
 
 function attendance_datetime_label($value): string
 {
     if (attendance_is_empty_time($value)) {
-        return '-';
+        return '';
     }
 
     $ts = strtotime((string)$value);
@@ -68,7 +69,7 @@ function attendance_datetime_label($value): string
 function attendance_time_label($value): string
 {
     if (attendance_is_empty_time($value)) {
-        return '-';
+        return '';
     }
 
     $ts = strtotime((string)$value);
@@ -82,54 +83,9 @@ function attendance_time_label($value): string
 
 function attendance_load_rows(int $page): array
 {
-    $all_rows = [];
-    $seen_ids = [];
-    $last_response = ['result' => []];
+    $paged = fitapp_api_get_page('/attendance', $page, 10, true, ['mine' => 1]);
 
-    for ($api_page = 1; $api_page <= 50; $api_page++) {
-        $response = api_get('/attendance?page=' . $api_page, auth: true);
-        $last_response = $response;
-
-        if (($response['result'] ?? null) === false) {
-            break;
-        }
-
-        $items = attendance_extract_list($response);
-
-        if (empty($items)) {
-            break;
-        }
-
-        $added_this_page = 0;
-
-        foreach ($items as $item) {
-            $id = (int)($item['id'] ?? 0);
-
-            if ($id > 0 && isset($seen_ids[$id])) {
-                continue;
-            }
-
-            if ($id > 0) {
-                $seen_ids[$id] = true;
-            }
-
-            $all_rows[] = $item;
-            $added_this_page++;
-        }
-
-        if ($added_this_page === 0 || count($items) < 10) {
-            break;
-        }
-    }
-
-    usort($all_rows, function ($a, $b) {
-        $dateA = (string)($a['date'] ?? $a['clock_in'] ?? '');
-        $dateB = (string)($b['date'] ?? $b['clock_in'] ?? '');
-
-        return strtotime($dateB) <=> strtotime($dateA);
-    });
-
-    return [$last_response, $all_rows];
+    return [$paged['response'], $paged['items']];
 }
 
 /**
@@ -325,10 +281,10 @@ wp_app_page_start('Staff Attendance', true);
                         <?php
                         $clock_in = attendance_value($row, ['clock_in', 'clock_in_time', 'clock_in_at'], '');
                         $clock_out = attendance_value($row, ['clock_out', 'clock_out_time', 'clock_out_at'], null);
-                        $gym_name = '-';
+                        $gym_name = '';
 
                         if (!empty($row['gym']) && is_array($row['gym'])) {
-                            $gym_name = $row['gym']['name'] ?? '-';
+                            $gym_name = $row['gym']['name'] ?? '';
                         } elseif (!empty($row['gym_name'])) {
                             $gym_name = $row['gym_name'];
                         } elseif (!empty($row['gym_id'])) {
@@ -342,9 +298,11 @@ wp_app_page_start('Staff Attendance', true);
                                     <p class="font-bold">
                                         <?= h($staff_name) ?>
                                     </p>
-                                    <p class="text-xs text-on-surface-variant">
-                                        <?= h($gym_name) ?>
-                                    </p>
+                                    <?php if (h($gym_name) !== ''): ?>
+                                        <p class="text-xs text-on-surface-variant">
+                                            <?= h($gym_name) ?>
+                                        </p>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="flex flex-wrap gap-2 text-xs">
@@ -394,7 +352,7 @@ wp_app_page_start('Staff Attendance', true);
                                 <?= h($row_date ?: attendance_datetime_label($clock_in)) ?>
                             </p>
                             <p class="text-xs text-on-surface-variant">
-                                Attendance record #<?= h((string)($row['id'] ?? '-')) ?>
+                                Attendance record #<?= h((string)($row['id'] ?? '')) ?>
                             </p>
                         </div>
 

@@ -9,7 +9,7 @@ use App\Http\Resources\EquipmentResource;
 use App\Models\Equipment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles CRUD and image operations for equipment.
@@ -47,10 +47,11 @@ class EquipmentController extends Controller
      *
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $paginated    = Equipment::paginate(6)->withQueryString();
+            $perPage = max(1, min(50, (int)$request->input('per_page', 10)));
+            $paginated    = Equipment::paginate($perPage)->withQueryString();
             $result       = [
                 'data' => EquipmentResource::collection($paginated),
                 'meta' => [

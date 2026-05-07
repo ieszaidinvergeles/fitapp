@@ -9,7 +9,7 @@ use App\Http\Resources\GymResource;
 use App\Models\Gym;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles CRUD and management operations for gyms.
@@ -35,13 +35,14 @@ class GymController extends Controller
      *
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve gyms.'];
 
         try {
-            $result       = GymResource::collection(Gym::paginate(10)->withQueryString());
+            $perPage = max(1, min(50, (int)$request->input('per_page', 10)));
+            $result       = GymResource::collection(Gym::paginate($perPage)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

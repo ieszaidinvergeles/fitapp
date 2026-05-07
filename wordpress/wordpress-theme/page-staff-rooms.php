@@ -5,11 +5,11 @@ Template Name: Staff Rooms
 require_once 'functions.php';
 require_advanced();
 
-$page = max(1, (int)($_GET['page_num'] ?? 1));
+$page     = max(1, (int)($_GET['page_num'] ?? 1));
 $per_page = 10;
 
 $flash_success = '';
-$flash_error = '';
+$flash_error   = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
@@ -38,44 +38,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
     }
 }
 
-function room_extract_list(array $response): array
-{
-    if (($response['result'] ?? false) === false) {
+if (!function_exists('room_extract_list')) {
+    function room_extract_list(array $response): array
+    {
+        if (($response['result'] ?? false) === false) {
+            return [];
+        }
+
+        if (!empty($response['result']['data']) && is_array($response['result']['data'])) {
+            return $response['result']['data'];
+        }
+
+        if (!empty($response['result']) && is_array($response['result'])) {
+            return $response['result'];
+        }
+
         return [];
     }
-
-    if (!empty($response['result']['data']) && is_array($response['result']['data'])) {
-        return $response['result']['data'];
-    }
-
-    if (!empty($response['result']) && is_array($response['result'])) {
-        return $response['result'];
-    }
-
-    return [];
 }
 
-function room_value(array $room, array $keys, $default = '-')
-{
-    foreach ($keys as $key) {
-        if (isset($room[$key]) && $room[$key] !== null && $room[$key] !== '') {
-            return $room[$key];
+if (!function_exists('room_value')) {
+    function room_value(array $room, array $keys, $default = '')
+    {
+        foreach ($keys as $key) {
+            if (!isset($room[$key]) || $room[$key] === null) {
+                continue;
+            }
+
+            $clean_value = trim((string)$room[$key]);
+
+            if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€"' && strtoupper($clean_value) !== 'NULL') {
+                return $room[$key];
+            }
         }
-    }
 
-    return $default;
+        return $default;
+    }
 }
 
-function room_page_url(int $page): string
-{
-    return home_url('/?pagename=staff-rooms&page_num=' . $page);
+if (!function_exists('room_page_url')) {
+    function room_page_url(int $page): string
+    {
+        return home_url('/?pagename=staff-rooms&page_num=' . $page);
+    }
 }
 
 /**
  * Cargar gimnasios para cruzar nombre de gym
  */
 $gyms_response = api_get('/gyms', auth: true);
-$gyms = room_extract_list($gyms_response);
+$gyms          = room_extract_list($gyms_response);
 
 $gyms_by_id = [];
 foreach ($gyms as $gym) {
@@ -85,63 +97,19 @@ foreach ($gyms as $gym) {
 }
 
 /**
- * Cargar todas las salas
+ * Cargar salas paginadas — una sola llamada al backend.
  */
-$all_rooms = [];
-$seen_ids = [];
-$listResp = ['result' => []];
+$paged        = fitapp_api_get_page('/rooms', $page, $per_page, true);
+$listResp     = $paged['response'];
+$rooms        = $paged['items'];
+$pagination   = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page    = $pagination['last_page'];
+$total        = $pagination['total'];
+$from         = $pagination['from'];
+$to           = $pagination['to'];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
-    $response = api_get('/rooms?page=' . $api_page, auth: true);
-
-    if (($response['result'] ?? null) === false) {
-        $listResp = $response;
-        break;
-    }
-
-    $items = room_extract_list($response);
-
-    if (empty($items)) {
-        break;
-    }
-
-    $added_this_page = 0;
-
-    foreach ($items as $item) {
-        $id = (int)($item['id'] ?? 0);
-
-        if ($id > 0 && isset($seen_ids[$id])) {
-            continue;
-        }
-
-        if ($id > 0) {
-            $seen_ids[$id] = true;
-        }
-
-        $all_rooms[] = $item;
-        $added_this_page++;
-    }
-
-    $listResp = $response;
-
-    if ($added_this_page === 0 || count($items) < 10) {
-        break;
-    }
-}
-
-$total = count($all_rooms);
-$last_page = max(1, (int)ceil($total / $per_page));
-
-if ($page > $last_page) {
-    $page = $last_page;
-}
-
-$current_page = $page;
-$offset = ($current_page - 1) * $per_page;
-$rooms = array_slice($all_rooms, $offset, $per_page);
-
-$from = $total > 0 ? $offset + 1 : 0;
-$to = $total > 0 ? min($total, $offset + count($rooms)) : 0;
+$has_next_unknown = ($last_page <= $current_page && count($rooms) >= $per_page);
 
 wp_app_page_start('Rooms', true);
 ?>
@@ -164,12 +132,16 @@ wp_app_page_start('Rooms', true);
         <div>
             <h2 class="text-lg font-bold">Room List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona salas, aforo, centro asociado y espacios disponibles.
+                Gestiona salas, aforo y centro asociado.
             </p>
 
             <?php if ($total > 0): ?>
                 <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-container">
                     <?= h((string)$total) ?> ROOMS REGISTERED · PAGE <?= h((string)$current_page) ?> OF <?= h((string)$last_page) ?>
+                </p>
+            <?php elseif ($rooms): ?>
+                <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-container">
+                    Room list · Page <?= h((string)$current_page) ?>
                 </p>
             <?php endif; ?>
         </div>
@@ -186,25 +158,32 @@ wp_app_page_start('Rooms', true);
     <section class="space-y-3">
         <?php foreach ($rooms as $room): ?>
             <?php
-            $room_id = (int)($room['id'] ?? 0);
+            $room_id   = (int)($room['id'] ?? 0);
+            $name      = room_value($room, ['name', 'title', 'room_name'], 'Room');
+            $capacity  = room_value($room, ['capacity', 'capacity_limit', 'max_capacity'], '');
+            $image_url = fitapp_public_asset_url(room_value($room, ['image_url', 'cover_image_url', 'image', 'photo_url'], ''));
 
-            $name = room_value($room, ['name', 'title', 'room_name'], 'Room');
-            $capacity = room_value($room, ['capacity', 'capacity_limit', 'max_capacity'], '-');
-            $floor = room_value($room, ['floor', 'floor_number'], '-');
+            $gym_id   = (int)($room['gym_id'] ?? $room['gym']['id'] ?? 0);
+            $gym      = $room['gym'] ?? ($gyms_by_id[$gym_id] ?? []);
+            $gym_name = h($gym['name'] ?? room_value($room, ['gym_name'], ''));
 
-            $gym_id = (int)($room['gym_id'] ?? $room['gym']['id'] ?? 0);
-            $gym = $room['gym'] ?? ($gyms_by_id[$gym_id] ?? []);
-            $gym_name = $gym['name'] ?? room_value($room, ['gym_name'], '-');
+            $room_meta_bits = [];
 
-            $description = room_value($room, ['description', 'notes'], '');
+            if ($gym_name !== '') {
+                $room_meta_bits[] = 'Gym: ' . $gym_name;
+            }
+
+            if ((string)$capacity !== '') {
+                $room_meta_bits[] = 'Capacity: ' . h((string)$capacity);
+            }
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
                     <div class="flex min-w-0 flex-1 gap-4">
-                        <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <span class="material-symbols-outlined text-4xl text-primary-container">meeting_room</span>
+                        <div class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
+                            <?php fitapp_render_image_or_placeholder((string)$image_url, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'meeting_room', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">
@@ -218,18 +197,9 @@ wp_app_page_start('Rooms', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Gym:
-                                <span class="font-semibold text-on-surface"><?= h($gym_name) ?></span>
-                                · Capacity:
-                                <span class="font-semibold text-on-surface"><?= h((string)$capacity) ?></span>
-                                · Floor:
-                                <span class="font-semibold text-on-surface"><?= h((string)$floor) ?></span>
-                            </p>
-
-                            <?php if ($description): ?>
-                                <p class="mt-1 line-clamp-2 text-sm text-on-surface-variant break-words">
-                                    <?= h((string)$description) ?>
+                            <?php if ($room_meta_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $room_meta_bits) ?>
                                 </p>
                             <?php endif; ?>
                         </div>
@@ -273,15 +243,16 @@ wp_app_page_start('Rooms', true);
         <?php endif; ?>
     </section>
 
-    <?php if ($last_page > 1): ?>
+    <?php if ($current_page > 1 || $current_page < $last_page || $has_next_unknown): ?>
         <section class="flex flex-col gap-4 rounded-xl border border-outline-variant/20 bg-surface-container p-4 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-on-surface-variant">
                 Showing
                 <span class="font-bold text-on-surface"><?= h((string)$from) ?></span>
-                -
+                –
                 <span class="font-bold text-on-surface"><?= h((string)$to) ?></span>
-                of
-                <span class="font-bold text-on-surface"><?= h((string)$total) ?></span>
+                <?php if ($total > 0): ?>
+                of <span class="font-bold text-on-surface"><?= h((string)$total) ?></span>
+                <?php endif; ?>
                 rooms
             </p>
 
@@ -299,23 +270,29 @@ wp_app_page_start('Rooms', true);
                     </span>
                 <?php endif; ?>
 
-                <?php
-                $start = max(1, $current_page - 2);
-                $end = min($last_page, $current_page + 2);
-                ?>
+                <?php if ($last_page > 1): ?>
+                    <?php
+                    $start = max(1, $current_page - 2);
+                    $end   = min($last_page, $current_page + 2);
+                    ?>
 
-                <?php for ($i = $start; $i <= $end; $i++): ?>
-                    <a
-                        href="<?= esc_url(room_page_url($i)) ?>"
-                        class="rounded-full border px-4 py-2 text-sm font-bold transition <?= $i === $current_page
-                            ? 'border-primary-container bg-primary-container text-on-primary-container shadow-[0_0_18px_rgba(212,251,0,0.22)]'
-                            : 'border-outline-variant/30 hover:bg-surface-container-high' ?>"
-                    >
-                        <?= h((string)$i) ?>
-                    </a>
-                <?php endfor; ?>
+                    <?php for ($i = $start; $i <= $end; $i++): ?>
+                        <a
+                            href="<?= esc_url(room_page_url($i)) ?>"
+                            class="rounded-full border px-4 py-2 text-sm font-bold transition <?= $i === $current_page
+                                ? 'border-primary-container bg-primary-container text-on-primary-container shadow-[0_0_18px_rgba(212,251,0,0.22)]'
+                                : 'border-outline-variant/30 hover:bg-surface-container-high' ?>"
+                        >
+                            <?= h((string)$i) ?>
+                        </a>
+                    <?php endfor; ?>
+                <?php else: ?>
+                    <span class="rounded-full border border-primary-container bg-primary-container px-4 py-2 text-sm font-bold text-on-primary-container">
+                        <?= $current_page ?>
+                    </span>
+                <?php endif; ?>
 
-                <?php if ($current_page < $last_page): ?>
+                <?php if ($current_page < $last_page || $has_next_unknown): ?>
                     <a
                         href="<?= esc_url(room_page_url($current_page + 1)) ?>"
                         class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"

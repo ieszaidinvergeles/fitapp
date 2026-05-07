@@ -71,11 +71,28 @@ class StaffDashboardController extends Controller
                 ->whereIn('gym_id', $gymIds)
                 ->whereBetween('start_time', [$todayStart, $todayEnd])
                 ->where('is_cancelled', false)
+                ->orderBy('start_time')
                 ->get();
 
             $todayBookingsCount = Booking::whereIn('class_id', $todayClasses->pluck('id'))
                 ->where('status', 'active')
                 ->count();
+
+            $upcomingClasses = GymClass::with(['activity', 'room', 'instructor'])
+                ->whereIn('gym_id', $gymIds)
+                ->where('start_time', '>=', $todayStart)
+                ->where('is_cancelled', false)
+                ->orderBy('start_time')
+                ->limit(4)
+                ->get();
+
+            $upcomingCalendarClasses = GymClass::with(['activity', 'room'])
+                ->whereIn('gym_id', $gymIds)
+                ->where('start_time', '>=', $todayStart)
+                ->where('is_cancelled', false)
+                ->orderBy('start_time')
+                ->limit(30)
+                ->get();
 
             $activeMembersCount = User::whereIn('current_gym_id', $gymIds)
                 ->where('membership_status', 'active')
@@ -110,6 +127,8 @@ class StaffDashboardController extends Controller
             $result = [
                 'gyms'                  => GymResource::collection($gyms),
                 'today_classes'         => GymClassResource::collection($todayClasses),
+                'upcoming_classes'      => GymClassResource::collection($upcomingClasses),
+                'upcoming_calendar_classes' => GymClassResource::collection($upcomingCalendarClasses),
                 'today_bookings_count'  => $todayBookingsCount,
                 'active_members_count'  => $activeMembersCount,
                 'staff_present_today'   => StaffAttendanceResource::collection($staffPresentToday),

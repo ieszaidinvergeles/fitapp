@@ -55,10 +55,16 @@ if (!function_exists('diet_plan_extract_list')) {
 }
 
 if (!function_exists('diet_plan_value')) {
-    function diet_plan_value(array $plan, array $keys, $default = '-')
+    function diet_plan_value(array $plan, array $keys, $default = '')
     {
         foreach ($keys as $key) {
-            if (isset($plan[$key]) && $plan[$key] !== null && $plan[$key] !== '') {
+            if (!isset($plan[$key]) || $plan[$key] === null) {
+                continue;
+            }
+
+            $clean_value = trim((string)$plan[$key]);
+
+            if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
                 return $plan[$key];
             }
         }
@@ -67,31 +73,18 @@ if (!function_exists('diet_plan_value')) {
     }
 }
 
-if (!function_exists('diet_plan_default_image')) {
-    function diet_plan_default_image(int $index): string
-    {
-        $default_images = [
-            'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=600&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=600&auto=format&fit=crop',
-        ];
-
-        return $default_images[$index % count($default_images)];
-    }
-}
-
 /*
  * IMPORTANTE:
  * El backend de diet_plans parece devolver lista simple, no paginación real.
  * Por eso pedimos muchos registros y paginamos aquí manualmente.
  */
+$paged = fitapp_api_get_page('/diet-plans', $page, $per_page, true);
 $all_diet_plans = [];
 $listResp = ['result' => []];
 
 $seen_ids = [];
 
-for ($api_page = 1; $api_page <= 20; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $pageResp = api_get('/diet-plans?page=' . $api_page, auth: true);
 
     if (($pageResp['result'] ?? null) === false) {
@@ -143,6 +136,15 @@ $diet_plans = array_slice($all_diet_plans, $offset, $per_page);
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($diet_plans)) : 0;
 
+$listResp = $paged['response'];
+$diet_plans = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
+
 wp_app_page_start('Manage Diet Plans', true);
 ?>
 
@@ -190,13 +192,13 @@ wp_app_page_start('Manage Diet Plans', true);
             $diet_plan_id = (int)($plan['id'] ?? 0);
 
             $name = diet_plan_value($plan, ['name', 'title'], 'Diet Plan');
-            $goal_description = diet_plan_value($plan, ['goal_description', 'description', 'notes', 'summary'], 'No description available.');
+            $goal_description = h((string)diet_plan_value($plan, ['goal_description', 'description', 'notes', 'summary'], ''));
 
-            $image = $plan['cover_image_url']
+            $image = fitapp_public_asset_url($plan['cover_image_url']
                 ?? $plan['image_url']
                 ?? $plan['image']
                 ?? $plan['photo_url']
-                ?? diet_plan_default_image($real_index);
+                ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -204,11 +206,7 @@ wp_app_page_start('Manage Diet Plans', true);
 
                     <div class="flex min-w-0 flex-1 gap-4">
                         <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <img
-                                src="<?= esc_url($image) ?>"
-                                alt="<?= h($name) ?>"
-                                class="h-full w-full object-cover"
-                            >
+                            <?php fitapp_render_image_or_placeholder($image, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'restaurant', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">
@@ -222,12 +220,18 @@ wp_app_page_start('Manage Diet Plans', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Goal description:
-                                <span class="font-semibold text-on-surface">
-                                    <?= h((string)$goal_description) ?>
-                                </span>
-                            </p>
+                            <?php if ($goal_description !== ''): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    Goal description:
+                                    <span class="font-semibold text-on-surface">
+                                        <?= $goal_description ?>
+                                    </span>
+                                </p>
+                            <?php else: ?>
+                                <p class="mt-1 text-sm italic text-on-surface-variant">
+                                    No description available.
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
 

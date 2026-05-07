@@ -10,7 +10,7 @@ use App\Models\Routine;
 use App\Models\UserFavorite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles CRUD, management, and image operations for routines.
@@ -56,7 +56,9 @@ class RoutineController extends Controller
         try {
             $this->authorize('viewAny', Routine::class);
             
-            $query = Routine::withCount('exercises');
+            $query = Routine::with(['creator', 'dietPlan'])
+                ->withCount('exercises')
+                ->orderByDesc('id');
 
             if ($request->has('favorites')) {
                 $user = $request->user() ?: auth('sanctum')->user();
@@ -111,7 +113,7 @@ class RoutineController extends Controller
         $messageArray = ['general' => 'Could not retrieve routine.'];
 
         try {
-            $routine     = Routine::with('orderedExercises')->findOrFail($id);
+            $routine     = Routine::with(['orderedExercises', 'creator', 'dietPlan'])->findOrFail($id);
             $result      = (new RoutineResource($routine))->response()->getData(true);
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
@@ -224,12 +226,20 @@ class RoutineController extends Controller
 
         try {
             $routine = Routine::findOrFail($id);
+            $validated = $request->validate([
+                'exercise_id'      => ['required', 'integer', 'exists:exercises,id'],
+                'order_index'      => ['required', 'integer', 'min:1'],
+                'recommended_sets' => ['required', 'integer', 'min:1'],
+                'recommended_reps' => ['required', 'integer', 'min:1'],
+                'rest_seconds'     => ['required', 'integer', 'min:0'],
+            ]);
+
             $routine->exercises()->syncWithoutDetaching([
-                $request->input('exercise_id') => [
-                    'order_index'      => $request->input('order_index'),
-                    'recommended_sets' => $request->input('recommended_sets'),
-                    'recommended_reps' => $request->input('recommended_reps'),
-                    'rest_seconds'     => $request->input('rest_seconds'),
+                $validated['exercise_id'] => [
+                    'order_index'      => $validated['order_index'],
+                    'recommended_sets' => $validated['recommended_sets'],
+                    'recommended_reps' => $validated['recommended_reps'],
+                    'rest_seconds'     => $validated['rest_seconds'],
                 ],
             ]);
             $result      = true;

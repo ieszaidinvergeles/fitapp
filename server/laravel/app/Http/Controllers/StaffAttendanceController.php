@@ -32,13 +32,15 @@ class StaffAttendanceController extends Controller
             $this->authorize('viewAny', StaffAttendance::class);
 
             $user  = $request->user();
-            $query = $user->isAdmin()
-                ? StaffAttendance::query()
-                : (($user->isManager() || $user->isAssistant())
-                    ? StaffAttendance::where('gym_id', $user->current_gym_id)
-                    : StaffAttendance::forStaff($user->id));
+            $query = $request->boolean('mine')
+                ? StaffAttendance::forStaff($user->id)
+                : ($user->isAdmin()
+                    ? StaffAttendance::query()
+                    : (($user->isManager() || $user->isAssistant())
+                        ? StaffAttendance::where('gym_id', $user->current_gym_id)
+                        : StaffAttendance::forStaff($user->id)));
 
-            $result       = StaffAttendanceResource::collection($query->paginate(10)->withQueryString());
+            $result       = StaffAttendanceResource::collection($query->orderByDesc('clock_in')->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

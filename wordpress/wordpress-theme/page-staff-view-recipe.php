@@ -16,10 +16,16 @@ if ($recipe_id <= 0) {
     exit;
 }
 
-function view_recipe_value(array $recipe, array $keys, $default = '-')
+function view_recipe_value(array $recipe, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($recipe[$key]) && $recipe[$key] !== null && $recipe[$key] !== '') {
+        if (!isset($recipe[$key]) || $recipe[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$recipe[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $recipe[$key];
         }
     }
@@ -31,8 +37,8 @@ function view_recipe_type_label($type): string
 {
     $type = trim((string)$type);
 
-    if ($type === '' || $type === '-' || $type === '—') {
-        return '-';
+    if ($type === '' || $type === '-' || $type === '—' || $type === 'â€”' || strtoupper($type) === 'NULL') {
+        return '';
     }
 
     return ucwords(str_replace('_', ' ', $type));
@@ -64,19 +70,34 @@ if (($recipe_response['result'] ?? false) !== false && is_array($recipe_response
 }
 
 $name = view_recipe_value($recipe, ['name'], 'Recipe');
-$description = view_recipe_value($recipe, ['description'], 'No description available.');
-$ingredients = view_recipe_value($recipe, ['ingredients'], '-');
-$preparation_steps = view_recipe_value($recipe, ['preparation_steps'], '-');
-$calories = view_recipe_value($recipe, ['calories'], '-');
-$type = view_recipe_type_label(view_recipe_value($recipe, ['type'], '-'));
-$image_url = view_recipe_value($recipe, ['image_url'], '');
+$description = view_recipe_value($recipe, ['description'], '');
+$ingredients = view_recipe_value($recipe, ['ingredients'], '');
+$preparation_steps = view_recipe_value($recipe, ['preparation_steps'], '');
+$calories = h((string)view_recipe_value($recipe, ['calories'], ''));
+$type = view_recipe_type_label(view_recipe_value($recipe, ['type'], ''));
+$image_url = fitapp_public_asset_url(view_recipe_value($recipe, ['image_url', 'cover_image_url', 'image', 'photo_url'], ''));
 
-$macros = view_recipe_decode_macros($recipe['macros_json'] ?? []);
-$protein = $macros['protein'] ?? '-';
-$carbs = $macros['carbs'] ?? '-';
-$fat = $macros['fat'] ?? '-';
+$macros = view_recipe_decode_macros($recipe['macros_json'] ?? $recipe['macros'] ?? []);
+$protein = h((string)($macros['protein'] ?? ''));
+$carbs = h((string)($macros['carbs'] ?? ''));
+$fat = h((string)($macros['fat'] ?? ''));
+$nutrition_cards = [];
 
-$default_image = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1200&auto=format&fit=crop';
+if ($calories !== '') {
+    $nutrition_cards[] = ['label' => 'Calories', 'value' => $calories];
+}
+
+if ($protein !== '') {
+    $nutrition_cards[] = ['label' => 'Protein', 'value' => $protein . 'g'];
+}
+
+if ($carbs !== '') {
+    $nutrition_cards[] = ['label' => 'Carbs', 'value' => $carbs . 'g'];
+}
+
+if ($fat !== '') {
+    $nutrition_cards[] = ['label' => 'Fat', 'value' => $fat . 'g'];
+}
 
 wp_app_page_start('View Recipe', true);
 ?>
@@ -124,42 +145,29 @@ wp_app_page_start('View Recipe', true);
             <div class="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)]">
 
                 <div class="relative min-h-[300px] border-b border-outline-variant/20 bg-surface-container-high lg:border-b-0 lg:border-r">
-                    <img
-                        src="<?= esc_url($image_url ?: $default_image) ?>"
-                        alt="<?= h($name) ?>"
-                        class="absolute inset-0 h-full w-full object-cover"
-                    >
+                    <?php fitapp_render_image_or_placeholder($image_url, (string)$name, 'absolute inset-0 h-full w-full object-cover', 'absolute inset-0 h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'restaurant', 'No image'); ?>
                     <div class="absolute inset-0 bg-gradient-to-t from-background/85 via-background/25 to-transparent"></div>
 
-                    <div class="absolute bottom-0 left-0 p-5">
-                        <span class="mb-2 inline-flex rounded-full bg-primary-container px-3 py-1 text-[10px] font-black uppercase tracking-wide text-on-primary-container">
-                            <?= h($type) ?>
-                        </span>
-                    </div>
+                    <?php if ($type !== ''): ?>
+                        <div class="absolute bottom-0 left-0 p-5">
+                            <span class="mb-2 inline-flex rounded-full bg-primary-container px-3 py-1 text-[10px] font-black uppercase tracking-wide text-on-primary-container">
+                                <?= h($type) ?>
+                            </span>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="p-5 sm:p-8">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Calories</p>
-                            <p class="mt-2 text-lg font-bold"><?= h((string)$calories) ?></p>
+                    <?php if ($nutrition_cards): ?>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                            <?php foreach ($nutrition_cards as $card): ?>
+                                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant"><?= h($card['label']) ?></p>
+                                    <p class="mt-2 text-lg font-bold"><?= $card['value'] ?></p>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Protein</p>
-                            <p class="mt-2 text-lg font-bold"><?= h((string)$protein) ?>g</p>
-                        </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Carbs</p>
-                            <p class="mt-2 text-lg font-bold"><?= h((string)$carbs) ?>g</p>
-                        </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">Fat</p>
-                            <p class="mt-2 text-lg font-bold"><?= h((string)$fat) ?>g</p>
-                        </div>
-                    </div>
+                    <?php endif; ?>
 
                     <div class="mt-5 rounded-2xl border border-outline-variant/20 bg-surface-container-high p-5">
                         <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
@@ -167,7 +175,7 @@ wp_app_page_start('View Recipe', true);
                         </p>
 
                         <p class="mt-3 whitespace-pre-line text-sm leading-7 text-on-surface-variant">
-                            <?= h($description) ?>
+                            <?= h($description, 'No description available.') ?>
                         </p>
                     </div>
                 </div>
@@ -182,7 +190,7 @@ wp_app_page_start('View Recipe', true);
                 </div>
 
                 <p class="whitespace-pre-line text-sm leading-7 text-on-surface-variant">
-                    <?= h($ingredients) ?>
+                    <?= h($ingredients, 'No ingredients available.') ?>
                 </p>
             </article>
 
@@ -193,7 +201,7 @@ wp_app_page_start('View Recipe', true);
                 </div>
 
                 <p class="whitespace-pre-line text-sm leading-7 text-on-surface-variant">
-                    <?= h($preparation_steps) ?>
+                    <?= h($preparation_steps, 'No preparation steps available.') ?>
                 </p>
             </article>
         </section>

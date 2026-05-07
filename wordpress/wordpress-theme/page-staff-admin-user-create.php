@@ -7,45 +7,86 @@ require_user_management();
 
 $flash_error = '';
 
+function staff_created_user_id(array $response): int
+{
+    $result = $response['result'] ?? [];
+
+    if (!is_array($result)) {
+        return 0;
+    }
+
+    $user = isset($result['data']) && is_array($result['data'])
+        ? $result['data']
+        : $result;
+
+    return (int)($user['id'] ?? 0);
+}
+
 function form_value(string $key, $default = '')
 {
-    return $_POST[$key] ?? $default;
+    $value = $_POST[$key] ?? $default;
+
+    return ($value === '-' || $value === '—' || $value === 'â€”') ? '' : $value;
 }
 
 /**
  * Procesar creación
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $payload = [
-        'username' => trim((string)($_POST['username'] ?? '')),
-        'full_name' => trim((string)($_POST['full_name'] ?? '')),
-        'email' => trim((string)($_POST['email'] ?? '')),
-        'role' => trim((string)($_POST['role'] ?? '')),
-        'dni' => trim((string)($_POST['dni'] ?? '')),
-        'birth_date' => trim((string)($_POST['birth_date'] ?? '')),
-        'current_gym_id' => !empty($_POST['current_gym_id']) ? (int)$_POST['current_gym_id'] : null,
-        'membership_plan_id' => !empty($_POST['membership_plan_id']) ? (int)$_POST['membership_plan_id'] : null,
-        'membership_status' => !empty($_POST['membership_status']) ? trim((string)$_POST['membership_status']) : null,
-        'cancellation_strikes' => isset($_POST['cancellation_strikes']) ? (int)$_POST['cancellation_strikes'] : 0,
-        'is_blocked_from_booking' => !empty($_POST['is_blocked_from_booking']),
-    ];
+    $photo_file = $_FILES['profile_photo'] ?? null;
+    $photo_error = fitapp_upload_error_message($photo_file);
 
-    $password = trim((string)($_POST['password'] ?? ''));
-    if ($password !== '') {
-        $payload['password_hash'] = $password;
-    }
-
-    $payload = array_filter($payload, function ($value) {
-        return $value !== null;
-    });
-
-    $create_response = api_post('/users', $payload, auth: true);
-
-    if (($create_response['result'] ?? false) !== false) {
-        wp_redirect(home_url('/?pagename=staff-admin-users&notice=created'));
-        exit;
+    if ($photo_error !== null) {
+        $flash_error = $photo_error;
     } else {
-        $flash_error = api_message($create_response);
+        $payload = [
+            'username' => trim((string)($_POST['username'] ?? '')),
+            'full_name' => trim((string)($_POST['full_name'] ?? '')),
+            'email' => trim((string)($_POST['email'] ?? '')),
+            'role' => trim((string)($_POST['role'] ?? '')),
+            'dni' => trim((string)($_POST['dni'] ?? '')),
+            'birth_date' => trim((string)($_POST['birth_date'] ?? '')),
+            'current_gym_id' => !empty($_POST['current_gym_id']) ? (int)$_POST['current_gym_id'] : null,
+            'membership_plan_id' => !empty($_POST['membership_plan_id']) ? (int)$_POST['membership_plan_id'] : null,
+            'membership_status' => !empty($_POST['membership_status']) ? trim((string)$_POST['membership_status']) : null,
+            'cancellation_strikes' => isset($_POST['cancellation_strikes']) ? (int)$_POST['cancellation_strikes'] : 0,
+            'is_blocked_from_booking' => !empty($_POST['is_blocked_from_booking']),
+        ];
+
+        $password = trim((string)($_POST['password'] ?? ''));
+        if ($password !== '') {
+            $payload['password_hash'] = $password;
+        }
+
+        $payload = array_filter($payload, function ($value) {
+            return $value !== null;
+        });
+
+        $create_response = api_post('/users', $payload, auth: true);
+
+        if (($create_response['result'] ?? false) !== false) {
+            $created_user_id = staff_created_user_id($create_response);
+
+            if ($created_user_id > 0 && fitapp_has_uploaded_file($photo_file)) {
+                $photo_response = api_post_file(
+                    '/users/' . $created_user_id . '/photo',
+                    'image',
+                    $photo_file['tmp_name'],
+                    $photo_file['name'] ?? 'profile-photo',
+                    true
+                );
+
+                if (($photo_response['result'] ?? false) === false) {
+                    wp_redirect(home_url('/?pagename=staff-admin-user-edit&id=' . $created_user_id . '&photo_error=1'));
+                    exit;
+                }
+            }
+
+            wp_redirect(home_url('/?pagename=staff-admin-users&notice=created'));
+            exit;
+        } else {
+            $flash_error = api_message($create_response);
+        }
     }
 }
 
@@ -84,7 +125,9 @@ wp_app_page_start('Create User', true);
     </div>
 
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
-        <form method="post" class="space-y-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+
+            <?php fitapp_render_image_dropzone('Profile photo', 'Upload profile photo', 'userPhotoInput', 'userPhotoDropzone', 'profile_photo', '', 'Profile photo preview', 'person'); ?>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
@@ -227,15 +270,21 @@ wp_app_page_start('Create User', true);
                 </div>
             </div>
 
-            <label class="flex items-center gap-3 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3">
-                <input
-                    type="checkbox"
-                    name="is_blocked_from_booking"
-                    value="1"
-                    class="h-4 w-4 rounded border-outline-variant/30 bg-surface text-primary focus:ring-primary-container"
-                    <?= !empty($_POST['is_blocked_from_booking']) ? 'checked' : '' ?>
-                >
+            <label for="isBlockedToggle" class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 transition hover:border-primary-container/50 hover:bg-surface-container-highest">
                 <span class="text-sm font-medium text-on-surface">Blocked from booking</span>
+
+                <div class="relative shrink-0">
+                    <input
+                        id="isBlockedToggle"
+                        type="checkbox"
+                        name="is_blocked_from_booking"
+                        value="1"
+                        class="peer sr-only"
+                        <?= !empty($_POST['is_blocked_from_booking']) ? 'checked' : '' ?>
+                    >
+
+                    <span class="relative block h-7 w-12 rounded-full border border-outline-variant/30 bg-surface-container transition after:absolute after:left-1 after:top-1 after:h-5 after:w-5 after:rounded-full after:bg-on-surface-variant after:shadow-md after:transition-all after:content-[''] peer-checked:border-primary-container peer-checked:bg-primary-container peer-checked:after:translate-x-5 peer-checked:after:bg-on-primary-container"></span>
+                </div>
             </label>
 
             <div class="flex flex-col gap-3 pt-2 sm:flex-row">
@@ -257,6 +306,8 @@ wp_app_page_start('Create User', true);
         </form>
     </section>
 </div>
+
+<?php fitapp_render_image_dropzone_script('userPhotoInput', 'userPhotoDropzone'); ?>
 
 <?php
 wp_app_page_end(true);

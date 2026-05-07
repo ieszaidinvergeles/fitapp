@@ -10,6 +10,8 @@ $data = $response['result'] ?? [];
 
 $user = $data['user'] ?? [];
 $todayClasses = $data['today_classes'] ?? [];
+$scheduleClasses = $data['upcoming_classes'] ?? $todayClasses;
+$scheduleClasses = is_array($scheduleClasses) ? array_slice($scheduleClasses, 0, 4) : [];
 
 $notif = isset($data['pending_notifications']) && is_array($data['pending_notifications'])
     ? count($data['pending_notifications'])
@@ -23,6 +25,38 @@ $totalGyms = isset($data['gyms']) && is_array($data['gyms'])
 
 $staff_name = $user['full_name'] ?? $user['username'] ?? 'Team Member';
 $staff_role = $user['role'] ?? 'Staff';
+$staff_intro_bits = array_filter([h($staff_name), h($staff_role)], static function ($value) {
+    return $value !== '';
+});
+
+function staff_dashboard_date_label($value): string
+{
+    $timestamp = strtotime((string)$value);
+
+    if (!$timestamp) {
+        return '';
+    }
+
+    $date_key = date('Y-m-d', $timestamp);
+    $today_key = date('Y-m-d');
+
+    return $date_key === $today_key ? 'Today' : date('M j', $timestamp);
+}
+
+function staff_dashboard_time_label($value): string
+{
+    $timestamp = strtotime((string)$value);
+
+    return $timestamp ? date('H:i', $timestamp) : '';
+}
+
+function staff_dashboard_class_title(array $class): string
+{
+    $activity = $class['activity']['name'] ?? '';
+    $name = $class['name'] ?? '';
+
+    return h($activity ?: $name ?: 'Class');
+}
 
 $page_title = 'Staff Portal';
 $GLOBALS['hide_global_header'] = true;
@@ -66,7 +100,7 @@ voltgym_get_header();
         </h2>
 
         <p class="mt-3 text-sm font-medium text-on-surface-variant">
-            Welcome back, <?= h($staff_name) ?> · <?= h($staff_role) ?>
+            Welcome back<?= $staff_intro_bits ? ', ' . implode(' | ', $staff_intro_bits) : '' ?>
         </p>
     </section>
 
@@ -164,7 +198,7 @@ voltgym_get_header();
                 ['Rooms', 'staff-rooms', 'meeting_room'],
                 ['Gyms', 'staff-manage-gyms', 'location_city'],
                 ['Equipment', 'staff-manage-equipment', 'construction'],
-                ['Bookings', 'staff-class-bookings', 'fact_check'],
+                ['Gym Equipment Inventory', 'staff-manage-gym-inventory', 'inventory_2'],
             ];
             ?>
 
@@ -201,30 +235,49 @@ voltgym_get_header();
                 </a>
             </div>
 
-            <?php if ($todayClasses): ?>
+            <?php if ($scheduleClasses): ?>
                 <div class="space-y-3">
-                    <?php foreach ($todayClasses as $c): ?>
-                        <div class="flex items-center justify-between rounded-2xl border border-outline-variant/10 bg-surface-container-high p-4 transition hover:bg-surface-bright">
-                            <div class="flex items-center gap-5">
-                                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/10 text-primary-container">
+                    <?php foreach ($scheduleClasses as $c): ?>
+                        <?php
+                        $class_meta_bits = [];
+                        $date_label = staff_dashboard_date_label($c['start_time'] ?? '');
+                        $time_label = staff_dashboard_time_label($c['start_time'] ?? '');
+                        $room_name = h($c['room']['name'] ?? '');
+                        $capacity = (int)($c['capacity'] ?? $c['capacity_limit'] ?? 0);
+
+                        if ($date_label !== '' || $time_label !== '') {
+                            $class_meta_bits[] = trim($date_label . ($time_label !== '' ? ' | ' . $time_label : ''));
+                        }
+
+                        if ($room_name !== '') {
+                            $class_meta_bits[] = $room_name;
+                        }
+
+                        if ($capacity > 0) {
+                            $class_meta_bits[] = $capacity . ' Cap';
+                        }
+                        ?>
+                        <div class="flex flex-col gap-3 rounded-2xl border border-outline-variant/10 bg-surface-container-high p-3 transition hover:bg-surface-bright sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-container/10 text-primary-container">
                                     <span class="material-symbols-outlined">event</span>
                                 </div>
 
-                                <div>
-                                    <p class="font-headline text-sm font-black uppercase tracking-wider">
-                                        <?= h($c['activity']['name'] ?? 'Class') ?>
+                                <div class="min-w-0">
+                                    <p class="truncate font-headline text-sm font-black uppercase tracking-wider">
+                                        <?= staff_dashboard_class_title($c) ?>
                                     </p>
-                                    <p class="text-xs text-on-surface-variant">
-                                        <?= h(substr($c['start_time'] ?? '', 0, 5)) ?> ·
-                                        <?= h($c['room']['name'] ?? '-') ?> ·
-                                        <?= (int)($c['capacity'] ?? $c['capacity_limit'] ?? 0) ?> Cap
-                                    </p>
+                                    <?php if ($class_meta_bits): ?>
+                                        <p class="truncate text-xs text-on-surface-variant">
+                                            <?= h(implode(' | ', $class_meta_bits)) ?>
+                                        </p>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 
                             <a
                                 href="<?= esc_url(home_url('/?pagename=staff-class-bookings&id=' . (int)($c['id'] ?? 0))) ?>"
-                                class="inline-flex items-center justify-center rounded-full border border-outline-variant/30 px-4 py-2 text-xs font-black uppercase tracking-widest text-on-surface transition hover:border-primary-container hover:text-primary-container"
+                                class="inline-flex items-center justify-center rounded-full border border-outline-variant/30 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface transition hover:border-primary-container hover:text-primary-container"
                             >
                                 View
                             </a>
@@ -234,7 +287,7 @@ voltgym_get_header();
             <?php else: ?>
                 <div class="rounded-2xl border border-outline-variant/10 bg-surface-container-high p-5">
                     <p class="text-sm italic text-on-surface-variant">
-                        No classes scheduled for today.
+                        No upcoming classes scheduled.
                     </p>
                 </div>
             <?php endif; ?>
@@ -242,18 +295,26 @@ voltgym_get_header();
 
         <article class="rounded-3xl border border-outline-variant/10 bg-surface-container-high p-7 md:col-span-4">
             <p class="mb-1 text-xs font-black uppercase tracking-[0.25em] text-primary-container">
-                Quick Search
+                Today's Quick Actions
             </p>
 
             <h3 class="mb-4 font-headline text-2xl font-black uppercase">
-                Find pages
+                Staff Shortcuts
             </h3>
 
             <div class="space-y-2 text-sm">
-                <a class="block rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-manage-classes')) ?>">Classes</a>
-                <a class="block rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-manage-routines')) ?>">Routines</a>
-                <a class="block rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-admin-users')) ?>">Users</a>
-                <a class="block rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-rooms')) ?>">Rooms</a>
+                <a class="flex items-center justify-between rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-admin-user-create')) ?>">
+                    <span class="font-bold">Create User</span>
+                    <span class="material-symbols-outlined text-lg">person_add</span>
+                </a>
+                <a class="flex items-center justify-between rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-create-class')) ?>">
+                    <span class="font-bold">Create Class</span>
+                    <span class="material-symbols-outlined text-lg">add_circle</span>
+                </a>
+                <a class="flex items-center justify-between rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-create-routine')) ?>">
+                    <span class="font-bold">Create Routine</span>
+                    <span class="material-symbols-outlined text-lg">fitness_center</span>
+                </a>
             </div>
         </article>
 

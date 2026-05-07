@@ -52,10 +52,16 @@ function gym_extract_list(array $response): array
     return [];
 }
 
-function gym_value(array $gym, array $keys, $default = '-')
+function gym_value(array $gym, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($gym[$key]) && $gym[$key] !== null && $gym[$key] !== '') {
+        if (!isset($gym[$key]) || $gym[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$gym[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $gym[$key];
         }
     }
@@ -65,76 +71,60 @@ function gym_value(array $gym, array $keys, $default = '-')
 
 function gym_page_url(int $page): string
 {
-    return home_url('/?pagename=staff-manage-gyms&page_num=' . $page);
+    return home_url('/?pagename=staff-manage-gyms&page_num=' . max(1, $page));
+}
+
+function gym_response_has_pagination_meta(array $response): bool
+{
+    $result = is_array($response['result'] ?? null) ? $response['result'] : [];
+    $meta = is_array($result['meta'] ?? null) ? $result['meta'] : [];
+
+    return isset($meta['total'])
+        || isset($meta['last_page'])
+        || isset($result['total'])
+        || isset($result['last_page']);
 }
 
 /*
 |--------------------------------------------------------------------------
-| Cargar todos los gimnasios
+| Cargar gimnasios paginados
 |--------------------------------------------------------------------------
 */
-$all_gyms = [];
-$seen_ids = [];
-$listResp = ['result' => []];
+$paged = fitapp_api_get_page('/gyms', $page, $per_page, true);
+$listResp = $paged['response'];
+$gyms = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
+$has_next = !empty($pagination['has_next']);
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
-    $response = api_get('/gyms?page=' . $api_page, auth: true);
+if (!gym_response_has_pagination_meta($listResp)) {
+    $item_count = count($gyms);
+    $current_page = max(1, $page);
+    $from = $item_count > 0 ? (($current_page - 1) * $per_page) + 1 : 0;
+    $to = $item_count > 0 ? $from + $item_count - 1 : 0;
+    $total = $to;
+    $last_page = max(1, $current_page);
+    $has_next = false;
 
-    if (($response['result'] ?? null) === false) {
-        $listResp = $response;
-        break;
-    }
+    if ($item_count >= $per_page) {
+        $next_page = $current_page + 1;
+        $next_probe = fitapp_api_get_page('/gyms', $next_page, $per_page, true);
 
-    $items = gym_extract_list($response);
+        if (($next_probe['response']['result'] ?? null) !== false) {
+            $next_count = count($next_probe['items']);
+            $has_next = $next_count > 0;
 
-    if (empty($items)) {
-        break;
-    }
-
-    $added_this_page = 0;
-
-    foreach ($items as $item) {
-        $id = (int)($item['id'] ?? 0);
-
-        if ($id > 0 && isset($seen_ids[$id])) {
-            continue;
+            if ($has_next) {
+                $last_page = $next_page;
+                $total = $to + $next_count;
+            }
         }
-
-        if ($id > 0) {
-            $seen_ids[$id] = true;
-        }
-
-        $all_gyms[] = $item;
-        $added_this_page++;
-    }
-
-    $listResp = $response;
-
-    if ($added_this_page === 0 || count($items) < 10) {
-        break;
     }
 }
-
-$total = count($all_gyms);
-$last_page = max(1, (int)ceil($total / $per_page));
-
-if ($page > $last_page) {
-    $page = $last_page;
-}
-
-$current_page = $page;
-$offset = ($current_page - 1) * $per_page;
-$gyms = array_slice($all_gyms, $offset, $per_page);
-
-$from = $total > 0 ? $offset + 1 : 0;
-$to = $total > 0 ? min($total, $offset + count($gyms)) : 0;
-
-$default_images = [
-    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=600&auto=format&fit=crop',
-];
 
 wp_app_page_start('Manage Gyms', true);
 ?>
@@ -182,17 +172,44 @@ wp_app_page_start('Manage Gyms', true);
             $gym_id = (int)($gym['id'] ?? 0);
 
             $name = gym_value($gym, ['name', 'title'], 'Gym');
-            $address = gym_value($gym, ['address', 'location', 'street'], '-');
-            $city = gym_value($gym, ['city'], '-');
-            $phone = gym_value($gym, ['phone', 'telephone'], '-');
+            $address = h((string)gym_value($gym, ['address', 'location', 'street'], ''));
+            $city = h((string)gym_value($gym, ['city'], ''));
+            $phone = h((string)gym_value($gym, ['phone', 'telephone'], ''));
 
             $manager = gym_value($gym, ['manager_name', 'responsible_name'], '');
             if (!$manager && !empty($gym['manager']) && is_array($gym['manager'])) {
                 $manager = $gym['manager']['full_name'] ?? $gym['manager']['username'] ?? $gym['manager']['email'] ?? '';
             }
 
-            $image = $gym['logo_url']
-                ?? $default_images[$index % count($default_images)];
+            $coordinates = h((string)gym_value($gym, ['location_coords'], ''));
+            $gym_location_bits = [];
+            $gym_contact_bits = [];
+
+            if ($address !== '') {
+                $gym_location_bits[] = 'Address: ' . $address;
+            }
+
+            if ($city !== '') {
+                $gym_location_bits[] = 'City: ' . $city;
+            }
+
+            if (h((string)$manager) !== '') {
+                $gym_contact_bits[] = 'Manager: ' . h((string)$manager);
+            }
+
+            if ($phone !== '') {
+                $gym_contact_bits[] = 'Phone: ' . $phone;
+            }
+
+            if ($coordinates !== '') {
+                $gym_contact_bits[] = 'Coordinates: ' . $coordinates;
+            }
+
+            $image = fitapp_public_asset_url($gym['logo_url']
+                ?? $gym['image_url']
+                ?? $gym['image']
+                ?? $gym['photo_url']
+                ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -200,11 +217,7 @@ wp_app_page_start('Manage Gyms', true);
 
                     <div class="flex min-w-0 flex-1 gap-4">
                         <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <img
-                                src="<?= esc_url($image) ?>"
-                                alt="<?= h($name) ?>"
-                                class="h-full w-full object-cover"
-                            >
+                            <?php fitapp_render_image_or_placeholder($image, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'location_city', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">
@@ -218,21 +231,17 @@ wp_app_page_start('Manage Gyms', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Address:
-                                <span class="font-semibold text-on-surface"><?= h((string)$address) ?></span>
-                                · City:
-                                <span class="font-semibold text-on-surface"><?= h((string)$city) ?></span>
-                            </p>
+                            <?php if ($gym_location_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $gym_location_bits) ?>
+                                </p>
+                            <?php endif; ?>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Manager:
-                                <span class="font-semibold text-on-surface"><?= h((string)($manager ?: '-')) ?></span>
-                                · Phone:
-                                <span class="font-semibold text-on-surface"><?= h((string)$phone) ?></span>
-                                · Coordinates:
-                                <span class="font-semibold text-on-surface"><?= h((string)gym_value($gym, ['location_coords'], '-')) ?></span>
-                            </p>
+                            <?php if ($gym_contact_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $gym_contact_bits) ?>
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -274,7 +283,7 @@ wp_app_page_start('Manage Gyms', true);
         <?php endif; ?>
     </section>
 
-    <?php if ($last_page > 1): ?>
+    <?php if ($last_page > 1 || $current_page > 1 || $has_next): ?>
         <section class="flex flex-col gap-4 rounded-xl border border-outline-variant/20 bg-surface-container p-4 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-on-surface-variant">
                 Showing
@@ -316,7 +325,7 @@ wp_app_page_start('Manage Gyms', true);
                     </a>
                 <?php endfor; ?>
 
-                <?php if ($current_page < $last_page): ?>
+                <?php if ($current_page < $last_page || $has_next): ?>
                     <a
                         href="<?= esc_url(gym_page_url($current_page + 1)) ?>"
                         class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"

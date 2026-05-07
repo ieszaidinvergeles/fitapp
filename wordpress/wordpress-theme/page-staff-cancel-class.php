@@ -21,7 +21,7 @@ function cancel_class_value(string $key, $default = '')
     return $_POST[$key] ?? $default;
 }
 
-function cancel_class_field(array $data = null, array $paths = [], $default = '-')
+function cancel_class_field(array $data = null, array $paths = [], $default = '')
 {
     if (!$data) {
         return $default;
@@ -40,7 +40,7 @@ function cancel_class_field(array $data = null, array $paths = [], $default = '-
             }
         }
 
-        if ($ok && $value !== null && $value !== '') {
+        if ($ok && $value !== null && $value !== '' && $value !== '-' && $value !== '—' && $value !== 'â€”') {
             return $value;
         }
     }
@@ -98,25 +98,18 @@ function cancel_extract_list(array $response): array
  * Cargar clase
  */
 $class_response = api_get('/classes/' . $class_id, auth: true);
-$class_data = (($class_response['result'] ?? false) !== false) ? $class_response['result'] : null;
+$class_result = (($class_response['result'] ?? false) !== false) ? $class_response['result'] : null;
+$class_data = is_array($class_result) ? ($class_result['data'] ?? $class_result) : null;
 
 if (!$class_data) {
     wp_redirect(home_url('/?pagename=staff-manage-classes'));
     exit;
 }
 
-/**
- * Cargar relaciones para mostrar nombres reales
- */
-$activities_response = api_get('/activities', auth: true);
-$rooms_response = api_get('/rooms', auth: true);
-$gyms_response = api_get('/gyms', auth: true);
-$users_response = api_get('/users', auth: true);
-
-$activities = cancel_extract_list($activities_response);
-$rooms = cancel_extract_list($rooms_response);
-$gyms = cancel_extract_list($gyms_response);
-$users = cancel_extract_list($users_response);
+$activities = [];
+$rooms = [];
+$gyms = [];
+$users = [];
 
 $activity_id = (int)($class_data['activity_id'] ?? $class_data['activity']['id'] ?? 0);
 $room_id = (int)($class_data['room_id'] ?? $class_data['room']['id'] ?? 0);
@@ -156,6 +149,10 @@ $class_instructor = $instructor_data['full_name']
 $class_gym = $gym['name']
     ?? $class_data['gym_name']
     ?? '';
+
+$class_location_bits = array_filter([h($class_location), h($class_gym)], static function ($value) {
+    return $value !== '';
+});
 
 /**
  * Procesar cancelación
@@ -232,7 +229,7 @@ wp_app_page_start('Cancel Class', true);
                         <span class="text-on-surface-variant text-[11px] uppercase font-bold tracking-widest">Location</span>
                     </div>
                     <p class="font-headline text-base font-semibold text-right">
-                        <?= h($class_location) ?><?= $class_gym ? ' · ' . h($class_gym) : '' ?>
+                        <?= implode(' | ', $class_location_bits) ?>
                     </p>
                 </div>
 

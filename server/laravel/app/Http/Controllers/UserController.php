@@ -9,7 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
@@ -53,6 +53,19 @@ class UserController extends Controller
             if ($request->filled('role')) {
                 $query->where('role', $request->input('role'));
             }
+
+            if ($request->filled('search')) {
+                $search = (string) $request->input('search');
+
+                $query->where(function ($q) use ($search) {
+                    $q->where('full_name', 'like', '%' . $search . '%')
+                        ->orWhere('username', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%')
+                        ->orWhere('role', 'like', '%' . $search . '%');
+                });
+            }
+
+            $query->orderByDesc('id');
 
             $result       = UserResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];

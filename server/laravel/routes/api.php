@@ -11,6 +11,7 @@ use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\FriendshipController;
 use App\Http\Controllers\GymClassController;
 use App\Http\Controllers\GymController;
+use App\Http\Controllers\GymInventoryController;
 use App\Http\Controllers\MembershipPlanController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RecipeController;
@@ -202,6 +203,13 @@ Route::prefix('v1')->group(function (): void {
             // Rooms (write)
             Route::post('/rooms',              [RoomController::class, 'store']);
             Route::put('/rooms/{id}',          [RoomController::class, 'update']);
+
+            // Gym inventory
+            Route::get('/gym-inventory',                             [GymInventoryController::class, 'index']);
+            Route::get('/gym-inventory/{gymId}/{equipmentId}',       [GymInventoryController::class, 'show']);
+            Route::post('/gym-inventory',                            [GymInventoryController::class, 'store']);
+            Route::put('/gym-inventory/{gymId}/{equipmentId}',       [GymInventoryController::class, 'update']);
+            Route::delete('/gym-inventory/{gymId}/{equipmentId}',    [GymInventoryController::class, 'destroy']);
 
             // Image uploads (advanced and above)
             Route::post('/exercises/{id}/image',         [ExerciseController::class,  'uploadImage']);

@@ -52,10 +52,16 @@ function recipe_extract_list(array $response): array
     return [];
 }
 
-function recipe_value(array $recipe, array $keys, $default = '-')
+function recipe_value(array $recipe, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($recipe[$key]) && $recipe[$key] !== null && $recipe[$key] !== '') {
+        if (!isset($recipe[$key]) || $recipe[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$recipe[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $recipe[$key];
         }
     }
@@ -72,8 +78,8 @@ function recipe_short_text($value, int $limit = 90): string
 {
     $text = trim((string)$value);
 
-    if ($text === '' || $text === '-' || $text === '—') {
-        return '-';
+    if ($text === '' || $text === '-' || $text === '—' || $text === 'â€”' || strtoupper($text) === 'NULL') {
+        return '';
     }
 
     if (function_exists('mb_strlen') && mb_strlen($text) > $limit) {
@@ -90,12 +96,12 @@ function recipe_short_text($value, int $limit = 90): string
 function recipe_macros_label($macros): string
 {
     if (is_string($macros)) {
-        $decoded = json_decode($macros, true);
+        $decoded = json_decode(str_replace("'", '"', $macros), true);
         $macros = is_array($decoded) ? $decoded : [];
     }
 
     if (!is_array($macros) || !$macros) {
-        return '-';
+        return 'No macros';
     }
 
     $fat = $macros['fat'] ?? null;
@@ -116,15 +122,17 @@ function recipe_macros_label($macros): string
         $parts[] = 'F: ' . $fat . 'g';
     }
 
-    return $parts ? implode(' · ', $parts) : '-';
+    $separator = ' ' . html_entity_decode('&middot;', ENT_QUOTES, 'UTF-8') . ' ';
+
+    return $parts ? implode($separator, $parts) : 'No macros';
 }
 
 function recipe_type_label($type): string
 {
     $type = trim((string)$type);
 
-    if ($type === '' || $type === '-') {
-        return '-';
+    if ($type === '' || $type === '-' || $type === '—' || $type === 'â€”' || strtoupper($type) === 'NULL') {
+        return '';
     }
 
     return ucwords(str_replace('_', ' ', $type));
@@ -132,71 +140,18 @@ function recipe_type_label($type): string
 
 /*
 |--------------------------------------------------------------------------
-| Cargar todas las recetas
+| Cargar recetas paginadas
 |--------------------------------------------------------------------------
 */
-$all_recipes = [];
-$seen_ids = [];
-$listResp = ['result' => []];
-
-for ($api_page = 1; $api_page <= 50; $api_page++) {
-    $response = api_get('/recipes?page=' . $api_page, auth: true);
-
-    if (($response['result'] ?? null) === false) {
-        $listResp = $response;
-        break;
-    }
-
-    $items = recipe_extract_list($response);
-
-    if (empty($items)) {
-        break;
-    }
-
-    $added_this_page = 0;
-
-    foreach ($items as $item) {
-        $id = (int)($item['id'] ?? 0);
-
-        if ($id > 0 && isset($seen_ids[$id])) {
-            continue;
-        }
-
-        if ($id > 0) {
-            $seen_ids[$id] = true;
-        }
-
-        $all_recipes[] = $item;
-        $added_this_page++;
-    }
-
-    $listResp = $response;
-
-    if ($added_this_page === 0 || count($items) < 10) {
-        break;
-    }
-}
-
-$total = count($all_recipes);
-$last_page = max(1, (int)ceil($total / $per_page));
-
-if ($page > $last_page) {
-    $page = $last_page;
-}
-
-$current_page = $page;
-$offset = ($current_page - 1) * $per_page;
-$recipes = array_slice($all_recipes, $offset, $per_page);
-
-$from = $total > 0 ? $offset + 1 : 0;
-$to = $total > 0 ? min($total, $offset + count($recipes)) : 0;
-
-$default_images = [
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=600&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=600&auto=format&fit=crop',
-];
+$paged = fitapp_api_get_page('/recipes', $page, $per_page, true);
+$listResp = $paged['response'];
+$recipes = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Manage Recipes', true);
 ?>
@@ -243,23 +198,14 @@ wp_app_page_start('Manage Recipes', true);
             <?php
             $recipe_id = (int)($recipe['id'] ?? 0);
 
-            // Cargar detalle completo de la receta
-            if ($recipe_id > 0) {
-                $detail_response = api_get('/recipes/' . $recipe_id, auth: true);
-
-                if (($detail_response['result'] ?? false) !== false && is_array($detail_response['result'] ?? null)) {
-                    $recipe = array_replace_recursive($recipe, $detail_response['result']);
-                }
-            }
-
             $name = recipe_value($recipe, ['name'], 'Recipe');
             $description = recipe_value($recipe, ['description'], '');
             $ingredients = recipe_value($recipe, ['ingredients'], '');
             $preparation_steps = recipe_value($recipe, ['preparation_steps'], '');
-            $calories = recipe_value($recipe, ['calories'], '-');
-            $type = recipe_type_label(recipe_value($recipe, ['type'], '-'));
+            $calories = h((string)recipe_value($recipe, ['calories'], ''));
+            $type = recipe_type_label(recipe_value($recipe, ['type'], ''));
 
-            $macros_raw = $recipe['macros_json'] ?? [];
+            $macros_raw = $recipe['macros_json'] ?? $recipe['macros'] ?? [];
 
             if (is_string($macros_raw)) {
                 $clean_macros = str_replace("'", '"', $macros_raw);
@@ -268,9 +214,23 @@ wp_app_page_start('Manage Recipes', true);
             }
 
             $macros = recipe_macros_label($macros_raw);
+            $recipe_meta_bits = [];
 
-            $image = $recipe['image_url']
-                ?? $default_images[$index % count($default_images)];
+            if ($calories !== '') {
+                $recipe_meta_bits[] = 'Calories: ' . $calories;
+            }
+
+            if ($macros !== '' && $macros !== 'No macros') {
+                $recipe_meta_bits[] = 'Macros: ' . h($macros);
+            } elseif ($macros === 'No macros') {
+                $recipe_meta_bits[] = 'No macros';
+            }
+
+            $image = fitapp_public_asset_url($recipe['image_url']
+                ?? $recipe['cover_image_url']
+                ?? $recipe['image']
+                ?? $recipe['photo_url']
+                ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -278,11 +238,7 @@ wp_app_page_start('Manage Recipes', true);
 
                     <div class="flex min-w-0 flex-1 gap-4">
                         <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-outline-variant/20 bg-surface-container-high">
-                            <img
-                                src="<?= esc_url($image) ?>"
-                                alt="<?= h($name) ?>"
-                                class="h-full w-full object-cover"
-                            >
+                            <?php fitapp_render_image_or_placeholder($image, (string)$name, 'h-full w-full object-cover', 'h-full w-full flex-col items-center justify-center text-center text-on-surface-variant', 'restaurant', 'No image'); ?>
                         </div>
 
                         <div class="min-w-0 flex-1">
@@ -295,33 +251,38 @@ wp_app_page_start('Manage Recipes', true);
                                     #<?= h((string)$recipe_id) ?>
                                 </span>
 
-                                <span class="rounded-full border border-outline-variant/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-on-surface-variant">
-                                    <?= h($type) ?>
-                                </span>
+                                <?php if ($type !== ''): ?>
+                                    <span class="rounded-full border border-outline-variant/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-on-surface-variant">
+                                        <?= h($type) ?>
+                                    </span>
+                                <?php endif; ?>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Calories:
-                                <span class="font-semibold text-on-surface"><?= h((string)$calories) ?></span>
-                                · Macros:
-                                <span class="font-semibold text-on-surface"><?= h($macros) ?></span>
-                            </p>
+                            <?php if ($recipe_meta_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $recipe_meta_bits) ?>
+                                </p>
+                            <?php endif; ?>
 
-                            <?php if ($description && $description !== '-'): ?>
+                            <?php if (recipe_short_text($description, 120) !== ''): ?>
                                 <p class="mt-1 line-clamp-2 text-sm text-on-surface-variant break-words">
                                     <?= h(recipe_short_text($description, 120)) ?>
                                 </p>
                             <?php endif; ?>
 
-                            <p class="mt-1 text-xs text-on-surface-variant break-words">
-                                Ingredients:
-                                <span class="text-on-surface"><?= h(recipe_short_text($ingredients, 100)) ?></span>
-                            </p>
+                            <?php if (recipe_short_text($ingredients, 100) !== ''): ?>
+                                <p class="mt-1 text-xs text-on-surface-variant break-words">
+                                    Ingredients:
+                                    <span class="text-on-surface"><?= h(recipe_short_text($ingredients, 100)) ?></span>
+                                </p>
+                            <?php endif; ?>
 
-                            <p class="mt-1 text-xs text-on-surface-variant break-words">
-                                Steps:
-                                <span class="text-on-surface"><?= h(recipe_short_text($preparation_steps, 100)) ?></span>
-                            </p>
+                            <?php if (recipe_short_text($preparation_steps, 100) !== ''): ?>
+                                <p class="mt-1 text-xs text-on-surface-variant break-words">
+                                    Steps:
+                                    <span class="text-on-surface"><?= h(recipe_short_text($preparation_steps, 100)) ?></span>
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
 

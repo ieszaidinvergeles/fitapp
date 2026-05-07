@@ -2,7 +2,7 @@
 
 namespace App\Contracts;
 
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\UploadedFile;
 
 /**

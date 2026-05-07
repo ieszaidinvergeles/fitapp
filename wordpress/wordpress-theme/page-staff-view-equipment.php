@@ -17,10 +17,16 @@ if ($equipment_id <= 0) {
     exit;
 }
 
-function equipment_view_value(array $equipment, array $keys, $default = '-')
+function equipment_view_value(array $equipment, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($equipment[$key]) && $equipment[$key] !== null && $equipment[$key] !== '') {
+        if (!isset($equipment[$key]) || $equipment[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$equipment[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $equipment[$key];
         }
     }
@@ -39,10 +45,8 @@ if (($equipment_response['result'] ?? false) !== false && is_array($equipment_re
 
 $name = equipment_view_value($equipment, ['name', 'title', 'equipment_name'], 'Equipment');
 $description = equipment_view_value($equipment, ['description', 'notes', 'details'], 'No description available.');
-$image_url = equipment_view_value($equipment, ['image_url', 'cover_image_url', 'image', 'photo_url'], '');
+$image_url = fitapp_public_asset_url(equipment_view_value($equipment, ['image_url', 'cover_image_url', 'image', 'photo_url'], ''));
 $is_home_accessible = !empty($equipment['is_home_accessible']);
-
-$default_image = 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1200&auto=format&fit=crop';
 
 wp_app_page_start('View Equipment', true);
 ?>
@@ -91,18 +95,9 @@ wp_app_page_start('View Equipment', true);
             <div class="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)]">
 
                 <div class="relative min-h-[280px] border-b border-outline-variant/20 bg-surface-container-high lg:border-b-0 lg:border-r">
+                    <?php fitapp_render_image_or_placeholder($image_url, (string)$name, 'absolute inset-0 h-full w-full object-cover', 'absolute inset-0 min-h-[280px] flex-col items-center justify-center p-8 text-center text-on-surface-variant', 'construction', 'No image'); ?>
                     <?php if ($image_url): ?>
-                        <img
-                            src="<?= esc_url($image_url) ?>"
-                            alt="<?= h($name) ?>"
-                            class="absolute inset-0 h-full w-full object-cover"
-                        >
                         <div class="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent"></div>
-                    <?php else: ?>
-                        <div class="flex h-full min-h-[280px] flex-col items-center justify-center p-8 text-center text-on-surface-variant">
-                            <span class="material-symbols-outlined mb-3 text-6xl text-primary-container/70">construction</span>
-                            <p class="text-sm font-bold uppercase tracking-wide">No image available</p>
-                        </div>
                     <?php endif; ?>
                 </div>
 
