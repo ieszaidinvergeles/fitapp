@@ -52,10 +52,16 @@ function recipe_extract_list(array $response): array
     return [];
 }
 
-function recipe_value(array $recipe, array $keys, $default = '-')
+function recipe_value(array $recipe, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($recipe[$key]) && $recipe[$key] !== null && $recipe[$key] !== '') {
+        if (!isset($recipe[$key]) || $recipe[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$recipe[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $recipe[$key];
         }
     }
@@ -72,8 +78,8 @@ function recipe_short_text($value, int $limit = 90): string
 {
     $text = trim((string)$value);
 
-    if ($text === '' || $text === '-' || $text === '—') {
-        return '-';
+    if ($text === '' || $text === '-' || $text === '—' || $text === 'â€”' || strtoupper($text) === 'NULL') {
+        return '';
     }
 
     if (function_exists('mb_strlen') && mb_strlen($text) > $limit) {
@@ -95,7 +101,7 @@ function recipe_macros_label($macros): string
     }
 
     if (!is_array($macros) || !$macros) {
-        return '-';
+        return '';
     }
 
     $fat = $macros['fat'] ?? null;
@@ -116,15 +122,15 @@ function recipe_macros_label($macros): string
         $parts[] = 'F: ' . $fat . 'g';
     }
 
-    return $parts ? implode(' · ', $parts) : '-';
+    return $parts ? implode(' | ', $parts) : '';
 }
 
 function recipe_type_label($type): string
 {
     $type = trim((string)$type);
 
-    if ($type === '' || $type === '-') {
-        return '-';
+    if ($type === '' || $type === '-' || $type === '—' || $type === 'â€”' || strtoupper($type) === 'NULL') {
+        return '';
     }
 
     return ucwords(str_replace('_', ' ', $type));
@@ -249,8 +255,8 @@ wp_app_page_start('Manage Recipes', true);
             $description = recipe_value($recipe, ['description'], '');
             $ingredients = recipe_value($recipe, ['ingredients'], '');
             $preparation_steps = recipe_value($recipe, ['preparation_steps'], '');
-            $calories = recipe_value($recipe, ['calories'], '-');
-            $type = recipe_type_label(recipe_value($recipe, ['type'], '-'));
+            $calories = h((string)recipe_value($recipe, ['calories'], ''));
+            $type = recipe_type_label(recipe_value($recipe, ['type'], ''));
 
             $macros_raw = $recipe['macros_json'] ?? [];
 
@@ -261,8 +267,21 @@ wp_app_page_start('Manage Recipes', true);
             }
 
             $macros = recipe_macros_label($macros_raw);
+            $recipe_meta_bits = [];
 
-            $image = fitapp_public_asset_url($recipe['image_url'] ?? '');
+            if ($calories !== '') {
+                $recipe_meta_bits[] = 'Calories: ' . $calories;
+            }
+
+            if ($macros !== '') {
+                $recipe_meta_bits[] = 'Macros: ' . h($macros);
+            }
+
+            $image = fitapp_public_asset_url($recipe['image_url']
+                ?? $recipe['cover_image_url']
+                ?? $recipe['image']
+                ?? $recipe['photo_url']
+                ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -283,33 +302,38 @@ wp_app_page_start('Manage Recipes', true);
                                     #<?= h((string)$recipe_id) ?>
                                 </span>
 
-                                <span class="rounded-full border border-outline-variant/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-on-surface-variant">
-                                    <?= h($type) ?>
-                                </span>
+                                <?php if ($type !== ''): ?>
+                                    <span class="rounded-full border border-outline-variant/30 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-on-surface-variant">
+                                        <?= h($type) ?>
+                                    </span>
+                                <?php endif; ?>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Calories:
-                                <span class="font-semibold text-on-surface"><?= h((string)$calories) ?></span>
-                                · Macros:
-                                <span class="font-semibold text-on-surface"><?= h($macros) ?></span>
-                            </p>
+                            <?php if ($recipe_meta_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $recipe_meta_bits) ?>
+                                </p>
+                            <?php endif; ?>
 
-                            <?php if ($description && $description !== '-'): ?>
+                            <?php if (recipe_short_text($description, 120) !== ''): ?>
                                 <p class="mt-1 line-clamp-2 text-sm text-on-surface-variant break-words">
                                     <?= h(recipe_short_text($description, 120)) ?>
                                 </p>
                             <?php endif; ?>
 
-                            <p class="mt-1 text-xs text-on-surface-variant break-words">
-                                Ingredients:
-                                <span class="text-on-surface"><?= h(recipe_short_text($ingredients, 100)) ?></span>
-                            </p>
+                            <?php if (recipe_short_text($ingredients, 100) !== ''): ?>
+                                <p class="mt-1 text-xs text-on-surface-variant break-words">
+                                    Ingredients:
+                                    <span class="text-on-surface"><?= h(recipe_short_text($ingredients, 100)) ?></span>
+                                </p>
+                            <?php endif; ?>
 
-                            <p class="mt-1 text-xs text-on-surface-variant break-words">
-                                Steps:
-                                <span class="text-on-surface"><?= h(recipe_short_text($preparation_steps, 100)) ?></span>
-                            </p>
+                            <?php if (recipe_short_text($preparation_steps, 100) !== ''): ?>
+                                <p class="mt-1 text-xs text-on-surface-variant break-words">
+                                    Steps:
+                                    <span class="text-on-surface"><?= h(recipe_short_text($preparation_steps, 100)) ?></span>
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
 

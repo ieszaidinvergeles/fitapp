@@ -55,10 +55,16 @@ if (!function_exists('equipment_extract_list')) {
 }
 
 if (!function_exists('equipment_value')) {
-    function equipment_value(array $item, array $keys, $default = '-')
+    function equipment_value(array $item, array $keys, $default = '')
     {
         foreach ($keys as $key) {
-            if (isset($item[$key]) && $item[$key] !== null && $item[$key] !== '') {
+            if (!isset($item[$key]) || $item[$key] === null) {
+                continue;
+            }
+
+            $clean_value = trim((string)$item[$key]);
+
+            if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
                 return $item[$key];
             }
         }
@@ -189,7 +195,7 @@ wp_app_page_start('Manage Equipment', true);
             $equipment_id = (int)($item['id'] ?? 0);
 
             $name = equipment_value($item, ['name', 'title', 'equipment_name'], 'Equipment');
-            $description = equipment_value($item, ['description', 'notes', 'details'], '');
+            $description = h((string)equipment_value($item, ['description', 'notes', 'details'], ''));
             $has_home_access = !empty($item['is_home_accessible']);
             $home_access_label = equipment_home_access_label($item);
 

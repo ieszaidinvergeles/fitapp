@@ -17,10 +17,16 @@ if ($gym_id <= 0) {
     exit;
 }
 
-function gym_view_value(array $gym, array $keys, $default = '-')
+function gym_view_value(array $gym, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($gym[$key]) && $gym[$key] !== null && $gym[$key] !== '') {
+        if (!isset($gym[$key]) || $gym[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$gym[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $gym[$key];
         }
     }
@@ -38,19 +44,41 @@ if (($gym_response['result'] ?? false) !== false && is_array($gym_response['resu
 }
 
 $name = gym_view_value($gym, ['name'], 'Gym');
-$address = gym_view_value($gym, ['address'], '-');
-$city = gym_view_value($gym, ['city'], '-');
-$phone = gym_view_value($gym, ['phone'], '-');
-$location_coords = gym_view_value($gym, ['location_coords'], '-');
-$logo_url = fitapp_public_asset_url(gym_view_value($gym, ['logo_url'], ''));
-$manager_id = gym_view_value($gym, ['manager_id'], '-');
+$address = h((string)gym_view_value($gym, ['address'], ''));
+$city = h((string)gym_view_value($gym, ['city'], ''));
+$phone = h((string)gym_view_value($gym, ['phone'], ''));
+$location_coords = h((string)gym_view_value($gym, ['location_coords'], ''));
+$logo_url = fitapp_public_asset_url(gym_view_value($gym, ['logo_url', 'image_url', 'image', 'photo_url'], ''));
+$manager_id = h((string)gym_view_value($gym, ['manager_id'], ''));
 
-$manager_name = '-';
+$manager_name = '';
 if (!empty($gym['manager']) && is_array($gym['manager'])) {
     $manager_name = $gym['manager']['full_name']
         ?? $gym['manager']['username']
         ?? $gym['manager']['email']
-        ?? '-';
+        ?? '';
+}
+
+$manager_value = h((string)($manager_name ?: $manager_id));
+$gym_hero_bits = array_filter([$address, $city], static function ($value) {
+    return $value !== '';
+});
+$gym_stat_cards = [];
+
+if ($address !== '') {
+    $gym_stat_cards[] = ['label' => 'Address', 'value' => $address];
+}
+
+if ($city !== '') {
+    $gym_stat_cards[] = ['label' => 'City', 'value' => $city];
+}
+
+if ($phone !== '') {
+    $gym_stat_cards[] = ['label' => 'Phone', 'value' => $phone];
+}
+
+if ($manager_value !== '') {
+    $gym_stat_cards[] = ['label' => 'Manager', 'value' => $manager_value];
 }
 
 wp_app_page_start('View Gym', true);
@@ -111,66 +139,43 @@ wp_app_page_start('View Gym', true);
                         <?= h($name) ?>
                     </h3>
 
-                    <p class="mt-2 text-sm text-white/80">
-                        <?= h($address) ?> · <?= h($city) ?>
-                    </p>
+                    <?php if ($gym_hero_bits): ?>
+                        <p class="mt-2 text-sm text-white/80">
+                            <?= implode(' | ', $gym_hero_bits) ?>
+                        </p>
+                    <?php endif; ?>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
-
-                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                        Address
-                    </p>
-                    <p class="mt-2 text-sm font-bold leading-relaxed">
-                        <?= h($address) ?>
-                    </p>
+            <?php if ($gym_stat_cards): ?>
+                <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <?php foreach ($gym_stat_cards as $card): ?>
+                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                                <?= h($card['label']) ?>
+                            </p>
+                            <p class="mt-2 text-sm font-bold leading-relaxed">
+                                <?= $card['value'] ?>
+                            </p>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-
-                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                        City
-                    </p>
-                    <p class="mt-2 text-sm font-bold">
-                        <?= h($city) ?>
-                    </p>
-                </div>
-
-                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                        Phone
-                    </p>
-                    <p class="mt-2 text-sm font-bold">
-                        <?= h($phone) ?>
-                    </p>
-                </div>
-
-                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                        Manager
-                    </p>
-                    <p class="mt-2 text-sm font-bold">
-                        <?= h($manager_name !== '-' ? $manager_name : (string)$manager_id) ?>
-                    </p>
-                </div>
-
-            </div>
+            <?php endif; ?>
         </section>
 
         <section class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
-            <article class="rounded-3xl border border-outline-variant/20 bg-surface-container p-5 sm:p-6">
-                <div class="mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary-container">map</span>
-                    <h3 class="text-lg font-bold">Location coordinates</h3>
-                </div>
+            <?php if ($location_coords !== ''): ?>
+                <article class="rounded-3xl border border-outline-variant/20 bg-surface-container p-5 sm:p-6">
+                    <div class="mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary-container">map</span>
+                        <h3 class="text-lg font-bold">Location coordinates</h3>
+                    </div>
 
-                <p class="text-sm leading-7 text-on-surface-variant">
-                    <?= h($location_coords) ?>
-                </p>
+                    <p class="text-sm leading-7 text-on-surface-variant">
+                        <?= $location_coords ?>
+                    </p>
 
-                <?php if ($location_coords !== '-'): ?>
                     <a
                         href="https://www.google.com/maps/search/?api=1&query=<?= urlencode((string)$location_coords) ?>"
                         target="_blank"
@@ -180,8 +185,8 @@ wp_app_page_start('View Gym', true);
                         Open in Google Maps
                         <span class="material-symbols-outlined text-base">open_in_new</span>
                     </a>
-                <?php endif; ?>
-            </article>
+                </article>
+            <?php endif; ?>
 
             <article class="rounded-3xl border border-outline-variant/20 bg-surface-container p-5 sm:p-6">
                 <div class="mb-4 flex items-center gap-2">

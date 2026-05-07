@@ -52,10 +52,16 @@ function gym_extract_list(array $response): array
     return [];
 }
 
-function gym_value(array $gym, array $keys, $default = '-')
+function gym_value(array $gym, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($gym[$key]) && $gym[$key] !== null && $gym[$key] !== '') {
+        if (!isset($gym[$key]) || $gym[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$gym[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $gym[$key];
         }
     }
@@ -175,16 +181,44 @@ wp_app_page_start('Manage Gyms', true);
             $gym_id = (int)($gym['id'] ?? 0);
 
             $name = gym_value($gym, ['name', 'title'], 'Gym');
-            $address = gym_value($gym, ['address', 'location', 'street'], '-');
-            $city = gym_value($gym, ['city'], '-');
-            $phone = gym_value($gym, ['phone', 'telephone'], '-');
+            $address = h((string)gym_value($gym, ['address', 'location', 'street'], ''));
+            $city = h((string)gym_value($gym, ['city'], ''));
+            $phone = h((string)gym_value($gym, ['phone', 'telephone'], ''));
 
             $manager = gym_value($gym, ['manager_name', 'responsible_name'], '');
             if (!$manager && !empty($gym['manager']) && is_array($gym['manager'])) {
                 $manager = $gym['manager']['full_name'] ?? $gym['manager']['username'] ?? $gym['manager']['email'] ?? '';
             }
 
-            $image = fitapp_public_asset_url($gym['logo_url'] ?? '');
+            $coordinates = h((string)gym_value($gym, ['location_coords'], ''));
+            $gym_location_bits = [];
+            $gym_contact_bits = [];
+
+            if ($address !== '') {
+                $gym_location_bits[] = 'Address: ' . $address;
+            }
+
+            if ($city !== '') {
+                $gym_location_bits[] = 'City: ' . $city;
+            }
+
+            if (h((string)$manager) !== '') {
+                $gym_contact_bits[] = 'Manager: ' . h((string)$manager);
+            }
+
+            if ($phone !== '') {
+                $gym_contact_bits[] = 'Phone: ' . $phone;
+            }
+
+            if ($coordinates !== '') {
+                $gym_contact_bits[] = 'Coordinates: ' . $coordinates;
+            }
+
+            $image = fitapp_public_asset_url($gym['logo_url']
+                ?? $gym['image_url']
+                ?? $gym['image']
+                ?? $gym['photo_url']
+                ?? '');
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -206,21 +240,17 @@ wp_app_page_start('Manage Gyms', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Address:
-                                <span class="font-semibold text-on-surface"><?= h((string)$address) ?></span>
-                                · City:
-                                <span class="font-semibold text-on-surface"><?= h((string)$city) ?></span>
-                            </p>
+                            <?php if ($gym_location_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $gym_location_bits) ?>
+                                </p>
+                            <?php endif; ?>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Manager:
-                                <span class="font-semibold text-on-surface"><?= h((string)($manager ?: '-')) ?></span>
-                                · Phone:
-                                <span class="font-semibold text-on-surface"><?= h((string)$phone) ?></span>
-                                · Coordinates:
-                                <span class="font-semibold text-on-surface"><?= h((string)gym_value($gym, ['location_coords'], '-')) ?></span>
-                            </p>
+                            <?php if ($gym_contact_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $gym_contact_bits) ?>
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
 

@@ -12,9 +12,15 @@ if ($routine_id <= 0) {
     exit;
 }
 
-function view_routine_value(array $data = null, string $key, $default = '-')
+function view_routine_value(array $data = null, string $key, $default = '')
 {
-    if (!$data || !isset($data[$key]) || $data[$key] === null || $data[$key] === '') {
+    if (!$data || !isset($data[$key]) || $data[$key] === null) {
+        return $default;
+    }
+
+    $clean_value = trim((string)$data[$key]);
+
+    if ($clean_value === '' || $clean_value === '-' || $clean_value === '—' || $clean_value === 'â€”' || strtoupper($clean_value) === 'NULL') {
         return $default;
     }
 
@@ -31,10 +37,10 @@ if (!$routine || !is_array($routine)) {
 }
 
 $routine_name = view_routine_value($routine, 'name', 'Routine');
-$difficulty = view_routine_value($routine, 'difficulty_level', '-');
-$goal = view_routine_value($routine, 'goal', '-');
-$description = view_routine_value($routine, 'description', 'No description available.');
-$duration = view_routine_value($routine, 'estimated_duration_min', '-');
+$difficulty = h(ucfirst(str_replace('_', ' ', (string)view_routine_value($routine, 'difficulty_level', ''))));
+$goal = h((string)view_routine_value($routine, 'goal', ''));
+$description = view_routine_value($routine, 'description', '');
+$duration = h((string)view_routine_value($routine, 'estimated_duration_min', ''));
 $image_url = fitapp_public_asset_url(
     $routine['cover_image_url']
     ?? $routine['image_url']
@@ -47,6 +53,18 @@ $exercises = $routine['ordered_exercises']
     ?? $routine['orderedExercises']
     ?? $routine['exercises']
     ?? [];
+
+$routine_stat_cards = [];
+
+if ($difficulty !== '') {
+    $routine_stat_cards[] = ['label' => 'Difficulty', 'value' => $difficulty];
+}
+
+$routine_stat_cards[] = ['label' => 'Goal', 'value' => $goal !== '' ? $goal : 'No goal defined'];
+
+if ($duration !== '') {
+    $routine_stat_cards[] = ['label' => 'Duration', 'value' => $duration . ' min'];
+}
 
 wp_app_page_start('View Routine', true);
 ?>
@@ -100,24 +118,16 @@ wp_app_page_start('View Routine', true);
                     </h3>
                 </div>
 
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                        <p class="text-xs uppercase text-on-surface-variant">Difficulty</p>
-                        <p class="mt-1 font-bold"><?= h(ucfirst((string)$difficulty)) ?></p>
+                <?php if ($routine_stat_cards): ?>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <?php foreach ($routine_stat_cards as $card): ?>
+                            <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
+                                <p class="text-xs uppercase text-on-surface-variant"><?= h($card['label']) ?></p>
+                                <p class="mt-1 font-bold"><?= $card['value'] ?></p>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
-
-                    <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                        <p class="text-xs uppercase text-on-surface-variant">Goal</p>
-                        <p class="mt-1 font-bold"><?= h((string)$goal) ?></p>
-                    </div>
-
-                    <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                        <p class="text-xs uppercase text-on-surface-variant">Duration</p>
-                        <p class="mt-1 font-bold">
-                            <?= $duration !== '-' ? h((string)$duration) . ' min' : '-' ?>
-                        </p>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
 
         </div>
@@ -126,7 +136,7 @@ wp_app_page_start('View Routine', true);
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
         <h3 class="mb-2 text-lg font-bold">Description</h3>
         <p class="text-sm leading-relaxed text-on-surface-variant">
-            <?= h($description) ?>
+            <?= h($description, 'No description available.') ?>
         </p>
     </section>
 
@@ -142,13 +152,26 @@ wp_app_page_start('View Routine', true);
             <?php foreach ($exercises as $index => $exercise): ?>
                 <?php
                 $exercise_name = $exercise['name'] ?? 'Exercise';
-                $exercise_description = $exercise['description'] ?? '-';
+                $exercise_description = h($exercise['description'] ?? '');
 
                 $pivot = $exercise['pivot'] ?? [];
-                $sets = $exercise['sets'] ?? ($pivot['recommended_sets'] ?? '-');
-                $reps = $exercise['reps'] ?? ($pivot['recommended_reps'] ?? '-');
-                $rest = $exercise['rest'] ?? ($pivot['rest_seconds'] ?? '-');
+                $sets = h((string)($exercise['sets'] ?? ($pivot['recommended_sets'] ?? '')));
+                $reps = h((string)($exercise['reps'] ?? ($pivot['recommended_reps'] ?? '')));
+                $rest = h((string)($exercise['rest'] ?? ($pivot['rest_seconds'] ?? '')));
                 $order = $exercise['order'] ?? ($pivot['order_index'] ?? ($index + 1));
+                $exercise_stat_cards = [];
+
+                if ($sets !== '') {
+                    $exercise_stat_cards[] = ['label' => 'Sets', 'value' => $sets];
+                }
+
+                if ($reps !== '') {
+                    $exercise_stat_cards[] = ['label' => 'Reps', 'value' => $reps];
+                }
+
+                if ($rest !== '') {
+                    $exercise_stat_cards[] = ['label' => 'Rest', 'value' => $rest . 's'];
+                }
                 ?>
 
                 <article class="rounded-2xl border border-outline-variant/20 bg-surface-container p-4">
@@ -167,27 +190,23 @@ wp_app_page_start('View Routine', true);
                                 <?= h($exercise_name) ?>
                             </h4>
 
-                            <p class="text-sm text-on-surface-variant">
-                                <?= h($exercise_description) ?>
-                            </p>
+                            <?php if ($exercise_description !== ''): ?>
+                                <p class="text-sm text-on-surface-variant">
+                                    <?= $exercise_description ?>
+                                </p>
+                            <?php endif; ?>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2 text-center sm:w-[260px]">
-                            <div class="rounded-xl bg-surface-container-high p-3">
-                                <p class="text-xs text-on-surface-variant">Sets</p>
-                                <p class="font-bold"><?= h((string)$sets) ?></p>
+                        <?php if ($exercise_stat_cards): ?>
+                            <div class="grid grid-cols-3 gap-2 text-center sm:w-[260px]">
+                                <?php foreach ($exercise_stat_cards as $card): ?>
+                                    <div class="rounded-xl bg-surface-container-high p-3">
+                                        <p class="text-xs text-on-surface-variant"><?= h($card['label']) ?></p>
+                                        <p class="font-bold"><?= $card['value'] ?></p>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
-
-                            <div class="rounded-xl bg-surface-container-high p-3">
-                                <p class="text-xs text-on-surface-variant">Reps</p>
-                                <p class="font-bold"><?= h((string)$reps) ?></p>
-                            </div>
-
-                            <div class="rounded-xl bg-surface-container-high p-3">
-                                <p class="text-xs text-on-surface-variant">Rest</p>
-                                <p class="font-bold"><?= h((string)$rest) ?>s</p>
-                            </div>
-                        </div>
+                        <?php endif; ?>
 
                     </div>
                 </article>

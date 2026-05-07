@@ -15,10 +15,16 @@ if ($notification_id <= 0) {
     exit;
 }
 
-function view_notification_value(array $notification, array $keys, $default = '-')
+function view_notification_value(array $notification, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($notification[$key]) && $notification[$key] !== null && $notification[$key] !== '') {
+        if (!isset($notification[$key]) || $notification[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$notification[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $notification[$key];
         }
     }
@@ -30,8 +36,8 @@ function view_notification_label($value): string
 {
     $value = trim((string)$value);
 
-    if ($value === '' || $value === '-' || $value === '—') {
-        return '-';
+    if ($value === '' || $value === '-' || $value === '—' || $value === 'â€”' || strtoupper($value) === 'NULL') {
+        return '';
     }
 
     return ucwords(str_replace('_', ' ', $value));
@@ -39,8 +45,8 @@ function view_notification_label($value): string
 
 function view_notification_date($raw): string
 {
-    if (!$raw || $raw === '-' || $raw === '—') {
-        return '-';
+    if (!$raw || $raw === '-' || $raw === '—' || $raw === 'â€”' || strtoupper((string)$raw) === 'NULL') {
+        return '';
     }
 
     $ts = strtotime((string)$raw);
@@ -75,7 +81,7 @@ $audience = view_notification_label(view_notification_value($notification, [
     'target_audience',
     'audience',
     'role'
-], '-'));
+], ''));
 
 $type = view_notification_label(view_notification_value($notification, [
     'type',
@@ -91,16 +97,39 @@ $status = view_notification_label(view_notification_value($notification, [
 $created_at = view_notification_date(view_notification_value($notification, [
     'created_at',
     'date'
-], '-'));
+], ''));
 
-$related_gym = '-';
+$related_gym = '';
 
 if (!empty($notification['gym']) && is_array($notification['gym'])) {
-    $related_gym = $notification['gym']['name'] ?? '-';
+    $related_gym = $notification['gym']['name'] ?? '';
 } elseif (!empty($notification['related_gym']) && is_array($notification['related_gym'])) {
-    $related_gym = $notification['related_gym']['name'] ?? '-';
+    $related_gym = $notification['related_gym']['name'] ?? '';
 } else {
-    $related_gym = view_notification_value($notification, ['related_gym_id', 'gym_id'], '-');
+    $related_gym = view_notification_value($notification, ['related_gym_id', 'gym_id'], '');
+}
+
+$notification_stat_cards = [];
+$notification_extra_cards = [];
+
+if ($type !== '') {
+    $notification_stat_cards[] = ['label' => 'Type', 'value' => h($type), 'pill' => false];
+}
+
+if ($audience !== '') {
+    $notification_stat_cards[] = ['label' => 'Audience', 'value' => h($audience), 'pill' => false];
+}
+
+if ($status !== '') {
+    $notification_stat_cards[] = ['label' => 'Status', 'value' => h($status), 'pill' => true];
+}
+
+if (h((string)$related_gym) !== '') {
+    $notification_extra_cards[] = ['label' => 'Related gym', 'value' => h((string)$related_gym)];
+}
+
+if ($created_at !== '') {
+    $notification_extra_cards[] = ['label' => 'Created', 'value' => h($created_at)];
 }
 
 wp_app_page_start('View Notification', true);
@@ -148,36 +177,27 @@ wp_app_page_start('View Notification', true);
 
                 <div class="min-w-0 flex-1 space-y-4">
 
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <?php if ($notification_stat_cards): ?>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <?php foreach ($notification_stat_cards as $card): ?>
+                                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                                        <?= h($card['label']) ?>
+                                    </p>
 
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Type
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h($type) ?>
-                            </p>
+                                    <?php if (!empty($card['pill'])): ?>
+                                        <p class="mt-2 inline-flex rounded-full bg-primary-container/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary-container">
+                                            <?= $card['value'] ?>
+                                        </p>
+                                    <?php else: ?>
+                                        <p class="mt-2 text-sm font-bold">
+                                            <?= $card['value'] ?>
+                                        </p>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Audience
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h($audience) ?>
-                            </p>
-                        </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Status
-                            </p>
-                            <p class="mt-2 inline-flex rounded-full bg-primary-container/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary-container">
-                                <?= h($status) ?>
-                            </p>
-                        </div>
-
-                    </div>
+                    <?php endif; ?>
 
                     <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-5">
                         <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
@@ -189,27 +209,20 @@ wp_app_page_start('View Notification', true);
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Related gym
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h((string)$related_gym) ?>
-                            </p>
+                    <?php if ($notification_extra_cards): ?>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <?php foreach ($notification_extra_cards as $card): ?>
+                                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                                        <?= h($card['label']) ?>
+                                    </p>
+                                    <p class="mt-2 text-sm font-bold">
+                                        <?= $card['value'] ?>
+                                    </p>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Created
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h($created_at) ?>
-                            </p>
-                        </div>
-
-                    </div>
+                    <?php endif; ?>
 
                 </div>
             </div>

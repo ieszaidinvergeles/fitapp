@@ -52,10 +52,16 @@ function routine_extract_list(array $response): array
     return [];
 }
 
-function routine_value(array $routine, array $keys, $default = '-')
+function routine_value(array $routine, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($routine[$key]) && $routine[$key] !== null && $routine[$key] !== '') {
+        if (!isset($routine[$key]) || $routine[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$routine[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $routine[$key];
         }
     }
@@ -72,8 +78,8 @@ function routine_format_label($value): string
 {
     $value = trim((string)$value);
 
-    if ($value === '' || $value === '-' || $value === '—') {
-        return 'Not defined';
+    if ($value === '' || $value === '-' || $value === '—' || $value === 'â€”' || strtoupper($value) === 'NULL') {
+        return '';
     }
 
     return ucfirst(str_replace('_', ' ', $value));
@@ -83,7 +89,7 @@ function routine_short_text($value, int $limit = 110): string
 {
     $text = trim((string)$value);
 
-    if ($text === '' || $text === '-' || $text === '—') {
+    if ($text === '' || $text === '-' || $text === '—' || $text === 'â€”' || strtoupper($text) === 'NULL') {
         return '';
     }
 
@@ -215,6 +221,18 @@ wp_app_page_start('Manage Routines', true);
              * Si en el futuro añadís goal a routines, esto lo pillará automáticamente.
              */
             $goal = routine_value($r, ['goal', 'goal_description', 'objective'], '');
+            $routine_meta_bits = [];
+
+            if ($difficulty !== '') {
+                $routine_meta_bits[] = 'Difficulty: ' . h($difficulty);
+            }
+
+            if ($duration !== '' && $duration !== '-') {
+                $routine_meta_bits[] = 'Duration: ' . h((string)$duration) . ' min';
+            }
+
+            $clean_goal = h((string)$goal);
+            $routine_meta_bits[] = 'Goal: ' . ($clean_goal !== '' ? $clean_goal : 'No goal defined');
 
             $img = fitapp_public_asset_url($r['cover_image_url']
                 ?? $r['image_url']
@@ -243,20 +261,11 @@ wp_app_page_start('Manage Routines', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant">
-                                Difficulty:
-                                <span class="font-semibold text-on-surface"><?= h($difficulty) ?></span>
-
-                                <?php if ($duration !== '' && $duration !== '-'): ?>
-                                    · Duration:
-                                    <span class="font-semibold text-on-surface"><?= h((string)$duration) ?> min</span>
-                                <?php endif; ?>
-
-                                · Goal:
-                                <span class="font-semibold text-on-surface">
-                                    <?= $goal !== '' && $goal !== '-' ? h((string)$goal) : 'No goal defined' ?>
-                                </span>
-                            </p>
+                            <?php if ($routine_meta_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant">
+                                    <?= implode(' | ', $routine_meta_bits) ?>
+                                </p>
+                            <?php endif; ?>
 
                             <?php $short_description = routine_short_text($description, 110); ?>
 

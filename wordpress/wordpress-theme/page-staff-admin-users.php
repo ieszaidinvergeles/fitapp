@@ -139,6 +139,8 @@ $page_num = max(1, $page_num);
 
 $offset = ($page_num - 1) * $per_page;
 $users = array_slice($filtered_users, $offset, $per_page);
+$from = $total_users > 0 ? $offset + 1 : 0;
+$to = $total_users > 0 ? min($total_users, $offset + count($users)) : 0;
 
 wp_app_page_start('Manage Users', true);
 ?>
@@ -223,6 +225,19 @@ wp_app_page_start('Manage Users', true);
 
     <section class="space-y-3">
         <?php foreach ($users as $u): ?>
+            <?php
+            $user_meta_bits = [];
+            $user_gym = h($u['gym']['name'] ?? $u['current_gym']['name'] ?? '');
+            $user_plan = h($u['membership_plan']['name'] ?? $u['membership_status'] ?? '');
+
+            if ($user_gym !== '') {
+                $user_meta_bits[] = 'Gym: ' . $user_gym;
+            }
+
+            if ($user_plan !== '') {
+                $user_meta_bits[] = 'Plan: ' . $user_plan;
+            }
+            ?>
             <article class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
@@ -246,13 +261,11 @@ wp_app_page_start('Manage Users', true);
                             </div>
                         </div>
 
-                        <p class="text-sm text-on-surface-variant break-words">
-                            Gym:
-                            <?= h($u['gym']['name'] ?? $u['current_gym']['name'] ?? '-') ?>
-                            •
-                            Plan:
-                            <?= h($u['membership_plan']['name'] ?? $u['membership_status'] ?? '-') ?>
-                        </p>
+                        <?php if ($user_meta_bits): ?>
+                            <p class="text-sm text-on-surface-variant break-words">
+                                <?= implode(' | ', $user_meta_bits) ?>
+                            </p>
+                        <?php endif; ?>
 
                         <p class="text-sm break-words <?= !empty($u['is_blocked_from_booking']) ? 'text-error' : 'text-primary-container' ?>">
                             <?= !empty($u['is_blocked_from_booking']) ? 'Blocked from booking' : 'Booking enabled' ?>
@@ -292,15 +305,30 @@ wp_app_page_start('Manage Users', true);
     </section>
 
     <?php if ($total_pages > 1): ?>
-        <section class="flex flex-wrap items-center justify-center gap-2 pt-4">
-            <?php if ($page_num > 1): ?>
-                <a
-                    href="<?= h(users_page_url($page_num - 1, $search)) ?>"
-                    class="px-3 py-2 rounded-lg border border-outline-variant/30 text-sm transition hover:bg-surface-container-high"
-                >
-                    Previous
-                </a>
-            <?php endif; ?>
+        <section class="flex flex-col gap-4 rounded-xl border border-outline-variant/20 bg-surface-container p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm text-on-surface-variant">
+                Showing
+                <span class="font-bold text-on-surface"><?= h((string)$from) ?></span>
+                -
+                <span class="font-bold text-on-surface"><?= h((string)$to) ?></span>
+                of
+                <span class="font-bold text-on-surface"><?= h((string)$total_users) ?></span>
+                users
+            </p>
+
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <?php if ($page_num > 1): ?>
+                    <a
+                        href="<?= esc_url(users_page_url($page_num - 1, $search)) ?>"
+                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                    >
+                        &larr; Previous
+                    </a>
+                <?php else: ?>
+                    <span class="rounded-full border border-outline-variant/10 px-4 py-2 text-sm font-bold text-on-surface-variant/40">
+                        &larr; Previous
+                    </span>
+                <?php endif; ?>
 
             <?php
             $start = max(1, $page_num - 2);
@@ -309,8 +337,8 @@ wp_app_page_start('Manage Users', true);
             if ($start > 1):
             ?>
                 <a
-                    href="<?= h(users_page_url(1, $search)) ?>"
-                    class="px-3 py-2 rounded-lg border border-outline-variant/30 text-sm transition hover:bg-surface-container-high"
+                    href="<?= esc_url(users_page_url(1, $search)) ?>"
+                    class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
                 >
                     1
                 </a>
@@ -321,9 +349,9 @@ wp_app_page_start('Manage Users', true);
 
             <?php for ($i = $start; $i <= $end; $i++): ?>
                 <a
-                    href="<?= h(users_page_url($i, $search)) ?>"
-                    class="px-3 py-2 rounded-lg border text-sm transition <?= $i === $page_num
-                        ? 'border-primary-container bg-primary-container text-on-primary-container font-bold'
+                    href="<?= esc_url(users_page_url($i, $search)) ?>"
+                    class="rounded-full border px-4 py-2 text-sm font-bold transition <?= $i === $page_num
+                        ? 'border-primary-container bg-primary-container text-on-primary-container shadow-[0_0_18px_rgba(212,251,0,0.22)]'
                         : 'border-outline-variant/30 hover:bg-surface-container-high' ?>"
                 >
                     <?= $i ?>
@@ -335,21 +363,26 @@ wp_app_page_start('Manage Users', true);
                     <span class="px-2 text-on-surface-variant">...</span>
                 <?php endif; ?>
                 <a
-                    href="<?= h(users_page_url($total_pages, $search)) ?>"
-                    class="px-3 py-2 rounded-lg border border-outline-variant/30 text-sm transition hover:bg-surface-container-high"
+                    href="<?= esc_url(users_page_url($total_pages, $search)) ?>"
+                    class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
                 >
                     <?= $total_pages ?>
                 </a>
             <?php endif; ?>
 
-            <?php if ($page_num < $total_pages): ?>
-                <a
-                    href="<?= h(users_page_url($page_num + 1, $search)) ?>"
-                    class="px-3 py-2 rounded-lg border border-outline-variant/30 text-sm transition hover:bg-surface-container-high"
-                >
-                    Next
-                </a>
-            <?php endif; ?>
+                <?php if ($page_num < $total_pages): ?>
+                    <a
+                        href="<?= esc_url(users_page_url($page_num + 1, $search)) ?>"
+                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                    >
+                        Next &rarr;
+                    </a>
+                <?php else: ?>
+                    <span class="rounded-full border border-outline-variant/10 px-4 py-2 text-sm font-bold text-on-surface-variant/40">
+                        Next &rarr;
+                    </span>
+                <?php endif; ?>
+            </div>
         </section>
     <?php endif; ?>
 

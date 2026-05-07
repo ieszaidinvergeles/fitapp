@@ -21,7 +21,7 @@ function cancel_class_value(string $key, $default = '')
     return $_POST[$key] ?? $default;
 }
 
-function cancel_class_field(array $data = null, array $paths = [], $default = '-')
+function cancel_class_field(array $data = null, array $paths = [], $default = '')
 {
     if (!$data) {
         return $default;
@@ -40,7 +40,7 @@ function cancel_class_field(array $data = null, array $paths = [], $default = '-
             }
         }
 
-        if ($ok && $value !== null && $value !== '') {
+        if ($ok && $value !== null && $value !== '' && $value !== '-' && $value !== '—' && $value !== 'â€”') {
             return $value;
         }
     }
@@ -157,6 +157,10 @@ $class_gym = $gym['name']
     ?? $class_data['gym_name']
     ?? '';
 
+$class_location_bits = array_filter([h($class_location), h($class_gym)], static function ($value) {
+    return $value !== '';
+});
+
 /**
  * Procesar cancelación
  */
@@ -232,7 +236,7 @@ wp_app_page_start('Cancel Class', true);
                         <span class="text-on-surface-variant text-[11px] uppercase font-bold tracking-widest">Location</span>
                     </div>
                     <p class="font-headline text-base font-semibold text-right">
-                        <?= h($class_location) ?><?= $class_gym ? ' · ' . h($class_gym) : '' ?>
+                        <?= implode(' | ', $class_location_bits) ?>
                     </p>
                 </div>
 

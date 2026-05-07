@@ -517,13 +517,38 @@ function fitapp_public_asset_url($url): string
         || $url === '—'
         || $url === 'â€”'
         || $url === 'Ã¢â‚¬â€'
+        || strtoupper($url) === 'NULL'
     ) {
         return '';
     }
 
     $path = parse_url($url, PHP_URL_PATH) ?: $url;
+    if (preg_match('~^/?images/([^/]+)/(\d+)\.[a-z0-9]+$~i', $path, $matches)) {
+        return fitapp_image_proxy_url(str_replace('-', '_', (string)$matches[1]), (int)$matches[2]);
+    }
+
     if (preg_match('~/uploads/images/([^/]+)/(\d+)\.[a-z0-9]+$~i', $path, $matches)) {
-        return fitapp_image_proxy_url((string)$matches[1], (int)$matches[2]);
+        return fitapp_image_proxy_url(str_replace('-', '_', (string)$matches[1]), (int)$matches[2]);
+    }
+
+    if (preg_match('~/api/v1/([^/]+)/(\d+)/(image|logo|photo)$~i', $path, $matches)) {
+        $resource = str_replace('-', '_', (string)$matches[1]);
+        $folderMap = [
+            'activities' => 'activities',
+            'diet_plans' => 'diet_plans',
+            'equipment' => 'equipment',
+            'exercises' => 'exercises',
+            'gyms' => 'gyms',
+            'membership_plans' => 'membership_plans',
+            'recipes' => 'recipes',
+            'rooms' => 'rooms',
+            'routines' => 'routines',
+            'users' => 'users',
+        ];
+
+        if (isset($folderMap[$resource])) {
+            return fitapp_image_proxy_url($folderMap[$resource], (int)$matches[2]);
+        }
     }
 
     if (str_starts_with($url, 'http://nginx:8000')) {
@@ -1335,9 +1360,19 @@ function api_message(array $response): ?string
  * @param string $default Fallback when value is empty.
  * @return string
  */
-function h($value, string $default = '—'): string
+function h($value, string $default = ''): string
 {
-    return htmlspecialchars((string)($value ?: $default));
+    if ($value === null) {
+        return htmlspecialchars($default);
+    }
+
+    $text = trim((string)$value);
+
+    if ($text === '' || $text === '-' || $text === '—' || $text === 'â€”' || strtoupper($text) === 'NULL') {
+        return htmlspecialchars($default);
+    }
+
+    return htmlspecialchars((string)$value);
 }
 
 /**

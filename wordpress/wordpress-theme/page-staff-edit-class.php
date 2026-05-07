@@ -15,7 +15,9 @@ if ($class_id <= 0) {
 
 function edit_class_post_value(string $key, $default = '')
 {
-    return $_POST[$key] ?? $default;
+    $value = $_POST[$key] ?? $default;
+
+    return ($value === '-' || $value === '—' || $value === 'â€”') ? '' : $value;
 }
 
 function edit_class_field(array $class = null, string $key, $default = '')
@@ -23,7 +25,9 @@ function edit_class_field(array $class = null, string $key, $default = '')
     if (!$class) {
         return $default;
     }
-    return $class[$key] ?? $default;
+    $value = $class[$key] ?? $default;
+
+    return ($value === '-' || $value === '—' || $value === 'â€”') ? '' : $value;
 }
 
 function edit_class_datetime_value(array $class = null, string $key): string
@@ -275,15 +279,21 @@ wp_app_page_start('Edit Class', true);
                 >
             </div>
 
-            <label class="flex items-center gap-3 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3">
-                <input
-                    type="checkbox"
-                    name="is_cancelled"
-                    value="1"
-                    class="h-4 w-4 rounded border-outline-variant/30 bg-surface text-primary focus:ring-primary-container"
-                    <?= $form_is_cancelled ? 'checked' : '' ?>
-                >
-                <span>Cancelled</span>
+            <label for="isCancelledToggle" class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 transition hover:border-primary-container/50 hover:bg-surface-container-highest">
+                <span class="text-sm font-medium text-on-surface">Cancelled</span>
+
+                <div class="relative shrink-0">
+                    <input
+                        id="isCancelledToggle"
+                        type="checkbox"
+                        name="is_cancelled"
+                        value="1"
+                        class="peer sr-only"
+                        <?= $form_is_cancelled ? 'checked' : '' ?>
+                    >
+
+                    <span class="relative block h-7 w-12 rounded-full border border-outline-variant/30 bg-surface-container transition after:absolute after:left-1 after:top-1 after:h-5 after:w-5 after:rounded-full after:bg-on-surface-variant after:shadow-md after:transition-all after:content-[''] peer-checked:border-primary-container peer-checked:bg-primary-container peer-checked:after:translate-x-5 peer-checked:after:bg-on-primary-container"></span>
+                </div>
             </label>
 
             <div class="flex flex-wrap gap-2">

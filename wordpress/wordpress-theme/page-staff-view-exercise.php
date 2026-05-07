@@ -11,10 +11,16 @@ $exercise_id = (int)($_GET['id'] ?? 0);
 $manage_exercises_url = home_url('/?pagename=staff-manage-exercises');
 $edit_exercise_url = home_url('/?pagename=staff-edit-exercise&id=' . $exercise_id);
 
-function view_exercise_value(array $exercise, array $keys, $default = '-')
+function view_exercise_value(array $exercise, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($exercise[$key]) && $exercise[$key] !== null && $exercise[$key] !== '') {
+        if (!isset($exercise[$key]) || $exercise[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$exercise[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $exercise[$key];
         }
     }
@@ -24,8 +30,8 @@ function view_exercise_value(array $exercise, array $keys, $default = '-')
 
 function view_exercise_label(string $value): string
 {
-    if ($value === '' || $value === '-' || $value === '—') {
-        return '-';
+    if ($value === '' || $value === '-' || $value === '—' || $value === 'â€”' || strtoupper($value) === 'NULL') {
+        return '';
     }
 
     return ucwords(str_replace('_', ' ', $value));
@@ -47,7 +53,7 @@ if (($exercise_response['result'] ?? false) !== false && is_array($exercise_resp
 
 $name = $exercise ? view_exercise_value($exercise, ['name', 'title'], 'Exercise') : 'Exercise';
 $description = $exercise ? view_exercise_value($exercise, ['description', 'instructions'], 'No description available.') : '';
-$muscle_group = $exercise ? view_exercise_label((string)view_exercise_value($exercise, ['target_muscle_group', 'muscle_group', 'target_muscle', 'body_part'], '-')) : '-';
+$muscle_group = $exercise ? view_exercise_label((string)view_exercise_value($exercise, ['target_muscle_group', 'muscle_group', 'target_muscle', 'body_part'], '')) : '';
 $image_url = $exercise ? fitapp_public_asset_url(view_exercise_value($exercise, ['image_url', 'cover_image_url', 'image', 'photo_url'], '')) : '';
 $video_url = $exercise ? view_exercise_value($exercise, ['video_url', 'video'], '') : '';
 
@@ -106,14 +112,16 @@ wp_app_page_start('View Exercise', true);
                 <div class="p-5 sm:p-8">
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Muscle group
-                            </p>
-                            <p class="mt-2 text-lg font-bold">
-                                <?= h($muscle_group) ?>
-                            </p>
-                        </div>
+                        <?php if ($muscle_group !== ''): ?>
+                            <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
+                                <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                                    Muscle group
+                                </p>
+                                <p class="mt-2 text-lg font-bold">
+                                    <?= h($muscle_group) ?>
+                                </p>
+                            </div>
+                        <?php endif; ?>
 
                         <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
                             <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
@@ -131,7 +139,7 @@ wp_app_page_start('View Exercise', true);
                                     <span class="material-symbols-outlined text-base">open_in_new</span>
                                 </a>
                             <?php else: ?>
-                                <p class="mt-2 text-lg font-bold">-</p>
+                                <p class="mt-2 text-sm italic text-on-surface-variant">No video available.</p>
                             <?php endif; ?>
                         </div>
 

@@ -55,10 +55,16 @@ function room_extract_list(array $response): array
     return [];
 }
 
-function room_value(array $room, array $keys, $default = '-')
+function room_value(array $room, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($room[$key]) && $room[$key] !== null && $room[$key] !== '') {
+        if (!isset($room[$key]) || $room[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$room[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $room[$key];
         }
     }
@@ -189,15 +195,28 @@ wp_app_page_start('Rooms', true);
             $room_id = (int)($room['id'] ?? 0);
 
             $name = room_value($room, ['name', 'title', 'room_name'], 'Room');
-            $capacity = room_value($room, ['capacity', 'capacity_limit', 'max_capacity'], '-');
-            $floor = room_value($room, ['floor', 'floor_number'], '-');
+            $capacity = room_value($room, ['capacity', 'capacity_limit', 'max_capacity'], '');
+            $floor = room_value($room, ['floor', 'floor_number'], '');
             $image_url = fitapp_public_asset_url(room_value($room, ['image_url', 'cover_image_url', 'image', 'photo_url'], ''));
 
             $gym_id = (int)($room['gym_id'] ?? $room['gym']['id'] ?? 0);
             $gym = $room['gym'] ?? ($gyms_by_id[$gym_id] ?? []);
-            $gym_name = $gym['name'] ?? room_value($room, ['gym_name'], '-');
+            $gym_name = h($gym['name'] ?? room_value($room, ['gym_name'], ''));
 
             $description = room_value($room, ['description', 'notes'], '');
+            $room_meta_bits = [];
+
+            if ($gym_name !== '') {
+                $room_meta_bits[] = 'Gym: ' . $gym_name;
+            }
+
+            if (h((string)$capacity) !== '') {
+                $room_meta_bits[] = 'Capacity: ' . h((string)$capacity);
+            }
+
+            if (h((string)$floor) !== '') {
+                $room_meta_bits[] = 'Floor: ' . h((string)$floor);
+            }
             ?>
 
             <article class="rounded-xl border border-outline-variant/20 bg-surface-container p-4 transition hover:border-primary-container/30 hover:bg-surface-container-high">
@@ -219,14 +238,11 @@ wp_app_page_start('Rooms', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Gym:
-                                <span class="font-semibold text-on-surface"><?= h($gym_name) ?></span>
-                                · Capacity:
-                                <span class="font-semibold text-on-surface"><?= h((string)$capacity) ?></span>
-                                · Floor:
-                                <span class="font-semibold text-on-surface"><?= h((string)$floor) ?></span>
-                            </p>
+                            <?php if ($room_meta_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $room_meta_bits) ?>
+                                </p>
+                            <?php endif; ?>
 
                             <?php if ($description): ?>
                                 <p class="mt-1 line-clamp-2 text-sm text-on-surface-variant break-words">

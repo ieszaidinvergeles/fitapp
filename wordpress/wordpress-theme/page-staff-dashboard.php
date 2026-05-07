@@ -23,6 +23,9 @@ $totalGyms = isset($data['gyms']) && is_array($data['gyms'])
 
 $staff_name = $user['full_name'] ?? $user['username'] ?? 'Team Member';
 $staff_role = $user['role'] ?? 'Staff';
+$staff_intro_bits = array_filter([h($staff_name), h($staff_role)], static function ($value) {
+    return $value !== '';
+});
 
 $page_title = 'Staff Portal';
 $GLOBALS['hide_global_header'] = true;
@@ -66,7 +69,7 @@ voltgym_get_header();
         </h2>
 
         <p class="mt-3 text-sm font-medium text-on-surface-variant">
-            Welcome back, <?= h($staff_name) ?> · <?= h($staff_role) ?>
+            Welcome back<?= $staff_intro_bits ? ', ' . implode(' | ', $staff_intro_bits) : '' ?>
         </p>
     </section>
 
@@ -204,6 +207,24 @@ voltgym_get_header();
             <?php if ($todayClasses): ?>
                 <div class="space-y-3">
                     <?php foreach ($todayClasses as $c): ?>
+                        <?php
+                        $class_meta_bits = [];
+                        $start_time = h(substr((string)($c['start_time'] ?? ''), 0, 5));
+                        $room_name = h($c['room']['name'] ?? '');
+                        $capacity = (int)($c['capacity'] ?? $c['capacity_limit'] ?? 0);
+
+                        if ($start_time !== '') {
+                            $class_meta_bits[] = $start_time;
+                        }
+
+                        if ($room_name !== '') {
+                            $class_meta_bits[] = $room_name;
+                        }
+
+                        if ($capacity > 0) {
+                            $class_meta_bits[] = $capacity . ' Cap';
+                        }
+                        ?>
                         <div class="flex items-center justify-between rounded-2xl border border-outline-variant/10 bg-surface-container-high p-4 transition hover:bg-surface-bright">
                             <div class="flex items-center gap-5">
                                 <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/10 text-primary-container">
@@ -214,11 +235,11 @@ voltgym_get_header();
                                     <p class="font-headline text-sm font-black uppercase tracking-wider">
                                         <?= h($c['activity']['name'] ?? 'Class') ?>
                                     </p>
-                                    <p class="text-xs text-on-surface-variant">
-                                        <?= h(substr($c['start_time'] ?? '', 0, 5)) ?> ·
-                                        <?= h($c['room']['name'] ?? '-') ?> ·
-                                        <?= (int)($c['capacity'] ?? $c['capacity_limit'] ?? 0) ?> Cap
-                                    </p>
+                                    <?php if ($class_meta_bits): ?>
+                                        <p class="text-xs text-on-surface-variant">
+                                            <?= implode(' | ', $class_meta_bits) ?>
+                                        </p>
+                                    <?php endif; ?>
                                 </div>
                             </div>
 

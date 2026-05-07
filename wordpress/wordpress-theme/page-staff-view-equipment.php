@@ -17,10 +17,16 @@ if ($equipment_id <= 0) {
     exit;
 }
 
-function equipment_view_value(array $equipment, array $keys, $default = '-')
+function equipment_view_value(array $equipment, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($equipment[$key]) && $equipment[$key] !== null && $equipment[$key] !== '') {
+        if (!isset($equipment[$key]) || $equipment[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$equipment[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $equipment[$key];
         }
     }

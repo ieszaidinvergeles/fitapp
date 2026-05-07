@@ -52,10 +52,16 @@ function notification_extract_list(array $response): array
     return [];
 }
 
-function notification_value(array $notification, array $keys, $default = '-')
+function notification_value(array $notification, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($notification[$key]) && $notification[$key] !== null && $notification[$key] !== '') {
+        if (!isset($notification[$key]) || $notification[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$notification[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $notification[$key];
         }
     }
@@ -70,8 +76,8 @@ function notification_page_url(int $page): string
 
 function notification_format_date($raw): string
 {
-    if (!$raw || $raw === '-' || $raw === '—') {
-        return '-';
+    if (!$raw || $raw === '-' || $raw === '—' || $raw === 'â€”' || strtoupper((string)$raw) === 'NULL') {
+        return '';
     }
 
     $ts = strtotime((string)$raw);
@@ -87,8 +93,8 @@ function notification_label($value): string
 {
     $value = trim((string)$value);
 
-    if ($value === '' || $value === '-' || $value === '—') {
-        return '-';
+    if ($value === '' || $value === '-' || $value === '—' || $value === 'â€”' || strtoupper($value) === 'NULL') {
+        return '';
     }
 
     return ucwords(str_replace('_', ' ', $value));
@@ -207,18 +213,29 @@ wp_app_page_start('Notifications', true);
 
             $title = notification_value($notification, ['title', 'subject', 'name'], 'Notification');
             $message = notification_value($notification, ['message', 'body', 'content', 'description'], '');
-            $audience = notification_label(notification_value($notification, ['target_audience', 'audience', 'role'], '-'));
+            $audience = notification_label(notification_value($notification, ['target_audience', 'audience', 'role'], ''));
             $type = notification_label(notification_value($notification, ['type', 'category', 'notification_type'], 'System'));
             $status = notification_label(notification_value($notification, ['status', 'state'], 'Pending'));
-            $created_at = notification_format_date(notification_value($notification, ['created_at', 'date'], '-'));
+            $created_at = notification_format_date(notification_value($notification, ['created_at', 'date'], ''));
 
-            $related_gym = '-';
+            $related_gym = '';
             if (!empty($notification['gym']) && is_array($notification['gym'])) {
-                $related_gym = $notification['gym']['name'] ?? '-';
+                $related_gym = $notification['gym']['name'] ?? '';
             } elseif (!empty($notification['related_gym']) && is_array($notification['related_gym'])) {
-                $related_gym = $notification['related_gym']['name'] ?? '-';
+                $related_gym = $notification['related_gym']['name'] ?? '';
             } else {
-                $related_gym = notification_value($notification, ['related_gym_id', 'gym_id'], '-');
+                $related_gym = notification_value($notification, ['related_gym_id', 'gym_id'], '');
+            }
+
+            $notification_meta_bits = [];
+            if (h($audience) !== '') {
+                $notification_meta_bits[] = 'Audience: ' . h($audience);
+            }
+            if (h((string)$related_gym) !== '') {
+                $notification_meta_bits[] = 'Gym: ' . h((string)$related_gym);
+            }
+            if (h($status) !== '') {
+                $notification_meta_bits[] = 'Status: ' . h($status);
             }
             ?>
 
@@ -245,14 +262,11 @@ wp_app_page_start('Notifications', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Audience:
-                                <span class="font-semibold text-on-surface"><?= h($audience) ?></span>
-                                · Gym:
-                                <span class="font-semibold text-on-surface"><?= h((string)$related_gym) ?></span>
-                                · Status:
-                                <span class="font-semibold text-on-surface"><?= h($status) ?></span>
-                            </p>
+                            <?php if ($notification_meta_bits): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    <?= implode(' | ', $notification_meta_bits) ?>
+                                </p>
+                            <?php endif; ?>
 
                             <?php if ($message): ?>
                                 <p class="mt-1 line-clamp-2 text-sm text-on-surface-variant break-words">
@@ -264,9 +278,11 @@ wp_app_page_start('Notifications', true);
                                 </p>
                             <?php endif; ?>
 
-                            <p class="mt-1 text-xs text-on-surface-variant">
-                                Created: <?= h($created_at) ?>
-                            </p>
+                            <?php if ($created_at !== ''): ?>
+                                <p class="mt-1 text-xs text-on-surface-variant">
+                                    Created: <?= h($created_at) ?>
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
 

@@ -52,10 +52,16 @@ function extract_exercises_response(array $response): array
     return [];
 }
 
-function exercise_value(array $exercise, array $keys, $default = '-')
+function exercise_value(array $exercise, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($exercise[$key]) && $exercise[$key] !== null && $exercise[$key] !== '') {
+        if (!isset($exercise[$key]) || $exercise[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$exercise[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $exercise[$key];
         }
     }
@@ -65,8 +71,8 @@ function exercise_value(array $exercise, array $keys, $default = '-')
 
 function format_exercise_muscle_group(string $value): string
 {
-    if ($value === '' || $value === '-') {
-        return '-';
+    if ($value === '' || $value === '-' || $value === '—' || $value === 'â€”' || strtoupper($value) === 'NULL') {
+        return '';
     }
 
     return ucwords(str_replace('_', ' ', $value));
@@ -195,9 +201,9 @@ wp_app_page_start('Manage Exercises', true);
             $exercise_id = (int)($exercise['id'] ?? 0);
 
             $name = exercise_value($exercise, ['name', 'title'], 'Exercise');
-            $muscle_group_raw = (string)exercise_value($exercise, ['target_muscle_group', 'muscle_group', 'target_muscle', 'body_part'], '-');
+            $muscle_group_raw = (string)exercise_value($exercise, ['target_muscle_group', 'muscle_group', 'target_muscle', 'body_part'], '');
             $muscle_group = format_exercise_muscle_group($muscle_group_raw);
-            $description = exercise_value($exercise, ['description', 'instructions'], '');
+            $description = h((string)exercise_value($exercise, ['description', 'instructions'], ''));
 
             $image = fitapp_public_asset_url($exercise['image_url']
                 ?? $exercise['cover_image_url']
@@ -225,10 +231,12 @@ wp_app_page_start('Manage Exercises', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Muscle group:
-                                <span class="font-semibold text-on-surface"><?= h($muscle_group) ?></span>
-                            </p>
+                            <?php if ($muscle_group !== ''): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    Muscle group:
+                                    <span class="font-semibold text-on-surface"><?= h($muscle_group) ?></span>
+                                </p>
+                            <?php endif; ?>
 
                             <?php if ($description): ?>
                                 <p class="mt-1 line-clamp-2 text-sm text-on-surface-variant break-words">

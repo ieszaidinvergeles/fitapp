@@ -292,7 +292,7 @@ wp_app_page_start('Edit Equipment', true);
                         <?= $is_home_accessible ? 'checked' : '' ?>
                     >
 
-                    <span class="relative h-7 w-12 shrink-0 rounded-full border border-outline-variant/30 bg-surface-container transition after:absolute after:left-1 after:top-1 after:h-5 after:w-5 after:rounded-full after:bg-on-surface-variant after:transition-all after:content-[''] peer-checked:border-primary-container peer-checked:bg-primary-container peer-checked:after:translate-x-5 peer-checked:after:bg-on-primary-container"></span>
+                    <span class="relative block h-7 w-12 shrink-0 rounded-full border border-outline-variant/30 bg-surface-container transition after:absolute after:left-1 after:top-1 after:h-5 after:w-5 after:rounded-full after:bg-on-surface-variant after:shadow-md after:transition-all after:content-[''] peer-checked:border-primary-container peer-checked:bg-primary-container peer-checked:after:translate-x-5 peer-checked:after:bg-on-primary-container"></span>
                 </label>
 
                 <div class="flex flex-col gap-3 pt-2 sm:flex-row">

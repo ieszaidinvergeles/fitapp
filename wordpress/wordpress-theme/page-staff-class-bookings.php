@@ -39,7 +39,7 @@ function booking_lookup_by_id(array $items, int $id): array
 function booking_format_date($raw): string
 {
     if (!$raw || !is_string($raw)) {
-        return '-';
+        return '';
     }
 
     $ts = strtotime($raw);
@@ -150,27 +150,37 @@ wp_app_page_start('Class Bookings', true);
                 ?? $user_data['username']
                 ?? 'User #' . $user_id;
 
-            $user_email = $user_data['email'] ?? '-';
+            $user_email = $user_data['email'] ?? '';
 
             $status = strtolower((string)($booking['status'] ?? 'booked'));
             $status_label = booking_status_label($status);
 
             $booked_at = booking_format_date($booking['booked_at'] ?? '');
             $cancelled_at = booking_format_date($booking['cancelled_at'] ?? '');
+            $booking_meta_bits = [];
+
+            if ($booked_at !== '') {
+                $booking_meta_bits[] = 'Reserva realizada: ' . h($booked_at);
+            }
+
+            if ($cancelled_at !== '') {
+                $booking_meta_bits[] = 'Cancelada: ' . h($cancelled_at);
+            }
             ?>
 
             <article class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <p class="font-bold text-lg"><?= h($user_name) ?></p>
-                        <p class="text-sm text-on-surface-variant"><?= h($user_email) ?></p>
+                        <?php if ($user_email !== ''): ?>
+                            <p class="text-sm text-on-surface-variant"><?= h($user_email) ?></p>
+                        <?php endif; ?>
 
-                        <p class="text-xs text-on-surface-variant mt-1">
-                            Reserva realizada: <?= h($booked_at) ?>
-                            <?php if ($cancelled_at !== '-'): ?>
-                                · Cancelada: <?= h($cancelled_at) ?>
-                            <?php endif; ?>
-                        </p>
+                        <?php if ($booking_meta_bits): ?>
+                            <p class="text-xs text-on-surface-variant mt-1">
+                                <?= implode(' | ', $booking_meta_bits) ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
 
                     <span class="inline-flex w-fit rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide <?= $status === 'cancelled' ? 'border border-error/40 text-error' : 'bg-primary-container text-on-primary-container' ?>">

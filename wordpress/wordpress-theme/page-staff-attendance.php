@@ -47,13 +47,14 @@ function attendance_is_empty_time($value): bool
         || $value === ''
         || $value === '-'
         || $value === '—'
+        || $value === 'â€”'
         || strtoupper((string)$value) === 'NULL';
 }
 
 function attendance_datetime_label($value): string
 {
     if (attendance_is_empty_time($value)) {
-        return '-';
+        return '';
     }
 
     $ts = strtotime((string)$value);
@@ -68,7 +69,7 @@ function attendance_datetime_label($value): string
 function attendance_time_label($value): string
 {
     if (attendance_is_empty_time($value)) {
-        return '-';
+        return '';
     }
 
     $ts = strtotime((string)$value);
@@ -325,10 +326,10 @@ wp_app_page_start('Staff Attendance', true);
                         <?php
                         $clock_in = attendance_value($row, ['clock_in', 'clock_in_time', 'clock_in_at'], '');
                         $clock_out = attendance_value($row, ['clock_out', 'clock_out_time', 'clock_out_at'], null);
-                        $gym_name = '-';
+                        $gym_name = '';
 
                         if (!empty($row['gym']) && is_array($row['gym'])) {
-                            $gym_name = $row['gym']['name'] ?? '-';
+                            $gym_name = $row['gym']['name'] ?? '';
                         } elseif (!empty($row['gym_name'])) {
                             $gym_name = $row['gym_name'];
                         } elseif (!empty($row['gym_id'])) {
@@ -342,9 +343,11 @@ wp_app_page_start('Staff Attendance', true);
                                     <p class="font-bold">
                                         <?= h($staff_name) ?>
                                     </p>
-                                    <p class="text-xs text-on-surface-variant">
-                                        <?= h($gym_name) ?>
-                                    </p>
+                                    <?php if (h($gym_name) !== ''): ?>
+                                        <p class="text-xs text-on-surface-variant">
+                                            <?= h($gym_name) ?>
+                                        </p>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div class="flex flex-wrap gap-2 text-xs">
@@ -394,7 +397,7 @@ wp_app_page_start('Staff Attendance', true);
                                 <?= h($row_date ?: attendance_datetime_label($clock_in)) ?>
                             </p>
                             <p class="text-xs text-on-surface-variant">
-                                Attendance record #<?= h((string)($row['id'] ?? '-')) ?>
+                                Attendance record #<?= h((string)($row['id'] ?? '')) ?>
                             </p>
                         </div>
 

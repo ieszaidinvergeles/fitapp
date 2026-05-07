@@ -27,8 +27,12 @@ if (($diet_response['result'] ?? false) !== false && is_array($diet_response['re
 }
 
 $name = $diet_plan['name'] ?? 'Diet Plan';
-$goal_description = $diet_plan['goal_description'] ?? 'No description available.';
-$cover_image_url = fitapp_public_asset_url($diet_plan['cover_image_url'] ?? '');
+$goal_description = $diet_plan['goal_description'] ?? '';
+$cover_image_url = fitapp_public_asset_url($diet_plan['cover_image_url']
+    ?? $diet_plan['image_url']
+    ?? $diet_plan['image']
+    ?? $diet_plan['photo_url']
+    ?? '');
 
 wp_app_page_start('View Diet Plan', true);
 ?>
@@ -97,7 +101,7 @@ wp_app_page_start('View Diet Plan', true);
                     </p>
 
                     <p class="mt-3 text-sm leading-7 text-on-surface-variant">
-                        <?= h($goal_description) ?>
+                        <?= h($goal_description, 'No description available.') ?>
                     </p>
                 </div>
 

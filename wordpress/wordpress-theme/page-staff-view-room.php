@@ -17,10 +17,16 @@ if ($room_id <= 0) {
     exit;
 }
 
-function room_view_value(array $room, array $keys, $default = '-')
+function room_view_value(array $room, array $keys, $default = '')
 {
     foreach ($keys as $key) {
-        if (isset($room[$key]) && $room[$key] !== null && $room[$key] !== '') {
+        if (!isset($room[$key]) || $room[$key] === null) {
+            continue;
+        }
+
+        $clean_value = trim((string)$room[$key]);
+
+        if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
             return $room[$key];
         }
     }
@@ -65,14 +71,27 @@ foreach ($gyms as $gym_item) {
 }
 
 $name = room_view_value($room, ['name', 'title', 'room_name'], 'Room');
-$capacity = room_view_value($room, ['capacity', 'capacity_limit', 'max_capacity'], '-');
-$floor = room_view_value($room, ['floor', 'floor_number'], '-');
-$description = room_view_value($room, ['description', 'notes'], 'No description available.');
+$capacity = h((string)room_view_value($room, ['capacity', 'capacity_limit', 'max_capacity'], ''));
+$floor = h((string)room_view_value($room, ['floor', 'floor_number'], ''));
+$description = room_view_value($room, ['description', 'notes'], '');
 $image_url = fitapp_public_asset_url(room_view_value($room, ['image_url', 'cover_image_url', 'image', 'photo_url'], ''));
 
 $gym_id = (int)($room['gym_id'] ?? $room['gym']['id'] ?? 0);
 $gym = $room['gym'] ?? ($gyms_by_id[$gym_id] ?? []);
-$gym_name = $gym['name'] ?? room_view_value($room, ['gym_name'], '-');
+$gym_name = h($gym['name'] ?? room_view_value($room, ['gym_name'], ''));
+$room_stat_cards = [];
+
+if ($gym_name !== '') {
+    $room_stat_cards[] = ['label' => 'Gym', 'value' => $gym_name];
+}
+
+if ($capacity !== '') {
+    $room_stat_cards[] = ['label' => 'Capacity', 'value' => $capacity];
+}
+
+if ($floor !== '') {
+    $room_stat_cards[] = ['label' => 'Floor', 'value' => $floor];
+}
 
 wp_app_page_start('View Room', true);
 ?>
@@ -127,36 +146,20 @@ wp_app_page_start('View Room', true);
                 </div>
 
                 <div class="p-5 sm:p-8">
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Gym
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h($gym_name) ?>
-                            </p>
+                    <?php if ($room_stat_cards): ?>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <?php foreach ($room_stat_cards as $card): ?>
+                                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                                        <?= h($card['label']) ?>
+                                    </p>
+                                    <p class="mt-2 text-sm font-bold">
+                                        <?= $card['value'] ?>
+                                    </p>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Capacity
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h((string)$capacity) ?>
-                            </p>
-                        </div>
-
-                        <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                Floor
-                            </p>
-                            <p class="mt-2 text-sm font-bold">
-                                <?= h((string)$floor) ?>
-                            </p>
-                        </div>
-
-                    </div>
+                    <?php endif; ?>
 
                     <div class="mt-5 rounded-2xl border border-outline-variant/20 bg-surface-container-high p-5">
                         <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
@@ -164,7 +167,7 @@ wp_app_page_start('View Room', true);
                         </p>
 
                         <p class="mt-3 whitespace-pre-line text-sm leading-7 text-on-surface-variant">
-                            <?= h($description) ?>
+                            <?= h($description, 'No description available.') ?>
                         </p>
                     </div>
                 </div>

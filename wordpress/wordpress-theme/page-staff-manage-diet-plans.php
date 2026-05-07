@@ -55,10 +55,16 @@ if (!function_exists('diet_plan_extract_list')) {
 }
 
 if (!function_exists('diet_plan_value')) {
-    function diet_plan_value(array $plan, array $keys, $default = '-')
+    function diet_plan_value(array $plan, array $keys, $default = '')
     {
         foreach ($keys as $key) {
-            if (isset($plan[$key]) && $plan[$key] !== null && $plan[$key] !== '') {
+            if (!isset($plan[$key]) || $plan[$key] === null) {
+                continue;
+            }
+
+            $clean_value = trim((string)$plan[$key]);
+
+            if ($clean_value !== '' && $clean_value !== '-' && $clean_value !== '—' && $clean_value !== 'â€”' && strtoupper($clean_value) !== 'NULL') {
                 return $plan[$key];
             }
         }
@@ -176,7 +182,7 @@ wp_app_page_start('Manage Diet Plans', true);
             $diet_plan_id = (int)($plan['id'] ?? 0);
 
             $name = diet_plan_value($plan, ['name', 'title'], 'Diet Plan');
-            $goal_description = diet_plan_value($plan, ['goal_description', 'description', 'notes', 'summary'], 'No description available.');
+            $goal_description = h((string)diet_plan_value($plan, ['goal_description', 'description', 'notes', 'summary'], ''));
 
             $image = fitapp_public_asset_url($plan['cover_image_url']
                 ?? $plan['image_url']
@@ -204,12 +210,18 @@ wp_app_page_start('Manage Diet Plans', true);
                                 </span>
                             </div>
 
-                            <p class="mt-1 text-sm text-on-surface-variant break-words">
-                                Goal description:
-                                <span class="font-semibold text-on-surface">
-                                    <?= h((string)$goal_description) ?>
-                                </span>
-                            </p>
+                            <?php if ($goal_description !== ''): ?>
+                                <p class="mt-1 text-sm text-on-surface-variant break-words">
+                                    Goal description:
+                                    <span class="font-semibold text-on-surface">
+                                        <?= $goal_description ?>
+                                    </span>
+                                </p>
+                            <?php else: ?>
+                                <p class="mt-1 text-sm italic text-on-surface-variant">
+                                    No description available.
+                                </p>
+                            <?php endif; ?>
                         </div>
                     </div>
 
