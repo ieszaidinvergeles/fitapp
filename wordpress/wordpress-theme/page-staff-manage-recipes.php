@@ -141,11 +141,12 @@ function recipe_type_label($type): string
 | Cargar todas las recetas
 |--------------------------------------------------------------------------
 */
+$paged = fitapp_api_get_page('/recipes', $page, $per_page, true);
 $all_recipes = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $response = api_get('/recipes?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -197,6 +198,15 @@ $recipes = array_slice($all_recipes, $offset, $per_page);
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($recipes)) : 0;
 
+$listResp = $paged['response'];
+$recipes = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
+
 wp_app_page_start('Manage Recipes', true);
 ?>
 
@@ -241,15 +251,6 @@ wp_app_page_start('Manage Recipes', true);
         <?php foreach ($recipes as $index => $recipe): ?>
             <?php
             $recipe_id = (int)($recipe['id'] ?? 0);
-
-            // Cargar detalle completo de la receta
-            if ($recipe_id > 0) {
-                $detail_response = api_get('/recipes/' . $recipe_id, auth: true);
-
-                if (($detail_response['result'] ?? false) !== false && is_array($detail_response['result'] ?? null)) {
-                    $recipe = array_replace_recursive($recipe, $detail_response['result']);
-                }
-            }
 
             $name = recipe_value($recipe, ['name'], 'Recipe');
             $description = recipe_value($recipe, ['description'], '');

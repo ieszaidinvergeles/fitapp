@@ -93,11 +93,12 @@ if (!function_exists('equipment_home_access_label')) {
 |--------------------------------------------------------------------------
 | Si la API pagina de 10 en 10, recorremos páginas y luego paginamos aquí.
 */
+$paged = fitapp_api_get_page('/equipment', $page, $per_page, true);
 $all_equipment = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $response = api_get('/equipment?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -148,6 +149,15 @@ $equipment_items = array_slice($all_equipment, $offset, $per_page);
 
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($equipment_items)) : 0;
+
+$listResp = $paged['response'];
+$equipment_items = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Manage Equipment', true);
 ?>

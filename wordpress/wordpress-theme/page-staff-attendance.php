@@ -83,54 +83,9 @@ function attendance_time_label($value): string
 
 function attendance_load_rows(int $page): array
 {
-    $all_rows = [];
-    $seen_ids = [];
-    $last_response = ['result' => []];
+    $paged = fitapp_api_get_page('/attendance', $page, 10, true, ['mine' => 1]);
 
-    for ($api_page = 1; $api_page <= 50; $api_page++) {
-        $response = api_get('/attendance?page=' . $api_page, auth: true);
-        $last_response = $response;
-
-        if (($response['result'] ?? null) === false) {
-            break;
-        }
-
-        $items = attendance_extract_list($response);
-
-        if (empty($items)) {
-            break;
-        }
-
-        $added_this_page = 0;
-
-        foreach ($items as $item) {
-            $id = (int)($item['id'] ?? 0);
-
-            if ($id > 0 && isset($seen_ids[$id])) {
-                continue;
-            }
-
-            if ($id > 0) {
-                $seen_ids[$id] = true;
-            }
-
-            $all_rows[] = $item;
-            $added_this_page++;
-        }
-
-        if ($added_this_page === 0 || count($items) < 10) {
-            break;
-        }
-    }
-
-    usort($all_rows, function ($a, $b) {
-        $dateA = (string)($a['date'] ?? $a['clock_in'] ?? '');
-        $dateB = (string)($b['date'] ?? $b['clock_in'] ?? '');
-
-        return strtotime($dateB) <=> strtotime($dateA);
-    });
-
-    return [$last_response, $all_rows];
+    return [$paged['response'], $paged['items']];
 }
 
 /**

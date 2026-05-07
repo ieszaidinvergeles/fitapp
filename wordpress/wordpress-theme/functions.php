@@ -460,6 +460,94 @@ function api_delete(string $endpoint, bool $auth = false): array
     return fitapp_request('DELETE', $endpoint, null, $auth);
 }
 
+function fitapp_api_items(array $response): array
+{
+    if (($response['result'] ?? false) === false) {
+        return [];
+    }
+
+    if (!empty($response['result']['data']) && is_array($response['result']['data'])) {
+        return $response['result']['data'];
+    }
+
+    if (!empty($response['result']) && is_array($response['result'])) {
+        return $response['result'];
+    }
+
+    return [];
+}
+
+function fitapp_api_meta(array $response, int $page = 1, int $perPage = 10): array
+{
+    $result = is_array($response['result'] ?? null) ? $response['result'] : [];
+    $meta = is_array($result['meta'] ?? null) ? $result['meta'] : [];
+    $items = fitapp_api_items($response);
+    $count = count($items);
+
+    $currentPage = (int)($meta['current_page'] ?? $result['current_page'] ?? $page);
+    $perPageValue = (int)($meta['per_page'] ?? $result['per_page'] ?? $perPage);
+    $total = $meta['total'] ?? $result['total'] ?? null;
+    $lastPage = $meta['last_page'] ?? $result['last_page'] ?? null;
+
+    if ($perPageValue <= 0) {
+        $perPageValue = max(1, $perPage);
+    }
+
+    if ($total === null) {
+        $total = $currentPage > 1 ? (($currentPage - 1) * $perPageValue) + $count : $count;
+    }
+
+    $total = max(0, (int)$total);
+
+    if ($lastPage === null) {
+        $lastPage = $total > 0 ? (int)ceil($total / $perPageValue) : ($count >= $perPageValue ? $currentPage + 1 : $currentPage);
+    }
+
+    $lastPage = max(1, (int)$lastPage);
+    $from = $meta['from'] ?? $result['from'] ?? ($total > 0 && $count > 0 ? (($currentPage - 1) * $perPageValue) + 1 : 0);
+    $to = $meta['to'] ?? $result['to'] ?? ($total > 0 && $count > 0 ? min($total, ((int)$from) + $count - 1) : 0);
+
+    return [
+        'current_page' => max(1, $currentPage),
+        'last_page'    => $lastPage,
+        'per_page'     => $perPageValue,
+        'total'        => $total,
+        'from'         => max(0, (int)$from),
+        'to'           => max(0, (int)$to),
+        'has_next'     => $currentPage < $lastPage || ($lastPage === $currentPage && $count >= $perPageValue && $total <= (($currentPage - 1) * $perPageValue + $count)),
+    ];
+}
+
+function fitapp_api_query_endpoint(string $endpoint, array $params): string
+{
+    $separator = str_contains($endpoint, '?') ? '&' : '?';
+
+    return $endpoint . $separator . http_build_query($params);
+}
+
+function fitapp_api_get_page(string $endpoint, int $page = 1, int $perPage = 10, bool $auth = true, array $params = []): array
+{
+    $params = array_merge($params, [
+        'page'     => max(1, $page),
+        'per_page' => max(1, $perPage),
+    ]);
+
+    $response = api_get(fitapp_api_query_endpoint($endpoint, $params), $auth);
+
+    return [
+        'response' => $response,
+        'items'    => fitapp_api_items($response),
+        'meta'     => fitapp_api_meta($response, $page, $perPage),
+    ];
+}
+
+function fitapp_staff_page_url(string $slug, int $page, array $params = []): string
+{
+    $query = array_merge(['pagename' => $slug, 'page_num' => max(1, $page)], $params);
+
+    return home_url('/?' . http_build_query($query));
+}
+
 function fitapp_has_uploaded_file(?array $file): bool
 {
     return $file

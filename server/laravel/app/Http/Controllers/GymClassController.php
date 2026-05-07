@@ -31,7 +31,7 @@ class GymClassController extends Controller
         $messageArray = ['general' => 'Could not retrieve classes.'];
 
         try {
-            $query = GymClass::with(['activity', 'instructor', 'room'])
+            $query = GymClass::with(['activity', 'instructor', 'room', 'gym'])
                 ->withCount(['bookings' => function($q) { $q->where('status', 'active'); }]);
 
             if ($request->filled('gym_id')) {
@@ -50,7 +50,7 @@ class GymClassController extends Controller
                 $query->where('activity_id', (int) $request->input('activity_id'));
             }
 
-            $query->orderBy('start_time', 'asc');
+            $query->orderBy('start_time', $request->boolean('include_past') ? 'desc' : 'asc');
 
             $paginated = $query->paginate(5)->withQueryString();
             $result = GymClassResource::collection($paginated)->response()->getData(true);
@@ -74,7 +74,9 @@ class GymClassController extends Controller
         $messageArray = ['general' => 'Could not retrieve class.'];
 
         try {
-            $gymClass = GymClass::findOrFail($id);
+            $gymClass = GymClass::with(['activity', 'instructor', 'room', 'gym'])
+                ->withCount(['bookings' => function($q) { $q->where('status', 'active'); }])
+                ->findOrFail($id);
             $this->authorize('view', $gymClass);
 
             $result       = new GymClassResource($gymClass);

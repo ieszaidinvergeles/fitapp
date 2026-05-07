@@ -78,12 +78,13 @@ if (!function_exists('diet_plan_value')) {
  * El backend de diet_plans parece devolver lista simple, no paginación real.
  * Por eso pedimos muchos registros y paginamos aquí manualmente.
  */
+$paged = fitapp_api_get_page('/diet-plans', $page, $per_page, true);
 $all_diet_plans = [];
 $listResp = ['result' => []];
 
 $seen_ids = [];
 
-for ($api_page = 1; $api_page <= 20; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $pageResp = api_get('/diet-plans?page=' . $api_page, auth: true);
 
     if (($pageResp['result'] ?? null) === false) {
@@ -134,6 +135,15 @@ $diet_plans = array_slice($all_diet_plans, $offset, $per_page);
 
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($diet_plans)) : 0;
+
+$listResp = $paged['response'];
+$diet_plans = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Manage Diet Plans', true);
 ?>

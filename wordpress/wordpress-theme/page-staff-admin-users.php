@@ -73,7 +73,8 @@ function users_page_url(int $page, string $search = ''): string
 /**
  * Cargar todos los usuarios desde la API
  */
-$first_response = api_get('/users?page=1', auth: true);
+$paged = fitapp_api_get_page('/users', $page_num, $per_page, true, $search !== '' ? ['search' => $search] : []);
+$first_response = $paged['response'];
 $api_error = (($first_response['result'] ?? null) === false);
 
 $all_users = [];
@@ -82,7 +83,7 @@ if (!$api_error) {
     $all_users = extract_users_from_response($first_response);
 
     $api_page = 2;
-    while (true) {
+    while (false) {
         $page_response = api_get('/users?page=' . $api_page, auth: true);
 
         if (($page_response['result'] ?? null) === false) {
@@ -141,6 +142,14 @@ $offset = ($page_num - 1) * $per_page;
 $users = array_slice($filtered_users, $offset, $per_page);
 $from = $total_users > 0 ? $offset + 1 : 0;
 $to = $total_users > 0 ? min($total_users, $offset + count($users)) : 0;
+
+$users = $paged['items'];
+$pagination = $paged['meta'];
+$page_num = $pagination['current_page'];
+$total_pages = $pagination['last_page'];
+$total_users = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Manage Users', true);
 ?>

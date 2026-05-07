@@ -90,11 +90,12 @@ function staff_exercise_page_url(int $page): string
 | La API solo devuelve 10 por página aunque pidamos per_page=1000.
 | Por eso recorremos /exercises?page=1, /exercises?page=2, etc.
 */
+$paged = fitapp_api_get_page('/exercises', $page, $per_page, true);
 $all_exercises = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $response = api_get('/exercises?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -154,6 +155,14 @@ if ($page > $last_page) {
 $current_page = $page;
 $offset = ($current_page - 1) * $per_page;
 $exercises = array_slice($all_exercises, $offset, $per_page);
+
+$listResp = $paged['response'];
+$exercises = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$offset = max(0, $pagination['from'] - 1);
 
 wp_app_page_start('Manage Exercises', true);
 ?>

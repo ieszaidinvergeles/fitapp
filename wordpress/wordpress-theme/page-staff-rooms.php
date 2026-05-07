@@ -93,11 +93,12 @@ foreach ($gyms as $gym) {
 /**
  * Cargar todas las salas
  */
+$paged = fitapp_api_get_page('/rooms', $page, $per_page, true);
 $all_rooms = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $response = api_get('/rooms?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -148,6 +149,15 @@ $rooms = array_slice($all_rooms, $offset, $per_page);
 
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($rooms)) : 0;
+
+$listResp = $paged['response'];
+$rooms = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Rooms', true);
 ?>

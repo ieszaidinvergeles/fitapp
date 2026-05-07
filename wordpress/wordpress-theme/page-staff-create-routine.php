@@ -44,10 +44,11 @@ function routine_response_last_page(array $response): ?int
     return $last_page !== null ? max(1, (int)$last_page) : null;
 }
 
-$diet_plans = [];
+$diet_paged = fitapp_api_get_page('/diet-plans', 1, 10, true);
+$diet_plans = $diet_paged['items'];
 $seen_diet_plan_ids = [];
 
-for ($api_page = 1; $api_page <= 100; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $diet_response = api_get('/diet-plans?page=' . $api_page, auth: true);
 
     if (($diet_response['result'] ?? null) === false) {
@@ -84,10 +85,11 @@ for ($api_page = 1; $api_page <= 100; $api_page++) {
     }
 }
 
-$exercises = [];
+$exercise_paged = fitapp_api_get_page('/exercises', 1, 10, true);
+$exercises = $exercise_paged['items'];
 $seen_exercise_ids = [];
 
-for ($api_page = 1; $api_page <= 100; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $exercise_response = api_get('/exercises?page=' . $api_page, auth: true);
 
     if (($exercise_response['result'] ?? null) === false) {

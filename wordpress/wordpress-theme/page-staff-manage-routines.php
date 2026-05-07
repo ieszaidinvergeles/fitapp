@@ -131,11 +131,12 @@ function routine_short_text($value, int $limit = 110): string
 |--------------------------------------------------------------------------
 | Recorremos varias páginas por si Laravel devuelve 10 en 10.
 */
+$paged = fitapp_api_get_page('/routines', $page, $per_page, true);
 $all_routines = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 100; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $response = api_get('/routines?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -182,7 +183,7 @@ usort($all_routines, function ($a, $b) {
 $all_diet_plans = [];
 $seen_diet_plan_ids = [];
 
-for ($api_page = 1; $api_page <= 100; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $diet_response = api_get('/diet-plans?page=' . $api_page, auth: true);
 
     if (($diet_response['result'] ?? null) === false) {
@@ -234,6 +235,15 @@ $routines = array_slice($all_routines, $offset, $per_page);
 
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($routines)) : 0;
+
+$listResp = $paged['response'];
+$routines = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Manage Routines', true);
 ?>

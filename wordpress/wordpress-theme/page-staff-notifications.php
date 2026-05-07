@@ -106,11 +106,12 @@ function notification_label($value): string
 |--------------------------------------------------------------------------
 | Recorremos páginas por si la API devuelve resultados paginados.
 */
+$paged = fitapp_api_get_page('/notifications', $page, $per_page, true);
 $all_notifications = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $response = api_get('/notifications?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -165,6 +166,15 @@ $notifications = array_slice($all_notifications, $offset, $per_page);
 
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($notifications)) : 0;
+
+$listResp = $paged['response'];
+$notifications = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Notifications', true);
 ?>

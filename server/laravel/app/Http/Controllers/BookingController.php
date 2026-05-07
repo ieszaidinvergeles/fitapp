@@ -38,7 +38,9 @@ class BookingController extends Controller
                 : Booking::with(['gymClass.activity', 'gymClass.room', 'gymClass.gym'])
                     ->where('user_id', $request->user()->id);
 
-            if ($request->boolean('include_past')) {
+            if ($request->filled('class_id')) {
+                $query->where('class_id', (int) $request->input('class_id'));
+            } elseif ($request->boolean('include_past')) {
                 $query->whereHas('gymClass', function($q) {
                     $q->where('start_time', '<', now());
                 });

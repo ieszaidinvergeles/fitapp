@@ -149,11 +149,12 @@ if (!function_exists('class_datetime_label')) {
 /**
  * Cargar TODAS las clases.
  */
+$paged = fitapp_api_get_page('/classes', $page, $per_page, true, ['include_past' => 1]);
 $all_classes = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 100; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $response = api_get('/classes?include_past=1&page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -197,7 +198,7 @@ for ($api_page = 1; $api_page <= 100; $api_page++) {
  * Fallback por si el endpoint real es otro.
  */
 if (!$all_classes && (($listResp['result'] ?? null) !== false)) {
-    for ($api_page = 1; $api_page <= 100; $api_page++) {
+    for ($api_page = 1; $api_page <= 0; $api_page++) {
         $response = api_get('/gym-classes?include_past=1&page=' . $api_page, auth: true);
 
         if (($response['result'] ?? null) === false) {
@@ -283,6 +284,15 @@ $classes = array_slice($all_classes, $offset, $per_page);
 
 $from = $total_classes > 0 ? $offset + 1 : 0;
 $to = $total_classes > 0 ? min($total_classes, $offset + count($classes)) : 0;
+
+$listResp = $paged['response'];
+$classes = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total_classes = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 $upcoming_total = 0;
 $past_total = 0;
 $now_ts = time();
@@ -300,15 +310,10 @@ foreach ($all_classes as $class_item) {
 /**
  * Cargar relaciones.
  */
-$activities_response = api_get('/activities', auth: true);
-$rooms_response = api_get('/rooms', auth: true);
-$gyms_response = api_get('/gyms', auth: true);
-$users_response = api_get('/users', auth: true);
-
-$activities = extract_list_from_response($activities_response);
-$rooms = extract_list_from_response($rooms_response);
-$gyms = extract_list_from_response($gyms_response);
-$users_lookup = extract_list_from_response($users_response);
+$activities = [];
+$rooms = [];
+$gyms = [];
+$users_lookup = [];
 
 $activities_by_id = build_lookup_by_id($activities);
 $rooms_by_id = build_lookup_by_id($rooms);
@@ -321,7 +326,7 @@ $users_by_id = build_lookup_by_id($users_lookup);
 $all_bookings = [];
 $seen_booking_ids = [];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $bookings_response = api_get('/bookings?page=' . $api_page, auth: true);
 
     if (($bookings_response['result'] ?? null) === false) {
@@ -404,9 +409,7 @@ wp_app_page_start('Manage Classes', true);
             $class_timestamp = strtotime((string)($c['start_time'] ?? '')) ?: 0;
             $class_group = $class_timestamp >= time() ? 'upcoming' : 'past';
 
-            $detail_response = $class_id > 0
-                ? api_get('/classes/' . $class_id, auth: true)
-                : [];
+            $detail_response = [];
 
             $detail = $detail_response['result'] ?? [];
 
@@ -465,12 +468,7 @@ wp_app_page_start('Manage Classes', true);
                 $staff_bits[] = 'Gym: ' . $gym_name;
             }
 
-            $bookings_count = 0;
-            foreach ($all_bookings as $booking) {
-                if ((int)($booking['class_id'] ?? 0) === $class_id) {
-                    $bookings_count++;
-                }
-            }
+            $bookings_count = (int)($c['bookings_count'] ?? 0);
 
             $is_cancelled = !empty($c['is_cancelled']);
             ?>
@@ -481,9 +479,7 @@ wp_app_page_start('Manage Classes', true);
                     <div class="flex items-center gap-3">
                         <span class="h-px flex-1 bg-outline-variant/20"></span>
                         <span class="rounded-full border border-outline-variant/30 bg-surface-container-high px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-primary-container">
-                            <?= $class_group === 'upcoming'
-                                ? 'Upcoming classes (' . h((string)$upcoming_total) . ')'
-                                : 'Past classes (' . h((string)$past_total) . ')' ?>
+                            <?= $class_group === 'upcoming' ? 'Upcoming classes' : 'Past classes' ?>
                         </span>
                         <span class="h-px flex-1 bg-outline-variant/20"></span>
                     </div>

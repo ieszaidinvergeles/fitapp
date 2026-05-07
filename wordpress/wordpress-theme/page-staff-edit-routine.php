@@ -59,10 +59,11 @@ function routine_edit_response_last_page(array $response): ?int
     return $last_page !== null ? max(1, (int)$last_page) : null;
 }
 
-$diet_plans = [];
+$diet_paged = fitapp_api_get_page('/diet-plans', 1, 10, true);
+$diet_plans = $diet_paged['items'];
 $seen_diet_plan_ids = [];
 
-for ($api_page = 1; $api_page <= 100; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $diet_response = api_get('/diet-plans?page=' . $api_page, auth: true);
 
     if (($diet_response['result'] ?? null) === false) {
@@ -99,10 +100,19 @@ for ($api_page = 1; $api_page <= 100; $api_page++) {
     }
 }
 
-$exercises = [];
+$exercise_paged = fitapp_api_get_page('/exercises', 1, 10, true);
+$exercises = $exercise_paged['items'];
 $seen_exercise_ids = [];
 
-for ($api_page = 1; $api_page <= 100; $api_page++) {
+foreach ($exercises as $exercise_item) {
+    $exercise_id = (int)($exercise_item['id'] ?? 0);
+
+    if ($exercise_id > 0) {
+        $seen_exercise_ids[$exercise_id] = true;
+    }
+}
+
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $exercise_response = api_get('/exercises?page=' . $api_page, auth: true);
 
     if (($exercise_response['result'] ?? null) === false) {
@@ -151,6 +161,13 @@ if (is_array($routine_exercises)) {
         if (is_array($routine_exercise) && isset($routine_exercise['id'])) {
             $existing_exercises_by_id[(int)$routine_exercise['id']] = $routine_exercise;
         }
+    }
+}
+
+foreach ($existing_exercises_by_id as $existing_exercise_id => $existing_exercise) {
+    if ($existing_exercise_id > 0 && !isset($seen_exercise_ids[$existing_exercise_id])) {
+        $exercises[] = $existing_exercise;
+        $seen_exercise_ids[$existing_exercise_id] = true;
     }
 }
 

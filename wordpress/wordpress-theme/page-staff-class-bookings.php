@@ -6,6 +6,8 @@ require_once 'functions.php';
 require_advanced();
 
 $class_id = (int)($_GET['id'] ?? 0);
+$page_num = max(1, (int)($_GET['page_num'] ?? 1));
+$per_page = 10;
 
 if ($class_id <= 0) {
     wp_redirect(home_url('/?pagename=staff-manage-classes'));
@@ -67,29 +69,13 @@ function booking_status_label(string $status): string
  * Cargar clase
  */
 $class_response = api_get('/classes/' . $class_id, auth: true);
-$class_data = (($class_response['result'] ?? false) !== false) ? $class_response['result'] : [];
+$class_result = (($class_response['result'] ?? false) !== false) ? $class_response['result'] : [];
+$class_data = is_array($class_result) ? ($class_result['data'] ?? $class_result) : [];
 
-/**
- * Cargar todas las reservas y filtrar por class_id
- */
-$bookings_response = api_get('/bookings', auth: true);
-$all_bookings = booking_extract_list($bookings_response);
-
-$bookings = array_values(array_filter($all_bookings, function ($booking) use ($class_id) {
-    return (int)($booking['class_id'] ?? 0) === $class_id;
-}));
-
-/**
- * Cargar usuarios
- */
-$users_response = api_get('/users', auth: true);
-$users = booking_extract_list($users_response);
-
-/**
- * Cargar actividades
- */
-$activities_response = api_get('/activities', auth: true);
-$activities = booking_extract_list($activities_response);
+$paged = fitapp_api_get_page('/bookings', $page_num, $per_page, true, ['class_id' => $class_id]);
+$bookings_response = $paged['response'];
+$bookings = $paged['items'];
+$pagination = $paged['meta'];
 
 $activity_id = (int)(
     $class_data['activity_id']
@@ -97,7 +83,7 @@ $activity_id = (int)(
     ?? 0
 );
 
-$activity = $class_data['activity'] ?? booking_lookup_by_id($activities, $activity_id);
+$activity = $class_data['activity'] ?? [];
 
 $class_name = $activity['name']
     ?? $class_data['activity_name']
@@ -106,7 +92,11 @@ $class_name = $activity['name']
     ?? $class_data['class_name']
     ?? 'Class';
 
-$total_bookings = count($bookings);
+$total_bookings = $pagination['total'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Class Bookings', true);
 ?>
@@ -144,7 +134,7 @@ wp_app_page_start('Class Bookings', true);
         <?php foreach ($bookings as $booking): ?>
             <?php
             $user_id = (int)($booking['user_id'] ?? 0);
-            $user_data = booking_lookup_by_id($users, $user_id);
+            $user_data = is_array($booking['user'] ?? null) ? $booking['user'] : [];
 
             $user_name = $user_data['full_name']
                 ?? $user_data['username']
@@ -196,6 +186,44 @@ wp_app_page_start('Class Bookings', true);
             </div>
         <?php endif; ?>
     </section>
+
+    <?php if ($last_page > 1): ?>
+        <section class="flex flex-col gap-4 rounded-xl border border-outline-variant/20 bg-surface-container p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm text-on-surface-variant">
+                Showing
+                <span class="font-bold text-on-surface"><?= h((string)$from) ?></span>
+                -
+                <span class="font-bold text-on-surface"><?= h((string)$to) ?></span>
+                of
+                <span class="font-bold text-on-surface"><?= h((string)$total_bookings) ?></span>
+                bookings
+            </p>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <?php if ($current_page > 1): ?>
+                    <a
+                        href="<?= esc_url(home_url('/?pagename=staff-class-bookings&id=' . $class_id . '&page_num=' . ($current_page - 1))) ?>"
+                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                    >
+                        &larr; Previous
+                    </a>
+                <?php endif; ?>
+
+                <span class="rounded-full bg-primary-container px-4 py-2 text-sm font-bold text-on-primary-container">
+                    <?= h((string)$current_page) ?>
+                </span>
+
+                <?php if ($current_page < $last_page): ?>
+                    <a
+                        href="<?= esc_url(home_url('/?pagename=staff-class-bookings&id=' . $class_id . '&page_num=' . ($current_page + 1))) ?>"
+                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                    >
+                        Next &rarr;
+                    </a>
+                <?php endif; ?>
+            </div>
+        </section>
+    <?php endif; ?>
 </div>
 
 <?php

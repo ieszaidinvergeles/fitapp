@@ -54,6 +54,19 @@ class UserController extends Controller
                 $query->where('role', $request->input('role'));
             }
 
+            if ($request->filled('search')) {
+                $search = (string) $request->input('search');
+
+                $query->where(function ($q) use ($search) {
+                    $q->where('full_name', 'like', '%' . $search . '%')
+                        ->orWhere('username', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%')
+                        ->orWhere('role', 'like', '%' . $search . '%');
+                });
+            }
+
+            $query->orderByDesc('id');
+
             $result       = UserResource::collection($query->paginate(10)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (HttpExceptionInterface $e) {

@@ -79,11 +79,12 @@ function gym_page_url(int $page): string
 | Cargar todos los gimnasios
 |--------------------------------------------------------------------------
 */
+$paged = fitapp_api_get_page('/gyms', $page, $per_page, true);
 $all_gyms = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
+for ($api_page = 1; $api_page <= 0; $api_page++) {
     $response = api_get('/gyms?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -134,6 +135,15 @@ $gyms = array_slice($all_gyms, $offset, $per_page);
 
 $from = $total > 0 ? $offset + 1 : 0;
 $to = $total > 0 ? min($total, $offset + count($gyms)) : 0;
+
+$listResp = $paged['response'];
+$gyms = $paged['items'];
+$pagination = $paged['meta'];
+$current_page = $pagination['current_page'];
+$last_page = $pagination['last_page'];
+$total = $pagination['total'];
+$from = $pagination['from'];
+$to = $pagination['to'];
 
 wp_app_page_start('Manage Gyms', true);
 ?>

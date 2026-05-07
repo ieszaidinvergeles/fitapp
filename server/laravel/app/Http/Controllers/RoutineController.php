@@ -56,7 +56,9 @@ class RoutineController extends Controller
         try {
             $this->authorize('viewAny', Routine::class);
             
-            $query = Routine::with(['creator', 'dietPlan'])->withCount('exercises');
+            $query = Routine::with(['creator', 'dietPlan'])
+                ->withCount('exercises')
+                ->orderByDesc('id');
 
             if ($request->has('favorites')) {
                 $user = $request->user() ?: auth('sanctum')->user();
