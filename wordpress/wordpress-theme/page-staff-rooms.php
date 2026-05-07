@@ -13,15 +13,15 @@ $flash_error   = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Sala eliminada correctamente.';
+    $flash_success = 'Room deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Sala creada correctamente.';
+    $flash_success = 'Room created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Sala actualizada correctamente.';
+    $flash_success = 'Room updated successfully.';
 }
 
 /**
- * Eliminar sala
+ * Delete room
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
     $room_id = (int)($_POST['room_id'] ?? 0);
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar la sala.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the room.';
     }
 }
 
@@ -84,7 +84,7 @@ if (!function_exists('room_page_url')) {
 }
 
 /**
- * Cargar gimnasios para cruzar nombre de gym
+ * Load gyms to map gym names
  */
 $gyms_response = api_get('/gyms', auth: true);
 $gyms          = room_extract_list($gyms_response);
@@ -97,7 +97,7 @@ foreach ($gyms as $gym) {
 }
 
 /**
- * Cargar salas paginadas — una sola llamada al backend.
+ * Load paginated rooms - one backend call.
  */
 $paged        = fitapp_api_get_page('/rooms', $page, $per_page, true);
 $listResp     = $paged['response'];
@@ -132,7 +132,7 @@ wp_app_page_start('Rooms', true);
         <div>
             <h2 class="text-lg font-bold">Room List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona salas, aforo y centro asociado.
+                Manage rooms, capacity, and linked location.
             </p>
 
             <?php if ($total > 0): ?>
@@ -220,7 +220,7 @@ wp_app_page_start('Rooms', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar esta sala?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this room?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="room_id" value="<?= $room_id ?>">
                             <button

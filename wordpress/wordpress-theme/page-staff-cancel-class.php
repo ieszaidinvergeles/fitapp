@@ -95,7 +95,7 @@ function cancel_extract_list(array $response): array
 }
 
 /**
- * Cargar clase
+ * Load class
  */
 $class_response = api_get('/classes/' . $class_id, auth: true);
 $class_result = (($class_response['result'] ?? false) !== false) ? $class_response['result'] : null;
@@ -155,13 +155,13 @@ $class_location_bits = array_filter([h($class_location), h($class_gym)], static 
 });
 
 /**
- * Procesar cancelación
+ * Process cancellation
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $reason = trim((string)($_POST['reason'] ?? ''));
 
     if ($reason === '') {
-        $flash_error = 'Debes indicar un motivo de cancelación.';
+        $flash_error = 'You must provide a cancellation reason.';
     } else {
         $payload = [
             'reason' => $reason,
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        $flash_error = api_message($cancel_response) ?: 'No se pudo cancelar la clase.';
+        $flash_error = api_message($cancel_response) ?: 'Could not cancel the class.';
     }
 }
 
@@ -199,7 +199,7 @@ wp_app_page_start('Cancel Class', true);
 
         <h2 class="font-headline text-3xl font-bold uppercase tracking-tighter">Confirm Cancellation</h2>
         <p class="mt-2 text-on-surface-variant font-medium">
-            Confirmar esta acción cancelará la sesión inmediatamente.
+            Confirming this action will cancel the session immediately.
         </p>
     </section>
 
@@ -270,7 +270,7 @@ wp_app_page_start('Cancel Class', true);
                 <div class="flex items-start gap-3 rounded-lg border border-error/20 bg-error-container/10 p-3">
                     <span class="material-symbols-outlined mt-0.5 text-error text-lg">info</span>
                     <p class="text-[10px] font-medium uppercase tracking-tight leading-relaxed text-error/80">
-                        Este mensaje se enviará inmediatamente a los alumnos afectados si tu backend tiene notificaciones activas.
+                        This message will be sent immediately to affected students if your backend has notifications enabled.
                     </p>
                 </div>
             </div>

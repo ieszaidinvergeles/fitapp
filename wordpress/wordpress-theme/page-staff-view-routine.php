@@ -91,7 +91,7 @@ wp_app_page_start('View Routine', true);
         <div>
             <h2 class="text-lg font-bold">Routine Details</h2>
             <p class="text-sm text-on-surface-variant">
-                Consulta la información completa de esta rutina.
+                View the full information for this routine.
             </p>
         </div>
 
@@ -156,7 +156,7 @@ wp_app_page_start('View Routine', true);
         <div>
             <h3 class="text-lg font-bold">Routine Exercises</h3>
             <p class="text-sm text-on-surface-variant">
-                Ejercicios asociados a esta rutina.
+                Exercises associated with this routine.
             </p>
         </div>
 

@@ -66,7 +66,7 @@ $recipe = [];
 if (($recipe_response['result'] ?? false) !== false && is_array($recipe_response['result'] ?? null)) {
     $recipe = $recipe_response['result'];
 } else {
-    $flash_error = api_message($recipe_response) ?: 'No se pudo cargar la receta.';
+    $flash_error = api_message($recipe_response) ?: 'Could not load the recipe.';
 }
 
 $name = view_recipe_value($recipe, ['name'], 'Recipe');
@@ -119,7 +119,7 @@ wp_app_page_start('View Recipe', true);
             </h2>
 
             <p class="mt-2 text-sm text-on-surface-variant">
-                Vista completa de la receta seleccionada.
+                Full view of the selected recipe.
             </p>
         </div>
 

@@ -39,7 +39,7 @@ $inventory = [];
 if (($inventory_response['result'] ?? false) !== false && is_array($inventory_response['result'] ?? null)) {
     $inventory = $inventory_response['result'];
 } else {
-    $flash_error = api_message($inventory_response) ?: 'No se pudo cargar el inventario.';
+    $flash_error = api_message($inventory_response) ?: 'Could not load the inventory item.';
 }
 
 $gyms = fitapp_api_get_page('/gyms', 1, 50, true)['items'];
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_inventory_submit
         exit;
     }
 
-    $flash_error = api_message($update_response) ?: 'No se pudo actualizar el inventario.';
+    $flash_error = api_message($update_response) ?: 'Could not update the inventory item.';
 }
 
 wp_app_page_start('Edit Gym Inventory', true);
@@ -75,7 +75,7 @@ wp_app_page_start('Edit Gym Inventory', true);
         <div>
             <h2 class="text-lg font-bold">Edit Inventory Item</h2>
             <p class="text-sm text-on-surface-variant">
-                Actualiza gimnasio, equipamiento, cantidad y estado.
+                Update gym, equipment, quantity, and status.
             </p>
         </div>
 

@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_recipe_submit'
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear la receta. Revisa los campos obligatorios.';
+    $flash_error = api_message($create_response) ?: 'Could not create the recipe. Check the required fields.';
 }
 
 wp_app_page_start('Create Recipe', true);
@@ -89,7 +89,7 @@ wp_app_page_start('Create Recipe', true);
         <div>
             <h2 class="text-lg font-bold">Create Recipe</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea una nueva receta con ingredientes, pasos, calorías y macros.
+                Create a new recipe with ingredients, steps, calories, and macros.
             </p>
         </div>
 
@@ -154,12 +154,12 @@ wp_app_page_start('Create Recipe', true);
                     rows="4"
                     maxlength="280"
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Describe brevemente la receta..."
+                    placeholder="Briefly describe the recipe..."
                     required
                 ><?= h(recipe_create_value('description')) ?></textarea>
 
                 <p class="mt-1 text-xs text-on-surface-variant">
-                    Máximo 280 caracteres.
+                    Maximum 280 characters.
                 </p>
             </div>
 

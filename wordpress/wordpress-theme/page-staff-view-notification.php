@@ -64,7 +64,7 @@ $notification = [];
 if (($response['result'] ?? false) !== false && is_array($response['result'] ?? null)) {
     $notification = $response['result'];
 } else {
-    $flash_error = api_message($response) ?: 'No se pudo cargar la notificación.';
+    $flash_error = api_message($response) ?: 'Could not load the notification.';
 }
 
 $title = view_notification_value($notification, ['title', 'subject', 'name'], 'Notification');
@@ -138,7 +138,7 @@ wp_app_page_start('View Notification', true);
             </h2>
 
             <p class="mt-2 text-sm text-on-surface-variant">
-                Vista completa de la notificación seleccionada.
+                Full view of the selected notification.
             </p>
         </div>
 

@@ -30,7 +30,7 @@ function form_value(string $key, $default = '')
 }
 
 /**
- * Procesar creación
+ * Process creation
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $photo_file = $_FILES['profile_photo'] ?? null;
@@ -112,7 +112,7 @@ wp_app_page_start('Create User', true);
         <div class="min-w-0">
             <h2 class="text-xl font-bold">Create User</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea un nuevo usuario desde este formulario.
+                Create a new user from this form.
             </p>
         </div>
 

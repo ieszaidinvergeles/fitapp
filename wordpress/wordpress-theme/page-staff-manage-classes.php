@@ -13,17 +13,17 @@ $flash_error   = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'cancelled') {
-    $flash_success = 'Clase cancelada correctamente.';
+    $flash_success = 'Class cancelled successfully.';
 } elseif ($notice === 'deleted') {
-    $flash_success = 'Clase eliminada correctamente.';
+    $flash_success = 'Class deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Clase creada correctamente.';
+    $flash_success = 'Class created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Clase actualizada correctamente.';
+    $flash_success = 'Class updated successfully.';
 }
 
 /**
- * Eliminar clase
+ * Delete class
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
     $class_id = (int)($_POST['class_id'] ?? 0);
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar la clase.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the class.';
     }
 }
 
@@ -117,8 +117,8 @@ if (!function_exists('class_datetime_label')) {
 }
 
 /**
- * Cargar clases paginadas con include_past para mostrar historial.
- * Una sola llamada por request — sin loops, sin riesgo de 504.
+ * Load paginated classes with include_past to show history.
+ * One request per page - no loops, no 504 risk.
  */
 $paged        = fitapp_api_get_page('/classes', $page, $per_page, true, ['include_past' => 1]);
 $listResp     = $paged['response'];
@@ -146,11 +146,11 @@ $gyms_by_id       = build_lookup_by_id($gyms);
 $users_by_id      = build_lookup_by_id($users_lookup);
 
 /**
- * Construir mapa de bookings por clase.
- * Por cada clase de la página actual lanzamos UNA petición ligera
+ * Build bookings map by class.
+ * For each class on the current page, send ONE lightweight request
  * (/bookings?class_id=X&status=active&per_page=1) y leemos el total del meta.
- * Intentamos excluir canceladas vía status=active.
- * Máximo ~10 llamadas (tamaño de página), ningún loop gigante.
+ * Try to exclude cancelled items with status=active.
+ * Maximum ~10 calls (page size), no huge loop.
  */
 $bookings_by_class = [];
 
@@ -189,7 +189,7 @@ wp_app_page_start('Manage Classes', true);
         <div>
             <h2 class="text-lg font-bold">Class List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona clases, revisa su estado o cancela sesiones.
+                Manage classes, review their status, or cancel sessions.
             </p>
 
             <?php if ($total_classes > 0): ?>
@@ -352,7 +352,7 @@ wp_app_page_start('Manage Classes', true);
                             View bookings
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar esta clase?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this class?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="class_id" value="<?= $class_id ?>">
                             <button

@@ -13,11 +13,11 @@ $flash_error = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Inventario eliminado correctamente.';
+    $flash_success = 'Inventory item deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Inventario creado correctamente.';
+    $flash_success = 'Inventory item created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Inventario actualizado correctamente.';
+    $flash_success = 'Inventory item updated successfully.';
 }
 
 function staff_inventory_value(array $item, array $keys, $default = '')
@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar este inventario.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete this inventory item.';
     }
 }
 
@@ -129,7 +129,7 @@ wp_app_page_start('Manage Gym Inventory', true);
         <div>
             <h2 class="text-lg font-bold">Gym Equipment Inventory</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona la cantidad y estado del equipamiento por gimnasio.
+                Manage equipment quantity and status by gym.
             </p>
 
             <?php if ($total > 0): ?>
@@ -212,7 +212,7 @@ wp_app_page_start('Manage Gym Inventory', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar este inventario?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this inventory item?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="gym_id" value="<?= $gym_id ?>">
                             <input type="hidden" name="equipment_id" value="<?= $equipment_id ?>">

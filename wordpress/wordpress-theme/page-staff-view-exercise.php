@@ -48,7 +48,7 @@ $exercise = [];
 if (($exercise_response['result'] ?? false) !== false && is_array($exercise_response['result'] ?? null)) {
     $exercise = $exercise_response['result'];
 } else {
-    $flash_error = api_message($exercise_response) ?: 'No se pudo cargar el ejercicio.';
+    $flash_error = api_message($exercise_response) ?: 'Could not load the exercise.';
 }
 
 $name = $exercise ? view_exercise_value($exercise, ['name', 'title'], 'Exercise') : 'Exercise';
@@ -77,7 +77,7 @@ wp_app_page_start('View Exercise', true);
             </h2>
 
             <p class="mt-2 text-sm text-on-surface-variant">
-                Consulta la información completa de este ejercicio.
+                View the full information for this exercise.
             </p>
         </div>
 

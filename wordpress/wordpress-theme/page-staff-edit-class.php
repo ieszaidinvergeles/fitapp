@@ -46,7 +46,7 @@ function edit_class_datetime_value(array $class = null, string $key): string
 }
 
 /**
- * Cargar clase
+ * Load class
  */
 $class_response = api_get('/classes/' . $class_id, auth: true);
 $editing_class = (($class_response['result'] ?? false) !== false) ? $class_response['result'] : null;
@@ -76,7 +76,7 @@ $instructors = array_values(array_filter($all_users, function ($user) {
 }));
 
 /**
- * Procesar edición
+ * Process edit
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payload = [
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         wp_redirect(home_url('/?pagename=staff-manage-classes&notice=updated'));
         exit;
     } else {
-        $flash_error = api_message($update_response) ?: 'No se pudo actualizar la clase.';
+        $flash_error = api_message($update_response) ?: 'Could not update the class.';
     }
 }
 
@@ -157,7 +157,7 @@ wp_app_page_start('Edit Class', true);
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h2 class="text-lg font-bold">Edit Class</h2>
-            <p class="text-sm text-on-surface-variant">Modifica los datos de la clase y guarda los cambios.</p>
+            <p class="text-sm text-on-surface-variant">Update the class details and save the changes.</p>
         </div>
 
         <a

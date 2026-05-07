@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_inventory_subm
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear el inventario.';
+    $flash_error = api_message($create_response) ?: 'Could not create the inventory item.';
 }
 
 wp_app_page_start('Create Gym Inventory', true);
@@ -58,7 +58,7 @@ wp_app_page_start('Create Gym Inventory', true);
         <div>
             <h2 class="text-lg font-bold">Create Inventory Item</h2>
             <p class="text-sm text-on-surface-variant">
-                Asigna equipamiento a un gimnasio y define cantidad y estado.
+                Assign equipment to a gym and define quantity and status.
             </p>
         </div>
 

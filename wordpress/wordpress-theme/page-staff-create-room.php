@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_room_submit'])
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear la sala. Revisa los campos obligatorios.';
+    $flash_error = api_message($create_response) ?: 'Could not create the room. Check the required fields.';
 }
 
 wp_app_page_start('Create Room', true);
@@ -75,7 +75,7 @@ wp_app_page_start('Create Room', true);
         <div>
             <h2 class="text-lg font-bold">Create Room</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea una nueva sala asociada a un gimnasio.
+                Create a new room linked to a gym.
             </p>
         </div>
 

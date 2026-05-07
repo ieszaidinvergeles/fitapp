@@ -199,7 +199,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $remove_response = api_delete('/routines/' . $routine_id . '/exercises/' . $existing_exercise_id, auth: true);
 
                 if (($remove_response['result'] ?? false) === false) {
-                    $exercise_errors[] = api_message($remove_response) ?: 'No se pudo quitar un ejercicio.';
+                    $exercise_errors[] = api_message($remove_response) ?: 'Could not remove an exercise.';
                 }
             }
         }
@@ -220,18 +220,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $exercise_response = api_post('/routines/' . $routine_id . '/exercises', $exercise_payload, auth: true);
 
             if (($exercise_response['result'] ?? false) === false) {
-                $exercise_errors[] = api_message($exercise_response) ?: 'No se pudo asignar un ejercicio.';
+                $exercise_errors[] = api_message($exercise_response) ?: 'Could not assign an exercise.';
             }
         }
 
         if ($exercise_errors) {
-            $flash_error = 'Rutina actualizada, pero algunos ejercicios no se pudieron sincronizar: ' . implode(' ', array_unique($exercise_errors));
+            $flash_error = 'Routine updated, but some exercises could not be synced: ' . implode(' ', array_unique($exercise_errors));
         } else {
             wp_redirect(home_url('/?pagename=staff-manage-routines&notice=updated'));
             exit;
         }
     } else {
-        $flash_error = api_message($update_response) ?: 'No se pudo actualizar la rutina.';
+        $flash_error = api_message($update_response) ?: 'Could not update the routine.';
     }
 }
 
@@ -254,7 +254,7 @@ wp_app_page_start('Edit Routine', true);
         <div>
             <h2 class="text-lg font-bold">Edit Routine</h2>
             <p class="text-sm text-on-surface-variant">
-                Modifica los datos de la rutina y guarda los cambios.
+                Update the routine details and save the changes.
             </p>
         </div>
 
@@ -340,11 +340,11 @@ wp_app_page_start('Edit Routine', true);
                     rows="5"
                     maxlength="280"
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Describe brevemente para qué sirve esta rutina..."
+                    placeholder="Briefly describe what this routine is for..."
                 ><?= h(routine_edit_value('description', $routine_data), '') ?></textarea>
 
                 <p class="mt-1 text-xs text-on-surface-variant">
-                    Máximo 280 caracteres.
+                    Maximum 280 characters.
                 </p>
             </div>
 
@@ -352,7 +352,7 @@ wp_app_page_start('Edit Routine', true);
                 <div class="mb-4">
                     <h3 class="text-base font-bold">Routine exercises</h3>
                     <p class="text-sm text-on-surface-variant">
-                        Añade o quita ejercicios y ajusta orden, series, repeticiones y descanso.
+                        Add or remove exercises and adjust order, sets, reps, and rest.
                     </p>
                 </div>
 

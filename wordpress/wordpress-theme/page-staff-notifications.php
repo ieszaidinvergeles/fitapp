@@ -13,11 +13,11 @@ $flash_error = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Notificación eliminada correctamente.';
+    $flash_success = 'Notification deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Notificación creada correctamente.';
+    $flash_success = 'Notification created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Notificación actualizada correctamente.';
+    $flash_success = 'Notification updated successfully.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar la notificación.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the notification.';
     }
 }
 
@@ -102,9 +102,9 @@ function notification_label($value): string
 
 /*
 |--------------------------------------------------------------------------
-| Cargar notificaciones paginadas
+| Load paginated notifications
 |--------------------------------------------------------------------------
-| Recorremos páginas por si la API devuelve resultados paginados.
+| Walk pages in case the API returns paginated results.
 */
 $paged = fitapp_api_get_page('/notifications', $page, $per_page, true);
 $listResp = $paged['response'];
@@ -137,7 +137,7 @@ wp_app_page_start('Notifications', true);
         <div>
             <h2 class="text-lg font-bold">Notification List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona avisos del sistema, mensajes globales y notificaciones por gimnasio.
+                Manage system announcements, global messages, and gym notifications.
             </p>
 
             <?php if ($total > 0): ?>
@@ -245,7 +245,7 @@ wp_app_page_start('Notifications', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar esta notificación?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this notification?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="notification_id" value="<?= $notification_id ?>">
                             <button

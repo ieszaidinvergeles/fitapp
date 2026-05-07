@@ -59,7 +59,7 @@ $inventory = [];
 if (($inventory_response['result'] ?? false) !== false && is_array($inventory_response['result'] ?? null)) {
     $inventory = $inventory_response['result'];
 } else {
-    $flash_error = api_message($inventory_response) ?: 'No se pudo cargar el inventario.';
+    $flash_error = api_message($inventory_response) ?: 'Could not load the inventory item.';
 }
 
 $gym = is_array($inventory['gym'] ?? null) ? $inventory['gym'] : [];
@@ -91,7 +91,7 @@ wp_app_page_start('View Gym Inventory', true);
             </h2>
 
             <p class="mt-2 text-sm text-on-surface-variant">
-                Vista completa del inventario seleccionado.
+                Full view of the selected inventory item.
             </p>
         </div>
 

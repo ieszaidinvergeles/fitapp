@@ -40,7 +40,7 @@ $equipment = [];
 if (($equipment_response['result'] ?? false) !== false && is_array($equipment_response['result'] ?? null)) {
     $equipment = $equipment_response['result'];
 } else {
-    $flash_error = api_message($equipment_response) ?: 'No se pudo cargar el equipamiento.';
+    $flash_error = api_message($equipment_response) ?: 'Could not load the equipment.';
 }
 
 $name = equipment_view_value($equipment, ['name', 'title', 'equipment_name'], 'Equipment');
@@ -68,7 +68,7 @@ wp_app_page_start('View Equipment', true);
             </h2>
 
             <p class="mt-2 text-sm text-on-surface-variant">
-                Vista completa del equipamiento seleccionado.
+                Full view of the selected equipment.
             </p>
         </div>
 

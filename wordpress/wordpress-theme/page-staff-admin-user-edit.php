@@ -9,7 +9,7 @@ $user_id = (int)($_GET['id'] ?? 0);
 $flash_error = '';
 
 if (($_GET['photo_error'] ?? '') === '1') {
-    $flash_error = 'Usuario guardado, pero no se pudo subir la foto. Intentalo de nuevo desde esta pantalla.';
+    $flash_error = 'User saved, but the photo could not be uploaded. Try again from this screen.';
 }
 
 if ($user_id <= 0) {
@@ -44,7 +44,7 @@ function user_birth_date_value(array $user = null): string
 }
 
 /**
- * Cargar usuario
+ * Load user
  */
 $user_response = api_get('/users/' . $user_id, auth: true);
 $editing_user = (($user_response['result'] ?? false) !== false) ? $user_response['result'] : null;
@@ -55,7 +55,7 @@ if (!$editing_user) {
 }
 
 /**
- * Procesar edición
+ * Process edit
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $photo_file = $_FILES['profile_photo'] ?? null;
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
 
                 if (($photo_response['result'] ?? false) === false) {
-                    $flash_error = api_message($photo_response) ?: 'Datos guardados, pero no se pudo subir la foto.';
+                    $flash_error = api_message($photo_response) ?: 'Details saved, but the photo could not be uploaded.';
                 } else {
                     wp_redirect(home_url('/?pagename=staff-admin-users&notice=updated'));
                     exit;
@@ -185,7 +185,7 @@ wp_app_page_start('Edit User', true);
         <div class="min-w-0">
             <h2 class="text-xl font-bold">Edit User</h2>
             <p class="text-sm text-on-surface-variant">
-                Modifica los datos del usuario y guarda los cambios.
+                Update the user details and save the changes.
             </p>
         </div>
 

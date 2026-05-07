@@ -50,7 +50,7 @@ function room_extract_list(array $response): array
 }
 
 /**
- * Cargar sala
+ * Load room
  */
 $room_response = api_get('/rooms/' . $room_id, auth: true);
 $room = [];
@@ -58,17 +58,17 @@ $room = [];
 if (($room_response['result'] ?? false) !== false && is_array($room_response['result'] ?? null)) {
     $room = $room_response['result'];
 } else {
-    $flash_error = api_message($room_response) ?: 'No se pudo cargar la sala.';
+    $flash_error = api_message($room_response) ?: 'Could not load the room.';
 }
 
 /**
- * Cargar gimnasios
+ * Load gyms
  */
 $gyms_response = api_get('/gyms', auth: true);
 $gyms = room_extract_list($gyms_response);
 
 /**
- * Procesar edición
+ * Process edit
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_room_submit'])) {
     $payload = [
@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_room_submit'])) 
         exit;
     }
 
-    $flash_error = api_message($update_response) ?: 'No se pudo actualizar la sala.';
+    $flash_error = api_message($update_response) ?: 'Could not update the room.';
 }
 
 wp_app_page_start('Edit Room', true);
@@ -105,7 +105,7 @@ $current_image = fitapp_public_asset_url($room['image_url'] ?? '');
         <div>
             <h2 class="text-lg font-bold">Edit Room</h2>
             <p class="text-sm text-on-surface-variant">
-                Modifica la sala, su aforo y el gimnasio asociado.
+                Update the room, its capacity, and the linked gym.
             </p>
         </div>
 

@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_equipment_subm
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear el equipamiento. Revisa los campos obligatorios.';
+    $flash_error = api_message($create_response) ?: 'Could not create the equipment. Check the required fields.';
 }
 
 wp_app_page_start('Create Equipment', true);
@@ -126,7 +126,7 @@ wp_app_page_start('Create Equipment', true);
         <div>
             <h2 class="text-lg font-bold">Create Equipment</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea nuevo equipamiento para el gimnasio.
+                Create new gym equipment.
             </p>
         </div>
 
@@ -220,12 +220,12 @@ wp_app_page_start('Create Equipment', true);
                     rows="6"
                     maxlength="280"
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Describe el equipamiento, uso, ubicación o características..."
+                    placeholder="Describe the equipment, usage, location, or features..."
                     required
                 ><?= h(equipment_create_value('description'), '') ?></textarea>
 
                 <p class="mt-1 text-xs text-on-surface-variant">
-                    Máximo 280 caracteres. Este campo es obligatorio.
+                    Maximum 280 characters. This field is required.
                 </p>
             </div>
 

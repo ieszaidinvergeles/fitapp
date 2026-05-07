@@ -63,7 +63,7 @@ $recipe = [];
 if (($recipe_response['result'] ?? false) !== false && is_array($recipe_response['result'] ?? null)) {
     $recipe = $recipe_response['result'];
 } else {
-    $flash_error = api_message($recipe_response) ?: 'No se pudo cargar la receta.';
+    $flash_error = api_message($recipe_response) ?: 'Could not load the recipe.';
 }
 
 $macros = recipe_decode_macros($recipe['macros_json'] ?? $recipe['macros'] ?? []);
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_recipe_submit'])
         exit;
     }
 
-    $flash_error = api_message($update_response) ?: 'No se pudo actualizar la receta.';
+    $flash_error = api_message($update_response) ?: 'Could not update the recipe.';
 }
 
 wp_app_page_start('Edit Recipe', true);
@@ -128,7 +128,7 @@ wp_app_page_start('Edit Recipe', true);
         <div>
             <h2 class="text-lg font-bold">Edit Recipe</h2>
             <p class="text-sm text-on-surface-variant">
-                Modifica los datos de la receta, sus macros y pasos de preparación.
+                Update the recipe details, macros, and preparation steps.
             </p>
         </div>
 
@@ -195,12 +195,12 @@ wp_app_page_start('Edit Recipe', true);
                         rows="4"
                         maxlength="280"
                         class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Describe brevemente la receta..."
+                        placeholder="Briefly describe the recipe..."
                         required
                     ><?= h($_POST['description'] ?? ($recipe['description'] ?? '')) ?></textarea>
 
                     <p class="mt-1 text-xs text-on-surface-variant">
-                        Máximo 280 caracteres.
+                        Maximum 280 characters.
                     </p>
                 </div>
 

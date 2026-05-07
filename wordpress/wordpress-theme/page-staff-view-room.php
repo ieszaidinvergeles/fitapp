@@ -57,7 +57,7 @@ $room = [];
 if (($room_response['result'] ?? false) !== false && is_array($room_response['result'] ?? null)) {
     $room = $room_response['result'];
 } else {
-    $flash_error = api_message($room_response) ?: 'No se pudo cargar la sala.';
+    $flash_error = api_message($room_response) ?: 'Could not load the room.';
 }
 
 $gyms_response = api_get('/gyms', auth: true);
@@ -108,7 +108,7 @@ wp_app_page_start('View Room', true);
             </h2>
 
             <p class="mt-2 text-sm text-on-surface-variant">
-                Vista completa de la sala seleccionada.
+                Full view of the selected room.
             </p>
         </div>
 

@@ -13,11 +13,11 @@ $flash_error = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Plan de dieta eliminado correctamente.';
+    $flash_success = 'Diet plan deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Plan de dieta creado correctamente.';
+    $flash_success = 'Diet plan created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Plan de dieta actualizado correctamente.';
+    $flash_success = 'Diet plan updated successfully.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar el plan de dieta.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the diet plan.';
     }
 }
 
@@ -75,8 +75,8 @@ if (!function_exists('diet_plan_value')) {
 
 /*
  * IMPORTANTE:
- * El backend de diet_plans parece devolver lista simple, no paginación real.
- * Por eso pedimos muchos registros y paginamos aquí manualmente.
+ * The diet_plans backend seems to return a simple list, not real pagination.
+ * That is why we request many records and paginate manually here.
  */
 $paged = fitapp_api_get_page('/diet-plans', $page, $per_page, true);
 $all_diet_plans = [];
@@ -166,7 +166,7 @@ wp_app_page_start('Manage Diet Plans', true);
         <div>
             <h2 class="text-lg font-bold">Diet Plan List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona planes de dieta, objetivos nutricionales y descripciones.
+                Manage diet plans, nutrition targets, and descriptions.
             </p>
 
             <?php if ($total > 0): ?>
@@ -250,7 +250,7 @@ wp_app_page_start('Manage Diet Plans', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar este plan de dieta?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this diet plan?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="diet_plan_id" value="<?= $diet_plan_id ?>">
                             <button

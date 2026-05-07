@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_exercise_submi
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear el ejercicio. Revisa los campos obligatorios.';
+    $flash_error = api_message($create_response) ?: 'Could not create the exercise. Check the required fields.';
 }
 
 wp_app_page_start('Create Exercise', true);
@@ -79,7 +79,7 @@ wp_app_page_start('Create Exercise', true);
         <div>
             <h2 class="text-lg font-bold">Create Exercise</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea un nuevo ejercicio para usarlo en rutinas y entrenamientos.
+                Create a new exercise for routines and workouts.
             </p>
         </div>
 
@@ -143,12 +143,12 @@ wp_app_page_start('Create Exercise', true);
                     rows="6"
                     maxlength="280"
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Describe cómo realizar el ejercicio, técnica, postura y recomendaciones..."
+                    placeholder="Describe how to perform the exercise, technique, posture, and recommendations..."
                     required
                 ><?= h(exercise_create_value('description')) ?></textarea>
 
                 <p class="mt-1 text-xs text-on-surface-variant">
-                    Máximo 280 caracteres. Este campo es obligatorio.
+                    Maximum 280 characters. This field is required.
                 </p>
             </div>
 

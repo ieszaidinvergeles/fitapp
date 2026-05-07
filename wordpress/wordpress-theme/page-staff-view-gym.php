@@ -40,7 +40,7 @@ $gym = [];
 if (($gym_response['result'] ?? false) !== false && is_array($gym_response['result'] ?? null)) {
     $gym = $gym_response['result'];
 } else {
-    $flash_error = api_message($gym_response) ?: 'No se pudo cargar el gimnasio.';
+    $flash_error = api_message($gym_response) ?: 'Could not load the gym.';
 }
 
 $name = gym_view_value($gym, ['name'], 'Gym');
@@ -101,7 +101,7 @@ wp_app_page_start('View Gym', true);
             </h2>
 
             <p class="mt-2 text-sm text-on-surface-variant">
-                Vista completa del centro seleccionado.
+                Full view of the selected location.
             </p>
         </div>
 

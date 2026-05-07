@@ -119,7 +119,7 @@ $equipment = [];
 if (($equipment_response['result'] ?? false) !== false && is_array($equipment_response['result'] ?? null)) {
     $equipment = $equipment_response['result'];
 } else {
-    $flash_error = api_message($equipment_response) ?: 'No se pudo cargar el equipamiento.';
+    $flash_error = api_message($equipment_response) ?: 'Could not load the equipment.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_equipment_submit'])) {
@@ -145,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_equipment_submit
         exit;
     }
 
-    $flash_error = api_message($update_response) ?: 'No se pudo actualizar el equipamiento.';
+    $flash_error = api_message($update_response) ?: 'Could not update the equipment.';
 }
 
 $current_image = equipment_public_image_url(equipment_edit_value($equipment, 'image_url'));
@@ -166,7 +166,7 @@ wp_app_page_start('Edit Equipment', true);
         <div>
             <h2 class="text-lg font-bold">Edit Equipment</h2>
             <p class="text-sm text-on-surface-variant">
-                Modifica el nombre, descripción, imagen y disponibilidad del equipamiento.
+                Update the equipment name, description, image, and availability.
             </p>
         </div>
 
@@ -262,12 +262,12 @@ wp_app_page_start('Edit Equipment', true);
                         rows="6"
                         maxlength="280"
                         class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Describe el equipamiento, uso, ubicación o características..."
+                        placeholder="Describe the equipment, usage, location, or features..."
                         required
                     ><?= h($_POST['description'] ?? ($equipment['description'] ?? '')) ?></textarea>
 
                     <p class="mt-1 text-xs text-on-surface-variant">
-                        Máximo 280 caracteres. Este campo es obligatorio.
+                        Maximum 280 characters. This field is required.
                     </p>
                 </div>
 

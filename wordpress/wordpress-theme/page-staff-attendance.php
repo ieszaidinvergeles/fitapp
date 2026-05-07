@@ -98,9 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $clock_response = api_post('/attendance/clock-in', [], auth: true);
 
         if (($clock_response['result'] ?? false) !== false) {
-            $flash_success = 'Clock in registrado correctamente.';
+            $flash_success = 'Clock in registered successfully.';
         } else {
-            $flash_error = api_message($clock_response) ?: 'No se pudo registrar el clock in.';
+            $flash_error = api_message($clock_response) ?: 'Could not register clock in.';
         }
     }
 
@@ -111,23 +111,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $clock_response = api_post('/attendance/' . $attendance_id . '/clock-out', [], auth: true);
 
             if (($clock_response['result'] ?? false) !== false) {
-                $flash_success = 'Clock out registrado correctamente.';
+                $flash_success = 'Clock out registered successfully.';
             } else {
-                $flash_error = api_message($clock_response) ?: 'No se pudo registrar el clock out.';
+                $flash_error = api_message($clock_response) ?: 'Could not register clock out.';
             }
         } else {
-            $flash_error = 'No se encontró un fichaje abierto para cerrar.';
+            $flash_error = 'No open attendance record was found to close.';
         }
     }
 }
 
 /**
- * Cargar asistencia después de procesar acciones
+ * Load attendance after processing actions
  */
 [$response, $rows] = attendance_load_rows($page);
 
 /**
- * Buscar fichaje abierto de hoy
+ * Find today open attendance record
  */
 $today = date('Y-m-d');
 $open_attendance = null;
@@ -192,7 +192,7 @@ wp_app_page_start('Staff Attendance', true);
         <div>
             <h2 class="text-lg font-bold">Clock In / Out</h2>
             <p class="text-sm text-on-surface-variant">
-                Registra tu entrada y salida del turno de trabajo.
+                Register your clock in and clock out for the work shift.
             </p>
         </div>
 
@@ -249,7 +249,7 @@ wp_app_page_start('Staff Attendance', true);
                     </h3>
 
                     <p class="mt-2 text-sm text-on-surface-variant">
-                        Todavía no has iniciado tu turno hoy.
+                        You have not started your shift today yet.
                     </p>
 
                     <form method="post" class="mt-6">

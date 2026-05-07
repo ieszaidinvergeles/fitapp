@@ -38,7 +38,7 @@ $gym = [];
 if (($gym_response['result'] ?? false) !== false && is_array($gym_response['result'] ?? null)) {
     $gym = $gym_response['result'];
 } else {
-    $flash_error = api_message($gym_response) ?: 'No se pudo cargar el gimnasio.';
+    $flash_error = api_message($gym_response) ?: 'Could not load the gym.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_gym_submit'])) {
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_gym_submit'])) {
         exit;
     }
 
-    $flash_error = api_message($update_response) ?: 'No se pudo actualizar el gimnasio.';
+    $flash_error = api_message($update_response) ?: 'Could not update the gym.';
 }
 
 $current_image = fitapp_public_asset_url(gym_edit_value($gym, 'logo_url'));
@@ -79,7 +79,7 @@ wp_app_page_start('Edit Gym', true);
         <div>
             <h2 class="text-lg font-bold">Edit Gym</h2>
             <p class="text-sm text-on-surface-variant">
-                Modifica los datos del centro, ubicación, contacto e imagen.
+                Update the location details, address, contact details, and image.
             </p>
         </div>
 
@@ -124,7 +124,7 @@ wp_app_page_start('Edit Gym', true);
                         name="address"
                         value="<?= h($_POST['address'] ?? ($gym['address'] ?? '')) ?>"
                         class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Example: Calle Gran Vía 45"
+                        placeholder="Example: 45 Main Street"
                         required
                     >
                 </div>

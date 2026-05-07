@@ -13,11 +13,11 @@ $flash_error = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Gimnasio eliminado correctamente.';
+    $flash_success = 'Gym deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Gimnasio creado correctamente.';
+    $flash_success = 'Gym created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Gimnasio actualizado correctamente.';
+    $flash_success = 'Gym updated successfully.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar el gimnasio.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the gym.';
     }
 }
 
@@ -87,7 +87,7 @@ function gym_response_has_pagination_meta(array $response): bool
 
 /*
 |--------------------------------------------------------------------------
-| Cargar gimnasios paginados
+| Load paginated gyms
 |--------------------------------------------------------------------------
 */
 $paged = fitapp_api_get_page('/gyms', $page, $per_page, true);
@@ -147,7 +147,7 @@ wp_app_page_start('Manage Gyms', true);
         <div>
             <h2 class="text-lg font-bold">Gym List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona centros, ubicaciones, responsables y datos básicos de cada gimnasio.
+                Manage locations, addresses, managers, and basic gym details.
             </p>
 
             <?php if ($total > 0): ?>
@@ -260,7 +260,7 @@ wp_app_page_start('Manage Gyms', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar este gimnasio?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this gym?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="gym_id" value="<?= $gym_id ?>">
                             <button

@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_notification_s
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear la notificación. Revisa los campos obligatorios.';
+    $flash_error = api_message($create_response) ?: 'Could not create the notification. Check the required fields.';
 }
 
 wp_app_page_start('Create Notification', true);
@@ -82,7 +82,7 @@ wp_app_page_start('Create Notification', true);
         <div>
             <h2 class="text-lg font-bold">Create Notification</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea un aviso para usuarios, staff o un gimnasio concreto.
+                Create an announcement for users, staff, or a specific gym.
             </p>
         </div>
 
@@ -130,7 +130,7 @@ wp_app_page_start('Create Notification', true);
                 ><?= h(notification_create_value('message_text')) ?></textarea>
 
                 <p class="mt-1 text-xs text-on-surface-variant">
-                    Máximo 500 caracteres.
+                    Maximum 500 characters.
                 </p>
             </div>
 
@@ -188,7 +188,7 @@ wp_app_page_start('Create Notification', true);
                 <div class="flex items-start gap-3">
                     <span class="material-symbols-outlined text-primary-container">info</span>
                     <p class="text-xs leading-relaxed text-on-surface-variant">
-                        Si eliges audiencia global, el aviso se mostrará para todos los usuarios. Si eliges un gimnasio concreto, quedará asociado a ese centro.
+                        If you choose a global audience, the announcement will be shown to all users. If you choose a specific gym, it will be linked to that location.
                     </p>
                 </div>
             </div>

@@ -58,6 +58,50 @@ function staff_dashboard_class_title(array $class): string
     return h($activity ?: $name ?: 'Class');
 }
 
+$current_role = strtolower(trim((string)($user['role'] ?? get_user_role())));
+
+if ($current_role === '') {
+    $current_role = get_user_role();
+}
+
+$canSeeUsers = in_array($current_role, ['admin', 'manager', 'assistant'], true);
+$canSeeGyms = $current_role === 'admin';
+$canSeeRooms = in_array($current_role, ['admin', 'manager'], true);
+$canSeeEquipment = in_array($current_role, ['admin', 'manager'], true);
+$canSeeInventory = in_array($current_role, ['admin', 'manager'], true);
+$canSeeRoutines = in_array($current_role, ['admin', 'manager', 'staff'], true);
+$canSeeExercises = in_array($current_role, ['admin', 'manager', 'staff'], true);
+$canSeeDietPlans = in_array($current_role, ['admin', 'manager'], true);
+$canSeeRecipes = in_array($current_role, ['admin', 'manager'], true);
+$canSeeNotifications = in_array($current_role, ['admin', 'manager', 'assistant', 'staff'], true);
+$canSeeAttendance = in_array($current_role, ['admin', 'manager', 'assistant', 'staff'], true);
+$canSeeClasses = in_array($current_role, ['admin', 'manager', 'assistant', 'staff'], true);
+$canSeeBookings = in_array($current_role, ['admin', 'manager', 'assistant'], true);
+$canSeeStats = $canSeeUsers || $canSeeGyms;
+
+$tools = array_values(array_filter([
+    ['label' => 'Classes', 'slug' => 'staff-manage-classes', 'icon' => 'event', 'visible' => $canSeeClasses],
+    ['label' => 'Routines', 'slug' => 'staff-manage-routines', 'icon' => 'fitness_center', 'visible' => $canSeeRoutines],
+    ['label' => 'Exercises', 'slug' => 'staff-manage-exercises', 'icon' => 'exercise', 'visible' => $canSeeExercises],
+    ['label' => 'Diet Plans', 'slug' => 'staff-manage-diet-plans', 'icon' => 'restaurant', 'visible' => $canSeeDietPlans],
+    ['label' => 'Recipes', 'slug' => 'staff-manage-recipes', 'icon' => 'menu_book', 'visible' => $canSeeRecipes],
+    ['label' => 'Users', 'slug' => 'staff-admin-users', 'icon' => 'groups', 'visible' => $canSeeUsers],
+    ['label' => 'Rooms', 'slug' => 'staff-rooms', 'icon' => 'meeting_room', 'visible' => $canSeeRooms],
+    ['label' => 'Gyms', 'slug' => 'staff-manage-gyms', 'icon' => 'location_city', 'visible' => $canSeeGyms],
+    ['label' => 'Equipment', 'slug' => 'staff-manage-equipment', 'icon' => 'construction', 'visible' => $canSeeEquipment],
+    ['label' => 'Gym Equipment Inventory', 'slug' => 'staff-manage-gym-inventory', 'icon' => 'inventory_2', 'visible' => $canSeeInventory],
+], static function (array $tool): bool {
+    return !empty($tool['visible']);
+}));
+
+$shortcuts = array_values(array_filter([
+    ['label' => 'Create User', 'slug' => 'staff-admin-user-create', 'icon' => 'person_add', 'visible' => $canSeeUsers],
+    ['label' => 'Create Class', 'slug' => 'staff-create-class', 'icon' => 'add_circle', 'visible' => $canSeeClasses],
+    ['label' => 'Create Routine', 'slug' => 'staff-create-routine', 'icon' => 'fitness_center', 'visible' => $canSeeRoutines],
+], static function (array $shortcut): bool {
+    return !empty($shortcut['visible']);
+}));
+
 $page_title = 'Staff Portal';
 $GLOBALS['hide_global_header'] = true;
 $GLOBALS['hide_global_footer'] = true;
@@ -108,8 +152,10 @@ voltgym_get_header();
         <?php show_error(api_message($response)); ?>
     <?php endif; ?>
 
+    <?php if ($canSeeStats || $canSeeAttendance || $canSeeNotifications): ?>
     <section class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-12">
 
+        <?php if ($canSeeStats): ?>
         <article class="relative overflow-hidden rounded-3xl border border-primary-container/30 bg-surface-container p-7 md:col-span-4">
             <div class="absolute -right-6 -top-6 opacity-10">
                 <span class="material-symbols-outlined text-[140px]">groups</span>
@@ -135,7 +181,9 @@ voltgym_get_header();
                 </div>
             </div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($canSeeAttendance): ?>
         <a href="<?= esc_url(home_url('/?pagename=staff-attendance')) ?>" class="group rounded-3xl bg-primary-container p-7 text-on-primary-container shadow-[0_0_30px_rgba(212,251,0,0.18)] transition hover:scale-[1.01] md:col-span-4">
             <div class="flex h-full min-h-[190px] flex-col items-center justify-center gap-4">
                 <span class="material-symbols-outlined text-5xl" style="font-variation-settings:'FILL' 1;">fingerprint</span>
@@ -144,7 +192,9 @@ voltgym_get_header();
                 </p>
             </div>
         </a>
+        <?php endif; ?>
 
+        <?php if ($canSeeNotifications): ?>
         <article class="rounded-3xl border border-outline-variant/10 bg-surface-container-high p-7 md:col-span-4">
             <div class="mb-6 flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -160,15 +210,17 @@ voltgym_get_header();
             </div>
 
             <p class="text-sm leading-relaxed text-on-surface-variant">
-                Revisa avisos, mensajes del sistema y actividad reciente del portal.
+                Review announcements, system messages, and recent portal activity.
             </p>
 
             <a href="<?= esc_url(home_url('/?pagename=staff-notifications')) ?>" class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-surface-bright px-4 py-3 text-[10px] font-black uppercase tracking-widest transition hover:text-primary-container">
                 View Notifications
             </a>
         </article>
+        <?php endif; ?>
 
     </section>
+    <?php endif; ?>
 
     <section class="mb-5 rounded-3xl border border-outline-variant/10 bg-surface-container p-6">
         <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -181,44 +233,36 @@ voltgym_get_header();
                 </h3>
             </div>
             <p class="text-sm text-on-surface-variant">
-                Accesos rápidos a las áreas que puede editar o revisar el staff.
+                Quick access to areas staff can edit or review.
             </p>
         </div>
 
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
 
-            <?php
-            $tools = [
-                ['Classes', 'staff-manage-classes', 'event'],
-                ['Routines', 'staff-manage-routines', 'fitness_center'],
-                ['Exercises', 'staff-manage-exercises', 'exercise'],
-                ['Diet Plans', 'staff-manage-diet-plans', 'restaurant'],
-                ['Recipes', 'staff-manage-recipes', 'menu_book'],
-                ['Users', 'staff-admin-users', 'groups'],
-                ['Rooms', 'staff-rooms', 'meeting_room'],
-                ['Gyms', 'staff-manage-gyms', 'location_city'],
-                ['Equipment', 'staff-manage-equipment', 'construction'],
-                ['Gym Equipment Inventory', 'staff-manage-gym-inventory', 'inventory_2'],
-            ];
-            ?>
-
             <?php foreach ($tools as $tool): ?>
-                <a href="<?= esc_url(home_url('/?pagename=' . $tool[1])) ?>"
+                <a href="<?= esc_url(home_url('/?pagename=' . $tool['slug'])) ?>"
                    class="group rounded-2xl border border-outline-variant/10 bg-surface-container-high p-5 transition hover:-translate-y-0.5 hover:border-primary-container/60 hover:bg-surface-bright">
                     <span class="material-symbols-outlined mb-4 text-3xl text-primary-container transition group-hover:scale-110">
-                        <?= h($tool[2]) ?>
+                        <?= h($tool['icon']) ?>
                     </span>
                     <p class="font-headline text-sm font-black uppercase tracking-widest">
-                        <?= h($tool[0]) ?>
+                        <?= h($tool['label']) ?>
                     </p>
                 </a>
             <?php endforeach; ?>
+
+            <?php if (!$tools): ?>
+                <div class="rounded-2xl border border-outline-variant/10 bg-surface-container-high p-5 text-sm text-on-surface-variant sm:col-span-2 lg:col-span-5">
+                    Your role does not have management tools assigned.
+                </div>
+            <?php endif; ?>
 
         </div>
     </section>
 
     <section class="grid grid-cols-1 gap-4 md:grid-cols-12">
 
+        <?php if ($canSeeClasses): ?>
         <article class="rounded-3xl border border-outline-variant/10 bg-surface-container p-7 md:col-span-8">
             <div class="mb-7 flex items-end justify-between gap-4">
                 <div>
@@ -275,12 +319,14 @@ voltgym_get_header();
                                 </div>
                             </div>
 
-                            <a
-                                href="<?= esc_url(home_url('/?pagename=staff-class-bookings&id=' . (int)($c['id'] ?? 0))) ?>"
-                                class="inline-flex items-center justify-center rounded-full border border-outline-variant/30 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface transition hover:border-primary-container hover:text-primary-container"
-                            >
-                                View
-                            </a>
+                            <?php if ($canSeeBookings): ?>
+                                <a
+                                    href="<?= esc_url(home_url('/?pagename=staff-class-bookings&id=' . (int)($c['id'] ?? 0))) ?>"
+                                    class="inline-flex items-center justify-center rounded-full border border-outline-variant/30 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface transition hover:border-primary-container hover:text-primary-container"
+                                >
+                                    View
+                                </a>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -292,6 +338,7 @@ voltgym_get_header();
                 </div>
             <?php endif; ?>
         </article>
+        <?php endif; ?>
 
         <article class="rounded-3xl border border-outline-variant/10 bg-surface-container-high p-7 md:col-span-4">
             <p class="mb-1 text-xs font-black uppercase tracking-[0.25em] text-primary-container">
@@ -303,18 +350,18 @@ voltgym_get_header();
             </h3>
 
             <div class="space-y-2 text-sm">
-                <a class="flex items-center justify-between rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-admin-user-create')) ?>">
-                    <span class="font-bold">Create User</span>
-                    <span class="material-symbols-outlined text-lg">person_add</span>
-                </a>
-                <a class="flex items-center justify-between rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-create-class')) ?>">
-                    <span class="font-bold">Create Class</span>
-                    <span class="material-symbols-outlined text-lg">add_circle</span>
-                </a>
-                <a class="flex items-center justify-between rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-create-routine')) ?>">
-                    <span class="font-bold">Create Routine</span>
-                    <span class="material-symbols-outlined text-lg">fitness_center</span>
-                </a>
+                <?php foreach ($shortcuts as $shortcut): ?>
+                    <a class="flex items-center justify-between rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=' . $shortcut['slug'])) ?>">
+                        <span class="font-bold"><?= h($shortcut['label']) ?></span>
+                        <span class="material-symbols-outlined text-lg"><?= h($shortcut['icon']) ?></span>
+                    </a>
+                <?php endforeach; ?>
+
+                <?php if (!$shortcuts): ?>
+                    <div class="rounded-xl bg-surface-container px-4 py-3 text-on-surface-variant">
+                        Your role does not have management tools assigned.
+                    </div>
+                <?php endif; ?>
             </div>
         </article>
 

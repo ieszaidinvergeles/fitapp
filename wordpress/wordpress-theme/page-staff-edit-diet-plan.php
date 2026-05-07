@@ -38,7 +38,7 @@ $diet_plan = [];
 if (($diet_response['result'] ?? false) !== false && is_array($diet_response['result'] ?? null)) {
     $diet_plan = $diet_response['result'];
 } else {
-    $flash_error = api_message($diet_response) ?: 'No se pudo cargar el plan de dieta.';
+    $flash_error = api_message($diet_response) ?: 'Could not load the diet plan.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_diet_plan_submit'])) {
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_diet_plan_submit
         exit;
     }
 
-    $flash_error = api_message($update_response) ?: 'No se pudo actualizar el plan de dieta.';
+    $flash_error = api_message($update_response) ?: 'Could not update the diet plan.';
 }
 
 $current_image = fitapp_public_asset_url(diet_edit_value($diet_plan, 'cover_image_url'));
@@ -76,7 +76,7 @@ wp_app_page_start('Edit Diet Plan', true);
         <div>
             <h2 class="text-lg font-bold">Edit Diet Plan</h2>
             <p class="text-sm text-on-surface-variant">
-                Modifica el nombre, objetivo nutricional e imagen de portada.
+                Update the name, nutrition target, and cover image.
             </p>
         </div>
 
@@ -121,12 +121,12 @@ wp_app_page_start('Edit Diet Plan', true);
                         rows="6"
                         maxlength="280"
                         class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Describe el objetivo del plan: perder grasa, ganar masa muscular, mantener peso..."
+                        placeholder="Describe the plan goal: lose fat, gain muscle, maintain weight..."
                         required
                     ><?= h($_POST['goal_description'] ?? ($diet_plan['goal_description'] ?? '')) ?></textarea>
 
                     <p class="mt-1 text-xs text-on-surface-variant">
-                        Máximo 280 caracteres. Este campo es obligatorio.
+                        Maximum 280 characters. This field is required.
                     </p>
                 </div>
 

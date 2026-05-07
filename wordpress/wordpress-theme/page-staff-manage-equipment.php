@@ -13,11 +13,11 @@ $flash_error = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Equipamiento eliminado correctamente.';
+    $flash_success = 'Equipment deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Equipamiento creado correctamente.';
+    $flash_success = 'Equipment created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Equipamiento actualizado correctamente.';
+    $flash_success = 'Equipment updated successfully.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar el equipamiento.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the equipment.';
     }
 }
 
@@ -91,7 +91,7 @@ if (!function_exists('equipment_home_access_label')) {
 |--------------------------------------------------------------------------
 | Cargar todo el equipamiento
 |--------------------------------------------------------------------------
-| Si la API pagina de 10 en 10, recorremos páginas y luego paginamos aquí.
+| If the API paginates in batches of 10, we walk pages and then paginate here.
 */
 $paged = fitapp_api_get_page('/equipment', $page, $per_page, true);
 $all_equipment = [];
@@ -180,7 +180,7 @@ wp_app_page_start('Manage Equipment', true);
         <div>
             <h2 class="text-lg font-bold">Equipment List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona máquinas, material deportivo y equipamiento del gimnasio.
+                Manage machines, sports gear, and gym equipment.
             </p>
 
             <?php if ($total > 0): ?>
@@ -268,7 +268,7 @@ wp_app_page_start('Manage Equipment', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar este equipamiento?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this equipment?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="equipment_id" value="<?= $equipment_id ?>">
                             <button

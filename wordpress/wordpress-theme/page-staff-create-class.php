@@ -34,7 +34,7 @@ $instructors = array_values(array_filter($all_users, function ($user) {
 }));
 
 /**
- * Procesar creación
+ * Process creation
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payload = [
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         wp_redirect(home_url('/?pagename=staff-manage-classes&notice=created'));
         exit;
     } else {
-        $flash_error = api_message($create_response) ?: 'No se pudo crear la clase.';
+        $flash_error = api_message($create_response) ?: 'Could not create the class.';
     }
 }
 
@@ -75,7 +75,7 @@ wp_app_page_start('Create Class', true);
         <div class="min-w-0">
             <h2 class="text-xl font-bold">Create Class</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea una nueva clase desde este formulario.
+                Create a new class from this form.
             </p>
         </div>
 

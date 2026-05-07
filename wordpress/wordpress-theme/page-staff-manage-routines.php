@@ -13,11 +13,11 @@ $flash_error = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Rutina eliminada correctamente.';
+    $flash_success = 'Routine deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Rutina creada correctamente.';
+    $flash_success = 'Routine created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Rutina actualizada correctamente.';
+    $flash_success = 'Routine updated successfully.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar la rutina.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the routine.';
     }
 }
 
@@ -127,9 +127,9 @@ function routine_short_text($value, int $limit = 110): string
 }
 /*
 |--------------------------------------------------------------------------
-| Cargar todas las rutinas
+| Load all routines
 |--------------------------------------------------------------------------
-| Recorremos varias páginas por si Laravel devuelve 10 en 10.
+| Walk several pages in case Laravel returns batches of 10.
 */
 $paged = fitapp_api_get_page('/routines', $page, $per_page, true);
 $all_routines = [];
@@ -266,7 +266,7 @@ wp_app_page_start('Manage Routines', true);
         <div>
             <h2 class="text-lg font-bold">Routine List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona rutinas, edítalas o elimínalas fácilmente.
+                Manage routines, edit them, or delete them easily.
             </p>
 
             <?php if ($total > 0): ?>
@@ -381,7 +381,7 @@ wp_app_page_start('Manage Routines', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Eliminar esta rutina?');">
+                        <form method="post" onsubmit="return confirm('Delete this routine?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="routine_id" value="<?= $routine_id ?>">
 

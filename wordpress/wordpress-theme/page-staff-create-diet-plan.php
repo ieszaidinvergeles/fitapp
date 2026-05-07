@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_diet_plan_subm
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear el plan de dieta. Revisa los campos obligatorios.';
+    $flash_error = api_message($create_response) ?: 'Could not create the diet plan. Check the required fields.';
 }
 
 wp_app_page_start('Create Diet Plan', true);
@@ -54,7 +54,7 @@ wp_app_page_start('Create Diet Plan', true);
         <div>
             <h2 class="text-lg font-bold">Create Diet Plan</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea un nuevo plan de dieta con objetivo nutricional e imagen de portada.
+                Create a new diet plan with a nutrition target and cover image.
             </p>
         </div>
 
@@ -97,12 +97,12 @@ wp_app_page_start('Create Diet Plan', true);
                     rows="6"
                     maxlength="280"
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Describe el objetivo del plan: perder grasa, ganar masa muscular, mantener peso..."
+                    placeholder="Describe the plan goal: lose fat, gain muscle, maintain weight..."
                     required
                 ><?= h(diet_create_value('goal_description')) ?></textarea>
 
                 <p class="mt-1 text-xs text-on-surface-variant">
-                    Máximo 280 caracteres. Este campo es obligatorio.
+                    Maximum 280 characters. This field is required.
                 </p>
             </div>
 

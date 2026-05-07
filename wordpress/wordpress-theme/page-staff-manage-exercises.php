@@ -13,11 +13,11 @@ $flash_error   = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Ejercicio eliminado correctamente.';
+    $flash_success = 'Exercise deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Ejercicio creado correctamente.';
+    $flash_success = 'Exercise created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Ejercicio actualizado correctamente.';
+    $flash_success = 'Exercise updated successfully.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar el ejercicio.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the exercise.';
     }
 }
 
@@ -74,9 +74,9 @@ if (!function_exists('staff_exercise_page_url')) {
 
 /*
 |--------------------------------------------------------------------------
-| Cargar ejercicios paginados desde backend
+| Load paginated exercises from backend
 |--------------------------------------------------------------------------
-| Una sola llamada por request — sin loops, sin riesgo de 504.
+| One request per page - no loops, no 504 risk.
 */
 $paged        = fitapp_api_get_page('/exercises', $page, $per_page, true);
 $listResp     = $paged['response'];
@@ -89,7 +89,7 @@ $offset       = max(0, $pagination['from'] - 1);
 
 /*
  * Si el backend no confirma last_page pero hay $per_page resultados,
- * habilitamos Next para explorar (no sabemos si hay más).
+ * enable Next to keep browsing (we do not know if there are more).
  */
 $has_next_unknown = ($last_page <= $current_page && count($exercises) >= $per_page);
 $total_known      = ($last_page > 1 || $total > $per_page);
@@ -115,7 +115,7 @@ wp_app_page_start('Manage Exercises', true);
         <div>
             <h2 class="text-lg font-bold">Exercise List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona ejercicios, grupos musculares e información técnica.
+                Manage exercises, muscle groups, and technical information.
             </p>
 
             <?php if ($total_known && $total > 0): ?>
@@ -205,7 +205,7 @@ wp_app_page_start('Manage Exercises', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar este ejercicio?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this exercise?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="exercise_id" value="<?= $exercise_id ?>">
                             <button

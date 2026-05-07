@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_gym_submit']))
         exit;
     }
 
-    $flash_error = api_message($create_response) ?: 'No se pudo crear el gimnasio. Revisa los campos obligatorios.';
+    $flash_error = api_message($create_response) ?: 'Could not create the gym. Check the required fields.';
 }
 
 wp_app_page_start('Create Gym', true);
@@ -57,7 +57,7 @@ wp_app_page_start('Create Gym', true);
         <div>
             <h2 class="text-lg font-bold">Create Gym</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea un nuevo centro con ubicación, contacto e imagen.
+                Create a new location with address, contact details, and image.
             </p>
         </div>
 
@@ -100,7 +100,7 @@ wp_app_page_start('Create Gym', true);
                     name="address"
                     value="<?= h(gym_create_value('address')) ?>"
                     class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Example: Calle Gran Vía 45"
+                    placeholder="Example: 45 Main Street"
                     required
                 >
             </div>

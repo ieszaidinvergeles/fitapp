@@ -13,11 +13,11 @@ $flash_error = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'deleted') {
-    $flash_success = 'Receta eliminada correctamente.';
+    $flash_success = 'Recipe deleted successfully.';
 } elseif ($notice === 'created') {
-    $flash_success = 'Receta creada correctamente.';
+    $flash_success = 'Recipe created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Receta actualizada correctamente.';
+    $flash_success = 'Recipe updated successfully.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
             exit;
         }
 
-        $flash_error = api_message($delete_response) ?: 'No se pudo eliminar la receta.';
+        $flash_error = api_message($delete_response) ?: 'Could not delete the recipe.';
     }
 }
 
@@ -140,7 +140,7 @@ function recipe_type_label($type): string
 
 /*
 |--------------------------------------------------------------------------
-| Cargar recetas paginadas
+| Load paginated recipes
 |--------------------------------------------------------------------------
 */
 $paged = fitapp_api_get_page('/recipes', $page, $per_page, true);
@@ -174,7 +174,7 @@ wp_app_page_start('Manage Recipes', true);
         <div>
             <h2 class="text-lg font-bold">Recipe List</h2>
             <p class="text-sm text-on-surface-variant">
-                Gestiona recetas, ingredientes, pasos de preparación, calorías y macros.
+                Manage recipes, ingredients, preparation steps, calories, and macros.
             </p>
 
             <?php if ($total > 0): ?>
@@ -301,7 +301,7 @@ wp_app_page_start('Manage Recipes', true);
                             View
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar esta receta?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this recipe?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="recipe_id" value="<?= $recipe_id ?>">
                             <button

@@ -60,7 +60,7 @@ $exercise = [];
 if (($exercise_response['result'] ?? false) !== false && is_array($exercise_response['result'] ?? null)) {
     $exercise = $exercise_response['result'];
 } else {
-    $flash_error = api_message($exercise_response) ?: 'No se pudo cargar el ejercicio.';
+    $flash_error = api_message($exercise_response) ?: 'Could not load the exercise.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_exercise_submit'])) {
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_exercise_submit'
         exit;
     }
 
-    $flash_error = api_message($update_response) ?: 'No se pudo actualizar el ejercicio.';
+    $flash_error = api_message($update_response) ?: 'Could not update the exercise.';
 }
 
 wp_app_page_start('Edit Exercise', true);
@@ -98,7 +98,7 @@ wp_app_page_start('Edit Exercise', true);
         <div>
             <h2 class="text-lg font-bold">Edit Exercise</h2>
             <p class="text-sm text-on-surface-variant">
-                Actualiza la información técnica del ejercicio.
+                Update the exercise technical information.
             </p>
         </div>
 
@@ -167,12 +167,12 @@ wp_app_page_start('Edit Exercise', true);
                         rows="6"
                         maxlength="280"
                         class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Describe cómo realizar el ejercicio, técnica, postura y recomendaciones..."
+                        placeholder="Describe how to perform the exercise, technique, posture, and recommendations..."
                         required
                     ><?= h(exercise_edit_value($exercise, 'description')) ?></textarea>
 
                     <p class="mt-1 text-xs text-on-surface-variant">
-                        Máximo 280 caracteres. Este campo es obligatorio.
+                        Maximum 280 characters. This field is required.
                     </p>
                 </div>
 

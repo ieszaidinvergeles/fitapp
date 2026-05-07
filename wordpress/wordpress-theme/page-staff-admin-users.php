@@ -13,15 +13,15 @@ $per_page = 6;
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'created') {
-    $flash_success = 'Usuario creado correctamente.';
+    $flash_success = 'User created successfully.';
 } elseif ($notice === 'updated') {
-    $flash_success = 'Usuario actualizado correctamente.';
+    $flash_success = 'User updated successfully.';
 } elseif ($notice === 'deleted') {
-    $flash_success = 'Usuario eliminado correctamente.';
+    $flash_success = 'User deleted successfully.';
 }
 
 /**
- * Eliminar usuario
+ * Delete user
  */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === 'delete') {
     $user_id = (int)($_POST['user_id'] ?? 0);
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
 }
 
 /**
- * Helper: construir URL manteniendo búsqueda
+ * Helper: build URL while preserving search
  */
 function users_page_url(int $page, string $search = ''): string
 {
@@ -97,7 +97,7 @@ function staff_user_initials(array $user): string
 }
 
 /**
- * Cargar usuarios paginados desde la API
+ * Load users paginados desde la API
  */
 $paged = fitapp_api_get_page('/users', $page_num, $per_page, true, $search !== '' ? ['search' => $search] : []);
 $first_response = $paged['response'];
@@ -132,7 +132,7 @@ wp_app_page_start('Manage Users', true);
         <div class="min-w-0">
             <h2 class="text-lg font-bold">User List</h2>
             <p class="text-sm text-on-surface-variant break-words">
-                Gestiona usuarios, edita sus datos o elimínalos.
+                Manage users, edit their details, or delete them.
             </p>
         </div>
 
@@ -182,12 +182,12 @@ wp_app_page_start('Manage Users', true);
 
     <div class="flex flex-col gap-2 text-sm text-on-surface-variant sm:flex-row sm:items-center sm:justify-between">
         <p>
-            Total usuarios: <span class="font-semibold text-on-surface"><?= (int)$total_users ?></span>
+            Total users: <span class="font-semibold text-on-surface"><?= (int)$total_users ?></span>
         </p>
 
         <?php if ($search !== ''): ?>
             <p>
-                Búsqueda activa: <span class="font-semibold text-on-surface"><?= h($search) ?></span>
+                Active search: <span class="font-semibold text-on-surface"><?= h($search) ?></span>
             </p>
         <?php endif; ?>
     </div>
@@ -269,7 +269,7 @@ wp_app_page_start('Manage Users', true);
                             Edit
                         </a>
 
-                        <form method="post" onsubmit="return confirm('¿Seguro que quieres eliminar este usuario?');">
+                        <form method="post" onsubmit="return confirm('Are you sure you want to delete this user?');">
                             <input type="hidden" name="action_type" value="delete">
                             <input type="hidden" name="user_id" value="<?= (int)($u['id'] ?? 0) ?>">
                             <button

@@ -56,8 +56,8 @@ function booking_status_label(string $status): string
 {
     $labels = [
         'active' => 'Activa',
-        'attended' => 'Asistió',
-        'no_show' => 'No asistió',
+        'attended' => 'Attended',
+        'no_show' => 'No-show',
         'cancelled' => 'Cancelada',
         'booked' => 'Reservada',
     ];
@@ -66,7 +66,7 @@ function booking_status_label(string $status): string
 }
 
 /**
- * Cargar clase
+ * Load class
  */
 $class_response = api_get('/classes/' . $class_id, auth: true);
 $class_result = (($class_response['result'] ?? false) !== false) ? $class_response['result'] : [];
@@ -124,11 +124,11 @@ wp_app_page_start('Class Bookings', true);
         <div>
             <h2 class="text-lg font-bold">Class Bookings</h2>
             <p class="text-sm text-on-surface-variant">
-                Reservas asociadas a:
+                Bookings for:
                 <span class="font-semibold text-on-surface"><?= h($class_name) ?></span>
             </p>
             <p class="mt-1 text-sm text-primary-container font-semibold">
-                <?= $total_bookings ?> <?= $total_bookings === 1 ? 'reserva encontrada' : 'reservas encontradas' ?>
+                <?= $total_bookings ?> <?= $total_bookings === 1 ? 'booking found' : 'bookings found' ?>
             </p>
         </div>
 
@@ -160,7 +160,7 @@ wp_app_page_start('Class Bookings', true);
             $booking_meta_bits = [];
 
             if ($booked_at !== '') {
-                $booking_meta_bits[] = 'Reserva realizada: ' . h($booked_at);
+                $booking_meta_bits[] = 'Booked at: ' . h($booked_at);
             }
 
             if ($cancelled_at !== '') {
@@ -192,7 +192,7 @@ wp_app_page_start('Class Bookings', true);
 
         <?php if (!$bookings): ?>
             <div class="rounded-xl border border-outline-variant/20 bg-surface-container p-4">
-                <p class="text-on-surface-variant">No hay reservas para esta clase.</p>
+                <p class="text-on-surface-variant">No bookings for this class.</p>
             </div>
         <?php endif; ?>
     </section>

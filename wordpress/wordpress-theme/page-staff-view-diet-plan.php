@@ -23,7 +23,7 @@ $diet_plan = [];
 if (($diet_response['result'] ?? false) !== false && is_array($diet_response['result'] ?? null)) {
     $diet_plan = $diet_response['result'];
 } else {
-    $flash_error = api_message($diet_response) ?: 'No se pudo cargar el plan de dieta.';
+    $flash_error = api_message($diet_response) ?: 'Could not load the diet plan.';
 }
 
 $name = $diet_plan['name'] ?? 'Diet Plan';
@@ -54,7 +54,7 @@ wp_app_page_start('View Diet Plan', true);
             </h2>
 
             <p class="mt-2 text-sm text-on-surface-variant">
-                Vista completa del plan de dieta seleccionado.
+                Full view of the selected diet plan.
             </p>
         </div>
 

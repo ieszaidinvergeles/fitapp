@@ -165,21 +165,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $exercise_response = api_post('/routines/' . $created_routine_id . '/exercises', $exercise_payload, auth: true);
 
                 if (($exercise_response['result'] ?? false) === false) {
-                    $exercise_errors[] = api_message($exercise_response) ?: 'No se pudo asignar un ejercicio.';
+                    $exercise_errors[] = api_message($exercise_response) ?: 'Could not assign an exercise.';
                 }
             }
         } elseif ($selected_exercise_ids) {
-            $exercise_errors[] = 'No se pudo detectar la rutina creada para asignar ejercicios.';
+            $exercise_errors[] = 'Could not detect the created routine to assign exercises.';
         }
 
         if ($exercise_errors) {
-            $flash_error = 'Rutina creada, pero algunos ejercicios no se pudieron asignar: ' . implode(' ', array_unique($exercise_errors));
+            $flash_error = 'Routine created, but some exercises could not be assigned: ' . implode(' ', array_unique($exercise_errors));
         } else {
             wp_redirect(home_url('/?pagename=staff-manage-routines&notice=created'));
             exit;
         }
     } else {
-        $flash_error = api_message($create_response) ?: 'No se pudo crear la rutina.';
+        $flash_error = api_message($create_response) ?: 'Could not create the routine.';
     }
 }
 
@@ -196,7 +196,7 @@ wp_app_page_start('Create Routine', true);
         <div>
             <h2 class="text-lg font-bold">Create Routine</h2>
             <p class="text-sm text-on-surface-variant">
-                Crea una nueva rutina para los usuarios del gimnasio.
+                Create a new routine for gym users.
             </p>
         </div>
 
@@ -280,7 +280,7 @@ wp_app_page_start('Create Routine', true);
                     rows="5"
                     required
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Describe brevemente para qué sirve esta rutina..."
+                    placeholder="Briefly describe what this routine is for..."
                 ><?= h(routine_form_value('description'), '') ?></textarea>
             </div>
 
@@ -288,7 +288,7 @@ wp_app_page_start('Create Routine', true);
                 <div class="mb-4">
                     <h3 class="text-base font-bold">Routine exercises</h3>
                     <p class="text-sm text-on-surface-variant">
-                        Selecciona ejercicios y define orden, series, repeticiones y descanso.
+                        Select exercises and set order, sets, reps, and rest.
                     </p>
                 </div>
 
