@@ -43,15 +43,13 @@ $gyms = extract_room_list($gyms_response);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_room_submit'])) {
     $payload = [
-        'name' => trim((string)($_POST['room_name'] ?? '')),
-        'gym_id' => !empty($_POST['gym_id']) ? (int)$_POST['gym_id'] : null,
+        'name'     => trim((string)($_POST['room_name'] ?? '')),
+        'gym_id'   => !empty($_POST['gym_id']) ? (int)$_POST['gym_id'] : null,
         'capacity' => !empty($_POST['capacity']) ? (int)$_POST['capacity'] : null,
-        'floor' => trim((string)($_POST['floor'] ?? '')),
-        'description' => trim((string)($_POST['description'] ?? '')),
     ];
 
     $payload = array_filter($payload, function ($value) {
-        return $value !== '' && $value !== null && $value !== '-' && $value !== '—';
+        return $value !== '' && $value !== null;
     });
 
     $create_response = fitapp_api_multipart_post('/rooms', $payload, $_FILES['image'] ?? null, 'image', true);
@@ -135,54 +133,20 @@ wp_app_page_start('Create Room', true);
                 </select>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                        Capacity
-                    </label>
-
-                    <input
-                        type="number"
-                        name="capacity"
-                        min="1"
-                        value="<?= h(room_create_value('capacity')) ?>"
-                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Example: 25"
-                        required
-                    >
-                </div>
-
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                        Floor
-                    </label>
-
-                    <input
-                        type="text"
-                        name="floor"
-                        value="<?= h(room_create_value('floor')) ?>"
-                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                        placeholder="Example: Main floor"
-                    >
-                </div>
-            </div>
-
             <div>
                 <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                    Description
+                    Capacity
                 </label>
 
-                <textarea
-                    name="description"
-                    rows="5"
-                    maxlength="280"
-                    class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    placeholder="Describe la sala, su uso principal o características..."
-                ><?= h(room_create_value('description')) ?></textarea>
-
-                <p class="mt-1 text-xs text-on-surface-variant">
-                    Opcional. Máximo 280 caracteres.
-                </p>
+                <input
+                    type="number"
+                    name="capacity"
+                    min="1"
+                    value="<?= h(room_create_value('capacity')) ?>"
+                    class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
+                    placeholder="Example: 25"
+                    required
+                >
             </div>
 
             <div class="flex flex-col gap-3 pt-2 sm:flex-row">

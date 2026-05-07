@@ -5,11 +5,11 @@ Template Name: Staff Manage Classes
 require_once 'functions.php';
 require_advanced();
 
-$page = max(1, (int)($_GET['page_num'] ?? 1));
+$page     = max(1, (int)($_GET['page_num'] ?? 1));
 $per_page = 10;
 
 $flash_success = '';
-$flash_error = '';
+$flash_error   = '';
 
 $notice = $_GET['notice'] ?? '';
 if ($notice === 'cancelled') {
@@ -62,25 +62,6 @@ if (!function_exists('extract_classes_from_response')) {
     }
 }
 
-if (!function_exists('extract_list_from_response')) {
-    function extract_list_from_response(array $response): array
-    {
-        if (($response['result'] ?? false) === false) {
-            return [];
-        }
-
-        if (!empty($response['result']['data']) && is_array($response['result']['data'])) {
-            return $response['result']['data'];
-        }
-
-        if (!empty($response['result']) && is_array($response['result'])) {
-            return $response['result'];
-        }
-
-        return [];
-    }
-}
-
 if (!function_exists('build_lookup_by_id')) {
     function build_lookup_by_id(array $items): array
     {
@@ -96,17 +77,6 @@ if (!function_exists('build_lookup_by_id')) {
     }
 }
 
-if (!function_exists('response_last_page')) {
-    function response_last_page(array $response): ?int
-    {
-        $last_page = $response['result']['meta']['last_page']
-            ?? $response['result']['last_page']
-            ?? null;
-
-        return $last_page !== null ? max(1, (int)$last_page) : null;
-    }
-}
-
 if (!function_exists('class_page_url')) {
     function class_page_url(int $page): string
     {
@@ -119,7 +89,7 @@ if (!function_exists('class_clean_value')) {
     {
         $value = trim((string)$value);
 
-        if ($value === '' || $value === '-' || $value === '—' || $value === 'â€”' || strtoupper($value) === 'NULL') {
+        if ($value === '' || $value === '-' || $value === '—' || $value === 'â€"' || strtoupper($value) === 'NULL') {
             return $default;
         }
 
@@ -128,7 +98,7 @@ if (!function_exists('class_clean_value')) {
 }
 
 if (!function_exists('class_datetime_label')) {
-    function class_datetime_label(array $class_data = null, string $field): string
+    function class_datetime_label(?array $class_data, string $field): string
     {
         $raw = class_clean_value($class_data[$field] ?? '');
 
@@ -147,218 +117,55 @@ if (!function_exists('class_datetime_label')) {
 }
 
 /**
- * Cargar TODAS las clases.
+ * Cargar clases paginadas con include_past para mostrar historial.
+ * Una sola llamada por request — sin loops, sin riesgo de 504.
  */
-$paged = fitapp_api_get_page('/classes', $page, $per_page, true, ['include_past' => 1]);
-$all_classes = [];
-$seen_ids = [];
-$listResp = ['result' => []];
-
-for ($api_page = 1; $api_page <= 0; $api_page++) {
-    $response = api_get('/classes?include_past=1&page=' . $api_page, auth: true);
-
-    if (($response['result'] ?? null) === false) {
-        $listResp = $response;
-        break;
-    }
-
-    $items = extract_classes_from_response($response);
-
-    if (empty($items)) {
-        break;
-    }
-
-    $added_this_page = 0;
-
-    foreach ($items as $item) {
-        $id = (int)($item['id'] ?? 0);
-
-        if ($id > 0 && isset($seen_ids[$id])) {
-            continue;
-        }
-
-        if ($id > 0) {
-            $seen_ids[$id] = true;
-        }
-
-        $all_classes[] = $item;
-        $added_this_page++;
-    }
-
-    $listResp = $response;
-
-    $last_api_page = response_last_page($response);
-
-    if ($added_this_page === 0 || ($last_api_page !== null && $api_page >= $last_api_page)) {
-        break;
-    }
-}
-
-/**
- * Fallback por si el endpoint real es otro.
- */
-if (!$all_classes && (($listResp['result'] ?? null) !== false)) {
-    for ($api_page = 1; $api_page <= 0; $api_page++) {
-        $response = api_get('/gym-classes?include_past=1&page=' . $api_page, auth: true);
-
-        if (($response['result'] ?? null) === false) {
-            $listResp = $response;
-            break;
-        }
-
-        $items = extract_classes_from_response($response);
-
-        if (empty($items)) {
-            break;
-        }
-
-        $added_this_page = 0;
-
-        foreach ($items as $item) {
-            $id = (int)($item['id'] ?? 0);
-
-            if ($id > 0 && isset($seen_ids[$id])) {
-                continue;
-            }
-
-            if ($id > 0) {
-                $seen_ids[$id] = true;
-            }
-
-            $all_classes[] = $item;
-            $added_this_page++;
-        }
-
-        $listResp = $response;
-
-        $last_api_page = response_last_page($response);
-
-        if ($added_this_page === 0 || ($last_api_page !== null && $api_page >= $last_api_page)) {
-            break;
-        }
-    }
-}
-
-/**
- * Ordenar clases:
- * 1. Primero próximas clases, de más cercana a más lejana.
- * 2. Después clases pasadas, de más reciente a más antigua.
- */
-usort($all_classes, function ($a, $b) {
-    $now = time();
-
-    $timeA = strtotime((string)($a['start_time'] ?? '')) ?: 0;
-    $timeB = strtotime((string)($b['start_time'] ?? '')) ?: 0;
-
-    $aIsFuture = $timeA >= $now;
-    $bIsFuture = $timeB >= $now;
-
-    if ($aIsFuture && !$bIsFuture) {
-        return -1;
-    }
-
-    if (!$aIsFuture && $bIsFuture) {
-        return 1;
-    }
-
-    if ($aIsFuture && $bIsFuture) {
-        return $timeA <=> $timeB;
-    }
-
-    return $timeB <=> $timeA;
-});
-
-/**
- * Paginación local.
- */
-$total_classes = count($all_classes);
-$last_page = max(1, (int)ceil($total_classes / $per_page));
-
-if ($page > $last_page) {
-    $page = $last_page;
-}
-
-$current_page = $page;
-$offset = ($current_page - 1) * $per_page;
-$classes = array_slice($all_classes, $offset, $per_page);
-
-$from = $total_classes > 0 ? $offset + 1 : 0;
-$to = $total_classes > 0 ? min($total_classes, $offset + count($classes)) : 0;
-
-$listResp = $paged['response'];
-$classes = $paged['items'];
-$pagination = $paged['meta'];
+$paged        = fitapp_api_get_page('/classes', $page, $per_page, true, ['include_past' => 1]);
+$listResp     = $paged['response'];
+$classes      = $paged['items'];
+$pagination   = $paged['meta'];
 $current_page = $pagination['current_page'];
-$last_page = $pagination['last_page'];
+$last_page    = $pagination['last_page'];
 $total_classes = $pagination['total'];
-$from = $pagination['from'];
-$to = $pagination['to'];
-$upcoming_total = 0;
-$past_total = 0;
-$now_ts = time();
+$from         = $pagination['from'];
+$to           = $pagination['to'];
 
-foreach ($all_classes as $class_item) {
-    $class_ts = strtotime((string)($class_item['start_time'] ?? '')) ?: 0;
-
-    if ($class_ts >= $now_ts) {
-        $upcoming_total++;
-    } else {
-        $past_total++;
-    }
-}
+$has_next_unknown = ($last_page <= $current_page && count($classes) >= $per_page);
 
 /**
  * Cargar relaciones.
  */
-$activities = [];
-$rooms = [];
-$gyms = [];
+$activities   = [];
+$rooms        = [];
+$gyms         = [];
 $users_lookup = [];
 
 $activities_by_id = build_lookup_by_id($activities);
-$rooms_by_id = build_lookup_by_id($rooms);
-$gyms_by_id = build_lookup_by_id($gyms);
-$users_by_id = build_lookup_by_id($users_lookup);
+$rooms_by_id      = build_lookup_by_id($rooms);
+$gyms_by_id       = build_lookup_by_id($gyms);
+$users_by_id      = build_lookup_by_id($users_lookup);
 
 /**
- * Cargar bookings.
+ * Construir mapa de bookings por clase.
+ * Por cada clase de la página actual lanzamos UNA petición ligera
+ * (/bookings?class_id=X&status=active&per_page=1) y leemos el total del meta.
+ * Intentamos excluir canceladas vía status=active.
+ * Máximo ~10 llamadas (tamaño de página), ningún loop gigante.
  */
-$all_bookings = [];
-$seen_booking_ids = [];
+$bookings_by_class = [];
 
-for ($api_page = 1; $api_page <= 0; $api_page++) {
-    $bookings_response = api_get('/bookings?page=' . $api_page, auth: true);
+foreach ($classes as $_bc) {
+    $_bc_id = (int)($_bc['id'] ?? 0);
 
-    if (($bookings_response['result'] ?? null) === false) {
-        break;
+    if ($_bc_id <= 0 || isset($bookings_by_class[$_bc_id])) {
+        continue;
     }
 
-    $booking_items = extract_list_from_response($bookings_response);
-
-    if (empty($booking_items)) {
-        break;
-    }
-
-    $added_this_page = 0;
-
-    foreach ($booking_items as $booking) {
-        $booking_id = (int)($booking['id'] ?? 0);
-
-        if ($booking_id > 0 && isset($seen_booking_ids[$booking_id])) {
-            continue;
-        }
-
-        if ($booking_id > 0) {
-            $seen_booking_ids[$booking_id] = true;
-        }
-
-        $all_bookings[] = $booking;
-        $added_this_page++;
-    }
-
-    if ($added_this_page === 0 || count($booking_items) < 10) {
-        break;
-    }
+    $_bc_paged = fitapp_api_get_page('/bookings', 1, 1, true, [
+        'class_id' => $_bc_id,
+        'status'   => 'active',
+    ]);
+    $bookings_by_class[$_bc_id] = (int)($_bc_paged['meta']['total'] ?? 0);
 }
 
 wp_app_page_start('Manage Classes', true);
@@ -389,6 +196,10 @@ wp_app_page_start('Manage Classes', true);
                 <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-container">
                     <?= h((string)$total_classes) ?> CLASSES REGISTERED | PAGE <?= h((string)$current_page) ?> OF <?= h((string)$last_page) ?>
                 </p>
+            <?php elseif ($classes): ?>
+                <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-primary-container">
+                    Class list · Page <?= h((string)$current_page) ?>
+                </p>
             <?php endif; ?>
         </div>
 
@@ -405,26 +216,18 @@ wp_app_page_start('Manage Classes', true);
         <?php $visible_class_group = null; ?>
         <?php foreach ($classes as $c): ?>
             <?php
-            $class_id = (int)($c['id'] ?? 0);
+            $class_id        = (int)($c['id'] ?? 0);
             $class_timestamp = strtotime((string)($c['start_time'] ?? '')) ?: 0;
-            $class_group = $class_timestamp >= time() ? 'upcoming' : 'past';
+            $class_group     = $class_timestamp >= time() ? 'upcoming' : 'past';
 
-            $detail_response = [];
-
-            $detail = $detail_response['result'] ?? [];
-
-            if (is_array($detail) && !empty($detail)) {
-                $c = array_replace_recursive($c, $detail);
-            }
-
-            $activity_id = (int)($c['activity_id'] ?? $c['activity']['id'] ?? 0);
-            $room_id = (int)($c['room_id'] ?? $c['room']['id'] ?? 0);
-            $gym_id = (int)($c['gym_id'] ?? $c['gym']['id'] ?? 0);
+            $activity_id   = (int)($c['activity_id'] ?? $c['activity']['id'] ?? 0);
+            $room_id       = (int)($c['room_id'] ?? $c['room']['id'] ?? 0);
+            $gym_id        = (int)($c['gym_id'] ?? $c['gym']['id'] ?? 0);
             $instructor_id = (int)($c['instructor_id'] ?? $c['instructor']['id'] ?? 0);
 
-            $activity = $c['activity'] ?? ($activities_by_id[$activity_id] ?? []);
-            $room = $c['room'] ?? ($rooms_by_id[$room_id] ?? []);
-            $gym = $c['gym'] ?? ($gyms_by_id[$gym_id] ?? []);
+            $activity       = $c['activity'] ?? ($activities_by_id[$activity_id] ?? []);
+            $room           = $c['room'] ?? ($rooms_by_id[$room_id] ?? []);
+            $gym            = $c['gym'] ?? ($gyms_by_id[$gym_id] ?? []);
             $instructorData = $c['instructor'] ?? ($users_by_id[$instructor_id] ?? []);
 
             $class_name = class_clean_value(
@@ -438,16 +241,16 @@ wp_app_page_start('Manage Classes', true);
             );
 
             $start_label = class_datetime_label($c, 'start_time');
-            $end_label = class_datetime_label($c, 'end_time');
+            $end_label   = class_datetime_label($c, 'end_time');
 
-            $room_name = class_clean_value($room['name'] ?? $c['room_name'] ?? '');
-            $capacity = class_clean_value($c['capacity_limit'] ?? $c['capacity'] ?? $c['max_capacity'] ?? '');
+            $room_name  = class_clean_value($room['name'] ?? $c['room_name'] ?? '');
+            $capacity   = class_clean_value($c['capacity_limit'] ?? $c['capacity'] ?? $c['max_capacity'] ?? '');
             $instructor = class_clean_value($instructorData['full_name'] ?? $instructorData['username'] ?? $instructorData['email'] ?? '');
-            $gym_name = class_clean_value($gym['name'] ?? $c['gym_name'] ?? '');
+            $gym_name   = class_clean_value($gym['name'] ?? $c['gym_name'] ?? '');
 
             $time_text = '';
             if ($start_label && $end_label) {
-                $time_text = $start_label . ' - ' . $end_label;
+                $time_text = $start_label . ' – ' . $end_label;
             } elseif ($start_label) {
                 $time_text = $start_label;
             }
@@ -468,9 +271,8 @@ wp_app_page_start('Manage Classes', true);
                 $staff_bits[] = 'Gym: ' . $gym_name;
             }
 
-            $bookings_count = (int)($c['bookings_count'] ?? 0);
-
-            $is_cancelled = !empty($c['is_cancelled']);
+            $bookings_count = $bookings_by_class[$class_id] ?? (int)($c['bookings_count'] ?? 0);
+            $is_cancelled   = !empty($c['is_cancelled']);
             ?>
 
             <?php if ($visible_class_group !== $class_group): ?>
@@ -573,15 +375,16 @@ wp_app_page_start('Manage Classes', true);
         <?php endif; ?>
     </section>
 
-    <?php if ($last_page > 1): ?>
+    <?php if ($current_page > 1 || $current_page < $last_page || $has_next_unknown): ?>
         <section class="flex flex-col gap-4 rounded-xl border border-outline-variant/20 bg-surface-container p-4 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-on-surface-variant">
                 Showing
                 <span class="font-bold text-on-surface"><?= h((string)$from) ?></span>
-                -
+                –
                 <span class="font-bold text-on-surface"><?= h((string)$to) ?></span>
-                of
-                <span class="font-bold text-on-surface"><?= h((string)$total_classes) ?></span>
+                <?php if ($total_classes > 0): ?>
+                of <span class="font-bold text-on-surface"><?= h((string)$total_classes) ?></span>
+                <?php endif; ?>
                 classes
             </p>
 
@@ -600,49 +403,55 @@ wp_app_page_start('Manage Classes', true);
                     </span>
                 <?php endif; ?>
 
-                <?php
-                $start = max(1, $current_page - 2);
-                $end = min($last_page, $current_page + 2);
-                ?>
+                <?php if ($last_page > 1): ?>
+                    <?php
+                    $start = max(1, $current_page - 2);
+                    $end   = min($last_page, $current_page + 2);
+                    ?>
 
-                <?php if ($start > 1): ?>
-                    <a
-                        href="<?= esc_url(class_page_url(1)) ?>"
-                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
-                    >
-                        1
-                    </a>
+                    <?php if ($start > 1): ?>
+                        <a
+                            href="<?= esc_url(class_page_url(1)) ?>"
+                            class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                        >
+                            1
+                        </a>
 
-                    <?php if ($start > 2): ?>
-                        <span class="px-1 text-sm text-on-surface-variant">...</span>
-                    <?php endif; ?>
-                <?php endif; ?>
-
-                <?php for ($i = $start; $i <= $end; $i++): ?>
-                    <a
-                        href="<?= esc_url(class_page_url($i)) ?>"
-                        class="rounded-full border px-4 py-2 text-sm font-bold transition <?= $i === $current_page
-                            ? 'border-primary-container bg-primary-container text-on-primary-container shadow-[0_0_18px_rgba(212,251,0,0.22)]'
-                            : 'border-outline-variant/30 hover:bg-surface-container-high' ?>"
-                    >
-                        <?= h((string)$i) ?>
-                    </a>
-                <?php endfor; ?>
-
-                <?php if ($end < $last_page): ?>
-                    <?php if ($end < $last_page - 1): ?>
-                        <span class="px-1 text-sm text-on-surface-variant">...</span>
+                        <?php if ($start > 2): ?>
+                            <span class="px-1 text-sm text-on-surface-variant">...</span>
+                        <?php endif; ?>
                     <?php endif; ?>
 
-                    <a
-                        href="<?= esc_url(class_page_url($last_page)) ?>"
-                        class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
-                    >
-                        <?= h((string)$last_page) ?>
-                    </a>
+                    <?php for ($i = $start; $i <= $end; $i++): ?>
+                        <a
+                            href="<?= esc_url(class_page_url($i)) ?>"
+                            class="rounded-full border px-4 py-2 text-sm font-bold transition <?= $i === $current_page
+                                ? 'border-primary-container bg-primary-container text-on-primary-container shadow-[0_0_18px_rgba(212,251,0,0.22)]'
+                                : 'border-outline-variant/30 hover:bg-surface-container-high' ?>"
+                        >
+                            <?= h((string)$i) ?>
+                        </a>
+                    <?php endfor; ?>
+
+                    <?php if ($end < $last_page): ?>
+                        <?php if ($end < $last_page - 1): ?>
+                            <span class="px-1 text-sm text-on-surface-variant">...</span>
+                        <?php endif; ?>
+
+                        <a
+                            href="<?= esc_url(class_page_url($last_page)) ?>"
+                            class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"
+                        >
+                            <?= h((string)$last_page) ?>
+                        </a>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <span class="rounded-full border border-primary-container bg-primary-container px-4 py-2 text-sm font-bold text-on-primary-container">
+                        <?= $current_page ?>
+                    </span>
                 <?php endif; ?>
 
-                <?php if ($current_page < $last_page): ?>
+                <?php if ($current_page < $last_page || $has_next_unknown): ?>
                     <a
                         href="<?= esc_url(class_page_url($current_page + 1)) ?>"
                         class="rounded-full border border-outline-variant/30 px-4 py-2 text-sm font-bold transition hover:bg-surface-container-high"

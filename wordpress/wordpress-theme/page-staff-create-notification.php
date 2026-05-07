@@ -44,25 +44,14 @@ $gyms = notification_extract_list($gyms_response);
 $audiences = [
     'global' => 'Global',
     'specific_gym' => 'Specific Gym',
-    'staff' => 'Staff',
-    'clients' => 'Clients',
-];
-
-$types = [
-    'system' => 'System',
-    'class' => 'Class',
-    'booking' => 'Booking',
-    'maintenance' => 'Maintenance',
-    'general' => 'General',
+    'staff_only' => 'Staff Only',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_notification_submit'])) {
     $payload = [
         'title' => trim((string)($_POST['notification_title'] ?? '')),
-        'content' => trim((string)($_POST['message'] ?? '')),
+        'body' => trim((string)($_POST['message_text'] ?? '')),
         'target_audience' => trim((string)($_POST['target_audience'] ?? '')),
-        'type' => trim((string)($_POST['type'] ?? 'system')),
-        'status' => trim((string)($_POST['status'] ?? 'pending')),
         'related_gym_id' => !empty($_POST['related_gym_id']) ? (int)$_POST['related_gym_id'] : null,
     ];
 
@@ -132,13 +121,13 @@ wp_app_page_start('Create Notification', true);
                 </label>
 
                 <textarea
-                    name="message"
+                    name="message_text"
                     rows="6"
                     maxlength="500"
                     class="w-full resize-none rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
                     placeholder="Write the notification message..."
                     required
-                ><?= h(notification_create_value('message')) ?></textarea>
+                ><?= h(notification_create_value('message_text')) ?></textarea>
 
                 <p class="mt-1 text-xs text-on-surface-variant">
                     Máximo 500 caracteres.
@@ -161,25 +150,6 @@ wp_app_page_start('Create Notification', true);
                     >
                         <?php foreach ($audiences as $value => $label): ?>
                             <option value="<?= h($value) ?>" <?= $selected_audience === $value ? 'selected' : '' ?>>
-                                <?= h($label) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                        Type
-                    </label>
-
-                    <?php $selected_type = notification_create_value('type', 'system'); ?>
-
-                    <select
-                        name="type"
-                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface [color-scheme:dark] focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    >
-                        <?php foreach ($types as $value => $label): ?>
-                            <option value="<?= h($value) ?>" <?= $selected_type === $value ? 'selected' : '' ?>>
                                 <?= h($label) ?>
                             </option>
                         <?php endforeach; ?>
@@ -209,23 +179,6 @@ wp_app_page_start('Create Notification', true);
                                 <?= h($gym['name'] ?? 'Gym') ?>
                             </option>
                         <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="mb-1.5 block text-sm font-medium text-on-surface-variant">
-                        Status
-                    </label>
-
-                    <?php $selected_status = notification_create_value('status', 'pending'); ?>
-
-                    <select
-                        name="status"
-                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-high px-4 py-3 text-on-surface [color-scheme:dark] focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
-                    >
-                        <option value="pending" <?= $selected_status === 'pending' ? 'selected' : '' ?>>Pending</option>
-                        <option value="sent" <?= $selected_status === 'sent' ? 'selected' : '' ?>>Sent</option>
-                        <option value="draft" <?= $selected_status === 'draft' ? 'selected' : '' ?>>Draft</option>
                     </select>
                 </div>
 

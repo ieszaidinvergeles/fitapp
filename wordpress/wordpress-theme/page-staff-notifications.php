@@ -102,71 +102,11 @@ function notification_label($value): string
 
 /*
 |--------------------------------------------------------------------------
-| Cargar todas las notificaciones
+| Cargar notificaciones paginadas
 |--------------------------------------------------------------------------
 | Recorremos páginas por si la API devuelve resultados paginados.
 */
 $paged = fitapp_api_get_page('/notifications', $page, $per_page, true);
-$all_notifications = [];
-$seen_ids = [];
-$listResp = ['result' => []];
-
-for ($api_page = 1; $api_page <= 0; $api_page++) {
-    $response = api_get('/notifications?page=' . $api_page, auth: true);
-
-    if (($response['result'] ?? null) === false) {
-        $listResp = $response;
-        break;
-    }
-
-    $items = notification_extract_list($response);
-
-    if (empty($items)) {
-        break;
-    }
-
-    $added_this_page = 0;
-
-    foreach ($items as $item) {
-        $id = (int)($item['id'] ?? 0);
-
-        if ($id > 0 && isset($seen_ids[$id])) {
-            continue;
-        }
-
-        if ($id > 0) {
-            $seen_ids[$id] = true;
-        }
-
-        $all_notifications[] = $item;
-        $added_this_page++;
-    }
-
-    $listResp = $response;
-
-    if ($added_this_page === 0 || count($items) < 10) {
-        break;
-    }
-}
-
-usort($all_notifications, function ($a, $b) {
-    return strtotime((string)($b['created_at'] ?? '')) <=> strtotime((string)($a['created_at'] ?? ''));
-});
-
-$total = count($all_notifications);
-$last_page = max(1, (int)ceil($total / $per_page));
-
-if ($page > $last_page) {
-    $page = $last_page;
-}
-
-$current_page = $page;
-$offset = ($current_page - 1) * $per_page;
-$notifications = array_slice($all_notifications, $offset, $per_page);
-
-$from = $total > 0 ? $offset + 1 : 0;
-$to = $total > 0 ? min($total, $offset + count($notifications)) : 0;
-
 $listResp = $paged['response'];
 $notifications = $paged['items'];
 $pagination = $paged['meta'];
@@ -222,7 +162,7 @@ wp_app_page_start('Notifications', true);
             $notification_id = (int)($notification['id'] ?? 0);
 
             $title = notification_value($notification, ['title', 'subject', 'name'], 'Notification');
-            $message = notification_value($notification, ['message', 'body', 'content', 'description'], '');
+            $message = notification_value($notification, ['body', 'message', 'content', 'description', 'text'], '');
             $audience = notification_label(notification_value($notification, ['target_audience', 'audience', 'role'], ''));
             $type = notification_label(notification_value($notification, ['type', 'category', 'notification_type'], 'System'));
             $status = notification_label(notification_value($notification, ['status', 'state'], 'Pending'));
@@ -234,7 +174,8 @@ wp_app_page_start('Notifications', true);
             } elseif (!empty($notification['related_gym']) && is_array($notification['related_gym'])) {
                 $related_gym = $notification['related_gym']['name'] ?? '';
             } else {
-                $related_gym = notification_value($notification, ['related_gym_id', 'gym_id'], '');
+                $related_gym_id = (int)notification_value($notification, ['related_gym_id', 'gym_id'], 0);
+                $related_gym = $related_gym_id > 0 ? 'Gym #' . $related_gym_id : '';
             }
 
             $notification_meta_bits = [];

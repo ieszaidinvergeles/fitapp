@@ -70,9 +70,9 @@ if (($response['result'] ?? false) !== false && is_array($response['result'] ?? 
 $title = view_notification_value($notification, ['title', 'subject', 'name'], 'Notification');
 
 $message = view_notification_value($notification, [
+    'body',
     'message',
     'content',
-    'body',
     'description',
     'text'
 ], 'No message available.');
@@ -106,31 +106,17 @@ if (!empty($notification['gym']) && is_array($notification['gym'])) {
 } elseif (!empty($notification['related_gym']) && is_array($notification['related_gym'])) {
     $related_gym = $notification['related_gym']['name'] ?? '';
 } else {
-    $related_gym = view_notification_value($notification, ['related_gym_id', 'gym_id'], '');
+    $related_gym_id = (int)view_notification_value($notification, ['related_gym_id', 'gym_id'], 0);
+    $related_gym = $related_gym_id > 0 ? 'Gym #' . $related_gym_id : '';
 }
 
-$notification_stat_cards = [];
-$notification_extra_cards = [];
-
-if ($type !== '') {
-    $notification_stat_cards[] = ['label' => 'Type', 'value' => h($type), 'pill' => false];
-}
-
-if ($audience !== '') {
-    $notification_stat_cards[] = ['label' => 'Audience', 'value' => h($audience), 'pill' => false];
-}
-
-if ($status !== '') {
-    $notification_stat_cards[] = ['label' => 'Status', 'value' => h($status), 'pill' => true];
-}
-
-if (h((string)$related_gym) !== '') {
-    $notification_extra_cards[] = ['label' => 'Related gym', 'value' => h((string)$related_gym)];
-}
-
-if ($created_at !== '') {
-    $notification_extra_cards[] = ['label' => 'Created', 'value' => h($created_at)];
-}
+$notification_detail_cards = [
+    ['label' => 'Audience', 'value' => h($audience, 'Global')],
+    ['label' => 'Type', 'value' => h($type, 'System')],
+    ['label' => 'Status', 'value' => h($status, 'Pending'), 'pill' => true],
+    ['label' => 'Related gym', 'value' => h((string)$related_gym, 'No gym assigned')],
+    ['label' => 'Created date', 'value' => h($created_at, 'Pending')],
+];
 
 wp_app_page_start('View Notification', true);
 ?>
@@ -165,68 +151,54 @@ wp_app_page_start('View Notification', true);
     </section>
 
     <?php if ($notification): ?>
-        <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-5 sm:p-7 shadow-lg">
-
-            <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
-
-                <div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-outline-variant/20 bg-surface-container-high">
-                    <span class="material-symbols-outlined text-5xl text-primary-container">
-                        notifications_active
-                    </span>
-                </div>
-
-                <div class="min-w-0 flex-1 space-y-4">
-
-                    <?php if ($notification_stat_cards): ?>
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <?php foreach ($notification_stat_cards as $card): ?>
-                                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                        <?= h($card['label']) ?>
-                                    </p>
-
-                                    <?php if (!empty($card['pill'])): ?>
-                                        <p class="mt-2 inline-flex rounded-full bg-primary-container/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary-container">
-                                            <?= $card['value'] ?>
-                                        </p>
-                                    <?php else: ?>
-                                        <p class="mt-2 text-sm font-bold">
-                                            <?= $card['value'] ?>
-                                        </p>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-5">
-                        <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                            Message
-                        </p>
-
-                        <p class="mt-3 whitespace-pre-line text-sm leading-7 text-on-surface-variant">
-                            <?= h($message) ?>
-                        </p>
+        <section class="space-y-4">
+            <article class="rounded-3xl border border-outline-variant/20 bg-surface-container p-5 shadow-lg sm:p-7">
+                <div class="flex flex-col gap-5 sm:flex-row sm:items-start">
+                    <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border border-outline-variant/20 bg-surface-container-high">
+                        <span class="material-symbols-outlined text-5xl text-primary-container">notifications_active</span>
                     </div>
 
-                    <?php if ($notification_extra_cards): ?>
-                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <?php foreach ($notification_extra_cards as $card): ?>
-                                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container-high p-4">
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
-                                        <?= h($card['label']) ?>
-                                    </p>
-                                    <p class="mt-2 text-sm font-bold">
-                                        <?= $card['value'] ?>
-                                    </p>
-                                </div>
-                            <?php endforeach; ?>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-black uppercase tracking-[0.2em] text-primary-container">
+                            Notification
+                        </p>
+
+                        <h3 class="mt-2 text-2xl font-black uppercase tracking-tight break-words">
+                            <?= h($title) ?>
+                        </h3>
+
+                        <div class="mt-5 rounded-2xl border border-outline-variant/20 bg-surface-container-high p-5">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                                Message
+                            </p>
+
+                            <p class="mt-3 whitespace-pre-line break-words text-sm leading-7 text-on-surface-variant">
+                                <?= h($message, 'No message available.') ?>
+                            </p>
                         </div>
-                    <?php endif; ?>
-
+                    </div>
                 </div>
-            </div>
+            </article>
 
+            <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <?php foreach ($notification_detail_cards as $card): ?>
+                    <article class="rounded-2xl border border-outline-variant/20 bg-surface-container p-4">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                            <?= h($card['label']) ?>
+                        </p>
+
+                        <?php if (!empty($card['pill'])): ?>
+                            <p class="mt-2 inline-flex rounded-full bg-primary-container/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-primary-container">
+                                <?= $card['value'] ?>
+                            </p>
+                        <?php else: ?>
+                            <p class="mt-2 text-sm font-bold break-words">
+                                <?= $card['value'] ?>
+                            </p>
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
+            </section>
         </section>
     <?php endif; ?>
 

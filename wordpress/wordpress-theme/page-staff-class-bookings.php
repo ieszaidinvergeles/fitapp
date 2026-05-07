@@ -74,7 +74,17 @@ $class_data = is_array($class_result) ? ($class_result['data'] ?? $class_result)
 
 $paged = fitapp_api_get_page('/bookings', $page_num, $per_page, true, ['class_id' => $class_id]);
 $bookings_response = $paged['response'];
-$bookings = $paged['items'];
+$raw_bookings = $paged['items'];
+$bookings = array_values(array_filter($raw_bookings, static function ($booking) use ($class_id) {
+    if (!is_array($booking)) {
+        return false;
+    }
+
+    $booking_class_id = (int)($booking['class_id'] ?? $booking['gym_class']['id'] ?? 0);
+    $user_id = (int)($booking['user_id'] ?? $booking['user']['id'] ?? 0);
+
+    return $booking_class_id === $class_id && $user_id > 0;
+}));
 $pagination = $paged['meta'];
 
 $activity_id = (int)(
@@ -92,11 +102,11 @@ $class_name = $activity['name']
     ?? $class_data['class_name']
     ?? 'Class';
 
-$total_bookings = $pagination['total'];
+$total_bookings = $bookings ? (int)$pagination['total'] : 0;
 $current_page = $pagination['current_page'];
-$last_page = $pagination['last_page'];
-$from = $pagination['from'];
-$to = $pagination['to'];
+$last_page = $bookings ? $pagination['last_page'] : 1;
+$from = $bookings ? $pagination['from'] : 0;
+$to = $bookings ? $pagination['to'] : 0;
 
 wp_app_page_start('Class Bookings', true);
 ?>
