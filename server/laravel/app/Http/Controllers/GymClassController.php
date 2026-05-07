@@ -41,7 +41,7 @@ class GymClassController extends Controller
             if ($request->filled('date')) {
                 $query->whereDate('start_time', $request->input('date'));
                 // Note: We remove the 'start_time > now' filter here to allow viewing history if the user searches for it.
-            } else {
+            } elseif (!$request->boolean('include_past')) {
                 // By default only show future classes
                 $query->where('start_time', '>', now());
             }

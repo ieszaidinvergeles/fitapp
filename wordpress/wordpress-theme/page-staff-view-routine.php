@@ -38,9 +38,13 @@ if (!$routine || !is_array($routine)) {
 
 $routine_name = view_routine_value($routine, 'name', 'Routine');
 $difficulty = h(ucfirst(str_replace('_', ' ', (string)view_routine_value($routine, 'difficulty_level', ''))));
-$goal = h((string)view_routine_value($routine, 'goal', ''));
 $description = view_routine_value($routine, 'description', '');
 $duration = h((string)view_routine_value($routine, 'estimated_duration_min', ''));
+$creator = is_array($routine['creator'] ?? null) ? $routine['creator'] : [];
+$creator_name = h($creator['full_name'] ?? $creator['username'] ?? $creator['email'] ?? '');
+$diet_plan = is_array($routine['diet_plan'] ?? null) ? $routine['diet_plan'] : [];
+$diet_plan_id = (int)view_routine_value($routine, 'associated_diet_plan_id', 0);
+$diet_plan_name = h($diet_plan['name'] ?? '');
 $image_url = fitapp_public_asset_url(
     $routine['cover_image_url']
     ?? $routine['image_url']
@@ -60,10 +64,18 @@ if ($difficulty !== '') {
     $routine_stat_cards[] = ['label' => 'Difficulty', 'value' => $difficulty];
 }
 
-$routine_stat_cards[] = ['label' => 'Goal', 'value' => $goal !== '' ? $goal : 'No goal defined'];
-
 if ($duration !== '') {
     $routine_stat_cards[] = ['label' => 'Duration', 'value' => $duration . ' min'];
+}
+
+if ($creator_name !== '') {
+    $routine_stat_cards[] = ['label' => 'Creator', 'value' => $creator_name];
+}
+
+if ($diet_plan_name !== '') {
+    $routine_stat_cards[] = ['label' => 'Diet plan', 'value' => $diet_plan_name];
+} elseif ($diet_plan_id > 0) {
+    $routine_stat_cards[] = ['label' => 'Diet plan', 'value' => '#' . h((string)$diet_plan_id)];
 }
 
 wp_app_page_start('View Routine', true);
@@ -113,7 +125,7 @@ wp_app_page_start('View Routine', true);
                         Routine #<?= h((string)$routine_id) ?>
                     </p>
 
-                    <h3 class="mt-1 text-2xl font-black uppercase tracking-tight text-on-surface">
+                    <h3 class="mt-1 break-words text-2xl font-black uppercase tracking-tight text-on-surface [overflow-wrap:anywhere]">
                         <?= h($routine_name) ?>
                     </h3>
                 </div>
@@ -135,7 +147,7 @@ wp_app_page_start('View Routine', true);
 
     <section class="rounded-3xl border border-outline-variant/20 bg-surface-container p-4 sm:p-6 shadow-lg">
         <h3 class="mb-2 text-lg font-bold">Description</h3>
-        <p class="text-sm leading-relaxed text-on-surface-variant">
+        <p class="break-words text-sm leading-relaxed text-on-surface-variant [overflow-wrap:anywhere]">
             <?= h($description, 'No description available.') ?>
         </p>
     </section>
@@ -149,10 +161,32 @@ wp_app_page_start('View Routine', true);
         </div>
 
         <?php if (!empty($exercises) && is_array($exercises)): ?>
+            <div class="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
+                <label class="relative block">
+                    <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xl text-on-surface-variant">search</span>
+                    <input
+                        id="viewRoutineExerciseSearch"
+                        type="search"
+                        class="w-full rounded-2xl border border-outline-variant/20 bg-surface-container px-11 py-3 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:outline-none focus:ring-2 focus:ring-primary-container/20"
+                        placeholder="Search exercise or muscle group"
+                    >
+                </label>
+
+                <div class="rounded-2xl border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm font-semibold text-on-surface-variant">
+                    <span id="viewRoutineExerciseVisibleCount"><?= count($exercises) ?></span> / <span id="viewRoutineExerciseTotalCount"><?= count($exercises) ?></span> visible
+                </div>
+            </div>
+
+            <div id="viewRoutineExerciseList" class="grid max-h-[560px] gap-3 overflow-y-auto pr-1 sm:max-h-[620px] xl:grid-cols-2">
             <?php foreach ($exercises as $index => $exercise): ?>
                 <?php
                 $exercise_name = $exercise['name'] ?? 'Exercise';
                 $exercise_description = h($exercise['description'] ?? '');
+                $exercise_filter = strtolower(trim(
+                    (string)($exercise['name'] ?? '') . ' ' .
+                    (string)($exercise['target_muscle_group'] ?? '') . ' ' .
+                    (string)($exercise['description'] ?? '')
+                ));
 
                 $pivot = $exercise['pivot'] ?? [];
                 $sets = h((string)($exercise['sets'] ?? ($pivot['recommended_sets'] ?? '')));
@@ -174,7 +208,11 @@ wp_app_page_start('View Routine', true);
                 }
                 ?>
 
-                <article class="rounded-2xl border border-outline-variant/20 bg-surface-container p-4">
+                <article
+                    data-routine-view-exercise-item
+                    data-routine-view-exercise-filter="<?= esc_attr($exercise_filter) ?>"
+                    class="rounded-2xl border border-outline-variant/20 bg-surface-container p-4"
+                >
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
 
                         <div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-outline-variant/20 bg-surface-container-high">
@@ -191,7 +229,7 @@ wp_app_page_start('View Routine', true);
                             </h4>
 
                             <?php if ($exercise_description !== ''): ?>
-                                <p class="text-sm text-on-surface-variant">
+                                <p class="break-words text-sm text-on-surface-variant [overflow-wrap:anywhere]">
                                     <?= $exercise_description ?>
                                 </p>
                             <?php endif; ?>
@@ -211,6 +249,11 @@ wp_app_page_start('View Routine', true);
                     </div>
                 </article>
             <?php endforeach; ?>
+            </div>
+
+            <p id="viewRoutineExerciseEmpty" class="hidden rounded-xl border border-outline-variant/20 bg-surface-container px-4 py-3 text-sm text-on-surface-variant">
+                No exercises match your search.
+            </p>
         <?php else: ?>
             <div class="rounded-2xl border border-outline-variant/20 bg-surface-container p-4">
                 <p class="text-sm text-on-surface-variant">
@@ -221,6 +264,56 @@ wp_app_page_start('View Routine', true);
     </section>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const search = document.getElementById('viewRoutineExerciseSearch');
+    const list = document.getElementById('viewRoutineExerciseList');
+
+    if (!search || !list) {
+        return;
+    }
+
+    const items = Array.from(list.querySelectorAll('[data-routine-view-exercise-item]'));
+    const emptyState = document.getElementById('viewRoutineExerciseEmpty');
+    const visibleCount = document.getElementById('viewRoutineExerciseVisibleCount');
+
+    function normalize(value) {
+        return (value || '')
+            .toString()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
+    }
+
+    function updateExerciseList() {
+        const query = normalize(search.value);
+        let visible = 0;
+
+        items.forEach(function (item) {
+            const haystack = normalize(item.dataset.routineViewExerciseFilter || item.textContent);
+            const matches = query === '' || haystack.includes(query);
+            item.classList.toggle('hidden', !matches);
+
+            if (matches) {
+                visible++;
+            }
+        });
+
+        if (visibleCount) {
+            visibleCount.textContent = visible;
+        }
+
+        if (emptyState) {
+            emptyState.classList.toggle('hidden', visible !== 0);
+        }
+    }
+
+    search.addEventListener('input', updateExerciseList);
+    updateExerciseList();
+});
+</script>
 
 <?php
 wp_app_page_end(true);

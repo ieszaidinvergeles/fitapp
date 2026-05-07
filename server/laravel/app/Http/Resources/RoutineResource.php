@@ -24,6 +24,14 @@ class RoutineResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $exercises = [];
+
+        if ($this->relationLoaded('orderedExercises')) {
+            $exercises = $this->orderedExercises;
+        } elseif ($this->relationLoaded('exercises')) {
+            $exercises = $this->exercises;
+        }
+
         return [
             'id'                       => $this->id,
             'name'                     => $this->name,
@@ -38,9 +46,8 @@ class RoutineResource extends JsonResource
             'associated_diet_plan_id'  => $this->associated_diet_plan_id,
             'exercises_count'          => $this->exercises_count ?? 0,
             'creator'                  => new UserResource($this->whenLoaded('creator')),
-            'exercises'                => ExerciseResource::collection(
-                $this->whenLoaded('orderedExercises') ?? $this->whenLoaded('exercises')
-            ),
+            'diet_plan'                => new DietPlanResource($this->whenLoaded('dietPlan')),
+            'exercises'                => ExerciseResource::collection($exercises),
         ];
     }
 }

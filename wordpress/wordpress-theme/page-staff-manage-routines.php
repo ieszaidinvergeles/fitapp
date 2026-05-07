@@ -52,6 +52,28 @@ function routine_extract_list(array $response): array
     return [];
 }
 
+function routine_response_last_page(array $response): ?int
+{
+    $last_page = $response['result']['meta']['last_page']
+        ?? $response['result']['last_page']
+        ?? null;
+
+    return $last_page !== null ? max(1, (int)$last_page) : null;
+}
+
+function routine_build_lookup_by_id(array $items): array
+{
+    $lookup = [];
+
+    foreach ($items as $item) {
+        if (is_array($item) && isset($item['id'])) {
+            $lookup[(int)$item['id']] = $item;
+        }
+    }
+
+    return $lookup;
+}
+
 function routine_value(array $routine, array $keys, $default = '')
 {
     foreach ($keys as $key) {
@@ -113,7 +135,7 @@ $all_routines = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
+for ($api_page = 1; $api_page <= 100; $api_page++) {
     $response = api_get('/routines?page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
@@ -146,10 +168,58 @@ for ($api_page = 1; $api_page <= 50; $api_page++) {
 
     $listResp = $response;
 
-    if ($added_this_page === 0 || count($items) < 10) {
+    $last_api_page = routine_response_last_page($response);
+
+    if ($added_this_page === 0 || ($last_api_page !== null && $api_page >= $last_api_page)) {
         break;
     }
 }
+
+usort($all_routines, function ($a, $b) {
+    return (int)($b['id'] ?? 0) <=> (int)($a['id'] ?? 0);
+});
+
+$all_diet_plans = [];
+$seen_diet_plan_ids = [];
+
+for ($api_page = 1; $api_page <= 100; $api_page++) {
+    $diet_response = api_get('/diet-plans?page=' . $api_page, auth: true);
+
+    if (($diet_response['result'] ?? null) === false) {
+        break;
+    }
+
+    $diet_items = routine_extract_list($diet_response);
+
+    if (!$diet_items) {
+        break;
+    }
+
+    $added_this_page = 0;
+
+    foreach ($diet_items as $diet_item) {
+        $diet_id = (int)($diet_item['id'] ?? 0);
+
+        if ($diet_id > 0 && isset($seen_diet_plan_ids[$diet_id])) {
+            continue;
+        }
+
+        if ($diet_id > 0) {
+            $seen_diet_plan_ids[$diet_id] = true;
+        }
+
+        $all_diet_plans[] = $diet_item;
+        $added_this_page++;
+    }
+
+    $last_api_page = routine_response_last_page($diet_response);
+
+    if ($added_this_page === 0 || ($last_api_page !== null && $api_page >= $last_api_page)) {
+        break;
+    }
+}
+
+$diet_plans_by_id = routine_build_lookup_by_id($all_diet_plans);
 
 $total = count($all_routines);
 $last_page = max(1, (int)ceil($total / $per_page));
@@ -216,11 +286,11 @@ wp_app_page_start('Manage Routines', true);
             $duration = routine_value($r, ['estimated_duration_min'], '');
             $description = routine_value($r, ['description'], '');
 
-            /*
-             * Ahora mismo tu tabla/API no tiene un campo goal real.
-             * Si en el futuro añadís goal a routines, esto lo pillará automáticamente.
-             */
-            $goal = routine_value($r, ['goal', 'goal_description', 'objective'], '');
+            $creator = $r['creator'] ?? [];
+            $creator_name = routine_value($creator, ['full_name', 'username', 'email'], '');
+            $diet_plan_id = (int)routine_value($r, ['associated_diet_plan_id'], 0);
+            $diet_plan = $r['diet_plan'] ?? ($diet_plans_by_id[$diet_plan_id] ?? []);
+            $diet_plan_name = routine_value($diet_plan, ['name'], '');
             $routine_meta_bits = [];
 
             if ($difficulty !== '') {
@@ -231,8 +301,15 @@ wp_app_page_start('Manage Routines', true);
                 $routine_meta_bits[] = 'Duration: ' . h((string)$duration) . ' min';
             }
 
-            $clean_goal = h((string)$goal);
-            $routine_meta_bits[] = 'Goal: ' . ($clean_goal !== '' ? $clean_goal : 'No goal defined');
+            if ($creator_name !== '') {
+                $routine_meta_bits[] = 'Creator: ' . h((string)$creator_name);
+            }
+
+            if ($diet_plan_name !== '') {
+                $routine_meta_bits[] = 'Diet plan: ' . h((string)$diet_plan_name);
+            } elseif ($diet_plan_id > 0) {
+                $routine_meta_bits[] = 'Diet plan: #' . h((string)$diet_plan_id);
+            }
 
             $img = fitapp_public_asset_url($r['cover_image_url']
                 ?? $r['image_url']

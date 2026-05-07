@@ -96,6 +96,17 @@ if (!function_exists('build_lookup_by_id')) {
     }
 }
 
+if (!function_exists('response_last_page')) {
+    function response_last_page(array $response): ?int
+    {
+        $last_page = $response['result']['meta']['last_page']
+            ?? $response['result']['last_page']
+            ?? null;
+
+        return $last_page !== null ? max(1, (int)$last_page) : null;
+    }
+}
+
 if (!function_exists('class_page_url')) {
     function class_page_url(int $page): string
     {
@@ -142,8 +153,8 @@ $all_classes = [];
 $seen_ids = [];
 $listResp = ['result' => []];
 
-for ($api_page = 1; $api_page <= 50; $api_page++) {
-    $response = api_get('/classes?page=' . $api_page, auth: true);
+for ($api_page = 1; $api_page <= 100; $api_page++) {
+    $response = api_get('/classes?include_past=1&page=' . $api_page, auth: true);
 
     if (($response['result'] ?? null) === false) {
         $listResp = $response;
@@ -175,7 +186,9 @@ for ($api_page = 1; $api_page <= 50; $api_page++) {
 
     $listResp = $response;
 
-    if ($added_this_page === 0 || count($items) < 10) {
+    $last_api_page = response_last_page($response);
+
+    if ($added_this_page === 0 || ($last_api_page !== null && $api_page >= $last_api_page)) {
         break;
     }
 }
@@ -184,8 +197,8 @@ for ($api_page = 1; $api_page <= 50; $api_page++) {
  * Fallback por si el endpoint real es otro.
  */
 if (!$all_classes && (($listResp['result'] ?? null) !== false)) {
-    for ($api_page = 1; $api_page <= 50; $api_page++) {
-        $response = api_get('/gym-classes?page=' . $api_page, auth: true);
+    for ($api_page = 1; $api_page <= 100; $api_page++) {
+        $response = api_get('/gym-classes?include_past=1&page=' . $api_page, auth: true);
 
         if (($response['result'] ?? null) === false) {
             $listResp = $response;
@@ -217,7 +230,9 @@ if (!$all_classes && (($listResp['result'] ?? null) !== false)) {
 
         $listResp = $response;
 
-        if ($added_this_page === 0 || count($items) < 10) {
+        $last_api_page = response_last_page($response);
+
+        if ($added_this_page === 0 || ($last_api_page !== null && $api_page >= $last_api_page)) {
             break;
         }
     }
@@ -268,6 +283,19 @@ $classes = array_slice($all_classes, $offset, $per_page);
 
 $from = $total_classes > 0 ? $offset + 1 : 0;
 $to = $total_classes > 0 ? min($total_classes, $offset + count($classes)) : 0;
+$upcoming_total = 0;
+$past_total = 0;
+$now_ts = time();
+
+foreach ($all_classes as $class_item) {
+    $class_ts = strtotime((string)($class_item['start_time'] ?? '')) ?: 0;
+
+    if ($class_ts >= $now_ts) {
+        $upcoming_total++;
+    } else {
+        $past_total++;
+    }
+}
 
 /**
  * Cargar relaciones.
@@ -369,9 +397,12 @@ wp_app_page_start('Manage Classes', true);
     </section>
 
     <section class="space-y-3">
+        <?php $visible_class_group = null; ?>
         <?php foreach ($classes as $c): ?>
             <?php
             $class_id = (int)($c['id'] ?? 0);
+            $class_timestamp = strtotime((string)($c['start_time'] ?? '')) ?: 0;
+            $class_group = $class_timestamp >= time() ? 'upcoming' : 'past';
 
             $detail_response = $class_id > 0
                 ? api_get('/classes/' . $class_id, auth: true)
@@ -443,6 +474,21 @@ wp_app_page_start('Manage Classes', true);
 
             $is_cancelled = !empty($c['is_cancelled']);
             ?>
+
+            <?php if ($visible_class_group !== $class_group): ?>
+                <?php $visible_class_group = $class_group; ?>
+                <div class="pt-2">
+                    <div class="flex items-center gap-3">
+                        <span class="h-px flex-1 bg-outline-variant/20"></span>
+                        <span class="rounded-full border border-outline-variant/30 bg-surface-container-high px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-primary-container">
+                            <?= $class_group === 'upcoming'
+                                ? 'Upcoming classes (' . h((string)$upcoming_total) . ')'
+                                : 'Past classes (' . h((string)$past_total) . ')' ?>
+                        </span>
+                        <span class="h-px flex-1 bg-outline-variant/20"></span>
+                    </div>
+                </div>
+            <?php endif; ?>
 
             <article class="bg-surface-container rounded-xl p-4 border border-outline-variant/20 transition hover:border-primary-container/30 hover:bg-surface-container-high">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
