@@ -77,7 +77,7 @@ $calories = h((string)view_recipe_value($recipe, ['calories'], ''));
 $type = view_recipe_type_label(view_recipe_value($recipe, ['type'], ''));
 $image_url = fitapp_public_asset_url(view_recipe_value($recipe, ['image_url', 'cover_image_url', 'image', 'photo_url'], ''));
 
-$macros = view_recipe_decode_macros($recipe['macros_json'] ?? []);
+$macros = view_recipe_decode_macros($recipe['macros_json'] ?? $recipe['macros'] ?? []);
 $protein = h((string)($macros['protein'] ?? ''));
 $carbs = h((string)($macros['carbs'] ?? ''));
 $fat = h((string)($macros['fat'] ?? ''));

@@ -66,13 +66,13 @@ if (($recipe_response['result'] ?? false) !== false && is_array($recipe_response
     $flash_error = api_message($recipe_response) ?: 'No se pudo cargar la receta.';
 }
 
-$macros = recipe_decode_macros($recipe['macros_json'] ?? []);
+$macros = recipe_decode_macros($recipe['macros_json'] ?? $recipe['macros'] ?? []);
 $current_image = fitapp_public_asset_url($recipe['image_url'] ?? '');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_recipe_submit'])) {
-    $fat = $_POST['fat'] !== '' ? (float)$_POST['fat'] : null;
-    $carbs = $_POST['carbs'] !== '' ? (float)$_POST['carbs'] : null;
-    $protein = $_POST['protein'] !== '' ? (float)$_POST['protein'] : null;
+    $fat = ($_POST['fat'] ?? '') !== '' ? (float)$_POST['fat'] : null;
+    $carbs = ($_POST['carbs'] ?? '') !== '' ? (float)$_POST['carbs'] : null;
+    $protein = ($_POST['protein'] ?? '') !== '' ? (float)$_POST['protein'] : null;
 
     $macros_payload = [];
 
@@ -93,10 +93,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_recipe_submit'])
         'description' => trim((string)($_POST['description'] ?? '')),
         'ingredients' => trim((string)($_POST['ingredients'] ?? '')),
         'preparation_steps' => trim((string)($_POST['preparation_steps'] ?? '')),
-        'calories' => $_POST['calories'] !== '' ? (int)$_POST['calories'] : null,
-        'macros_json' => !empty($macros_payload) ? json_encode($macros_payload) : '',
+        'calories' => ($_POST['calories'] ?? '') !== '' ? (int)$_POST['calories'] : null,
         'type' => trim((string)($_POST['type'] ?? '')),
     ];
+
+    if (!empty($macros_payload)) {
+        $payload['macros_json'] = json_encode($macros_payload);
+    }
 
     $payload = array_filter($payload, function ($value) {
         return $value !== '' && $value !== null && $value !== '-' && $value !== '—';

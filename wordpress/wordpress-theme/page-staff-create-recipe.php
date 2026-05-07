@@ -30,9 +30,9 @@ $recipe_types = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_recipe_submit'])) {
-    $fat = $_POST['fat'] !== '' ? (float)$_POST['fat'] : null;
-    $carbs = $_POST['carbs'] !== '' ? (float)$_POST['carbs'] : null;
-    $protein = $_POST['protein'] !== '' ? (float)$_POST['protein'] : null;
+    $fat = ($_POST['fat'] ?? '') !== '' ? (float)$_POST['fat'] : null;
+    $carbs = ($_POST['carbs'] ?? '') !== '' ? (float)$_POST['carbs'] : null;
+    $protein = ($_POST['protein'] ?? '') !== '' ? (float)$_POST['protein'] : null;
 
     $macros = [];
     if ($fat !== null) {
@@ -50,10 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_recipe_submit'
         'description' => trim((string)($_POST['description'] ?? '')),
         'ingredients' => trim((string)($_POST['ingredients'] ?? '')),
         'preparation_steps' => trim((string)($_POST['preparation_steps'] ?? '')),
-        'calories' => $_POST['calories'] !== '' ? (int)$_POST['calories'] : null,
-        'macros_json' => !empty($macros) ? json_encode($macros) : '',
+        'calories' => ($_POST['calories'] ?? '') !== '' ? (int)$_POST['calories'] : null,
         'type' => trim((string)($_POST['type'] ?? '')),
     ];
+
+    if (!empty($macros)) {
+        $payload['macros_json'] = json_encode($macros);
+    }
 
     $payload = array_filter($payload, function ($value) {
         if (is_array($value)) {

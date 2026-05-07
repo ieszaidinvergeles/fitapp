@@ -10,6 +10,10 @@ $data = $response['result'] ?? [];
 
 $user = $data['user'] ?? [];
 $todayClasses = $data['today_classes'] ?? [];
+$scheduleClasses = $data['upcoming_classes'] ?? $todayClasses;
+$scheduleClasses = is_array($scheduleClasses) ? array_slice($scheduleClasses, 0, 4) : [];
+$calendarClasses = $data['upcoming_calendar_classes'] ?? $scheduleClasses;
+$calendarClasses = is_array($calendarClasses) ? $calendarClasses : [];
 
 $notif = isset($data['pending_notifications']) && is_array($data['pending_notifications'])
     ? count($data['pending_notifications'])
@@ -26,6 +30,70 @@ $staff_role = $user['role'] ?? 'Staff';
 $staff_intro_bits = array_filter([h($staff_name), h($staff_role)], static function ($value) {
     return $value !== '';
 });
+
+function staff_dashboard_date_label($value): string
+{
+    $timestamp = strtotime((string)$value);
+
+    if (!$timestamp) {
+        return '';
+    }
+
+    $date_key = date('Y-m-d', $timestamp);
+    $today_key = date('Y-m-d');
+
+    return $date_key === $today_key ? 'Today' : date('M j', $timestamp);
+}
+
+function staff_dashboard_time_label($value): string
+{
+    $timestamp = strtotime((string)$value);
+
+    return $timestamp ? date('H:i', $timestamp) : '';
+}
+
+function staff_dashboard_class_title(array $class): string
+{
+    $activity = $class['activity']['name'] ?? '';
+    $name = $class['name'] ?? '';
+
+    return h($activity ?: $name ?: 'Class');
+}
+
+function staff_dashboard_calendar_dates(array $classes, int $limit = 4): array
+{
+    $dates = [];
+    $today = date('Y-m-d');
+
+    foreach ($classes as $class) {
+        $timestamp = strtotime((string)($class['start_time'] ?? ''));
+
+        if (!$timestamp) {
+            continue;
+        }
+
+        $date_key = date('Y-m-d', $timestamp);
+
+        if ($date_key < $today) {
+            continue;
+        }
+
+        if (!isset($dates[$date_key])) {
+            $dates[$date_key] = [
+                'label' => $date_key === $today ? 'Today' : date('D, M j', $timestamp),
+                'count' => 0,
+            ];
+        }
+
+        $dates[$date_key]['count']++;
+    }
+
+    ksort($dates);
+
+    return array_slice($dates, 0, $limit, true);
+}
+
+$calendarDates = staff_dashboard_calendar_dates($calendarClasses, 4);
 
 $page_title = 'Staff Portal';
 $GLOBALS['hide_global_header'] = true;
@@ -167,7 +235,7 @@ voltgym_get_header();
                 ['Rooms', 'staff-rooms', 'meeting_room'],
                 ['Gyms', 'staff-manage-gyms', 'location_city'],
                 ['Equipment', 'staff-manage-equipment', 'construction'],
-                ['Bookings', 'staff-class-bookings', 'fact_check'],
+                ['Gym Equipment Inventory', 'staff-manage-gym-inventory', 'inventory_2'],
             ];
             ?>
 
@@ -204,17 +272,18 @@ voltgym_get_header();
                 </a>
             </div>
 
-            <?php if ($todayClasses): ?>
+            <?php if ($scheduleClasses): ?>
                 <div class="space-y-3">
-                    <?php foreach ($todayClasses as $c): ?>
+                    <?php foreach ($scheduleClasses as $c): ?>
                         <?php
                         $class_meta_bits = [];
-                        $start_time = h(substr((string)($c['start_time'] ?? ''), 0, 5));
+                        $date_label = staff_dashboard_date_label($c['start_time'] ?? '');
+                        $time_label = staff_dashboard_time_label($c['start_time'] ?? '');
                         $room_name = h($c['room']['name'] ?? '');
                         $capacity = (int)($c['capacity'] ?? $c['capacity_limit'] ?? 0);
 
-                        if ($start_time !== '') {
-                            $class_meta_bits[] = $start_time;
+                        if ($date_label !== '' || $time_label !== '') {
+                            $class_meta_bits[] = trim($date_label . ($time_label !== '' ? ' · ' . $time_label : ''));
                         }
 
                         if ($room_name !== '') {
@@ -225,19 +294,19 @@ voltgym_get_header();
                             $class_meta_bits[] = $capacity . ' Cap';
                         }
                         ?>
-                        <div class="flex items-center justify-between rounded-2xl border border-outline-variant/10 bg-surface-container-high p-4 transition hover:bg-surface-bright">
-                            <div class="flex items-center gap-5">
-                                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-container/10 text-primary-container">
+                        <div class="flex flex-col gap-3 rounded-2xl border border-outline-variant/10 bg-surface-container-high p-3 transition hover:bg-surface-bright sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-container/10 text-primary-container">
                                     <span class="material-symbols-outlined">event</span>
                                 </div>
 
-                                <div>
-                                    <p class="font-headline text-sm font-black uppercase tracking-wider">
-                                        <?= h($c['activity']['name'] ?? 'Class') ?>
+                                <div class="min-w-0">
+                                    <p class="truncate font-headline text-sm font-black uppercase tracking-wider">
+                                        <?= staff_dashboard_class_title($c) ?>
                                     </p>
                                     <?php if ($class_meta_bits): ?>
-                                        <p class="text-xs text-on-surface-variant">
-                                            <?= implode(' | ', $class_meta_bits) ?>
+                                        <p class="truncate text-xs text-on-surface-variant">
+                                            <?= h(implode(' · ', $class_meta_bits)) ?>
                                         </p>
                                     <?php endif; ?>
                                 </div>
@@ -245,7 +314,7 @@ voltgym_get_header();
 
                             <a
                                 href="<?= esc_url(home_url('/?pagename=staff-class-bookings&id=' . (int)($c['id'] ?? 0))) ?>"
-                                class="inline-flex items-center justify-center rounded-full border border-outline-variant/30 px-4 py-2 text-xs font-black uppercase tracking-widest text-on-surface transition hover:border-primary-container hover:text-primary-container"
+                                class="inline-flex items-center justify-center rounded-full border border-outline-variant/30 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-on-surface transition hover:border-primary-container hover:text-primary-container"
                             >
                                 View
                             </a>
@@ -255,7 +324,7 @@ voltgym_get_header();
             <?php else: ?>
                 <div class="rounded-2xl border border-outline-variant/10 bg-surface-container-high p-5">
                     <p class="text-sm italic text-on-surface-variant">
-                        No classes scheduled for today.
+                        No upcoming classes scheduled.
                     </p>
                 </div>
             <?php endif; ?>
@@ -263,19 +332,36 @@ voltgym_get_header();
 
         <article class="rounded-3xl border border-outline-variant/10 bg-surface-container-high p-7 md:col-span-4">
             <p class="mb-1 text-xs font-black uppercase tracking-[0.25em] text-primary-container">
-                Quick Search
+                Upcoming Calendar
             </p>
 
             <h3 class="mb-4 font-headline text-2xl font-black uppercase">
-                Find pages
+                Schedule Snapshot
             </h3>
 
-            <div class="space-y-2 text-sm">
-                <a class="block rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-manage-classes')) ?>">Classes</a>
-                <a class="block rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-manage-routines')) ?>">Routines</a>
-                <a class="block rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-admin-users')) ?>">Users</a>
-                <a class="block rounded-xl bg-surface-container px-4 py-3 transition hover:text-primary-container" href="<?= esc_url(home_url('/?pagename=staff-rooms')) ?>">Rooms</a>
-            </div>
+            <?php if ($calendarDates): ?>
+                <div class="space-y-2 text-sm">
+                    <?php foreach ($calendarDates as $date): ?>
+                        <div class="flex items-center justify-between rounded-xl bg-surface-container px-4 py-3">
+                            <span class="font-bold text-on-surface"><?= h($date['label']) ?></span>
+                            <span class="rounded-full bg-primary-container px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-on-primary-container">
+                                <?= (int)$date['count'] ?> classes
+                            </span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="rounded-xl bg-surface-container px-4 py-3">
+                    <p class="text-sm italic text-on-surface-variant">No upcoming dates.</p>
+                </div>
+            <?php endif; ?>
+
+            <a
+                class="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-outline-variant/30 px-4 py-3 text-xs font-black uppercase tracking-widest transition hover:border-primary-container hover:text-primary-container"
+                href="<?= esc_url(home_url('/?pagename=staff-manage-classes')) ?>"
+            >
+                Manage Classes
+            </a>
         </article>
 
     </section>

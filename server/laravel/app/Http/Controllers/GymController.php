@@ -35,13 +35,14 @@ class GymController extends Controller
      *
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         /** @var mixed $result */ $result       = false;
         $messageArray = ['general' => 'Could not retrieve gyms.'];
 
         try {
-            $result       = GymResource::collection(Gym::paginate(10)->withQueryString());
+            $perPage = max(1, min(50, (int)$request->input('per_page', 10)));
+            $result       = GymResource::collection(Gym::paginate($perPage)->withQueryString());
             $messageArray = ['general' => 'OK'];
         } catch (\Exception $e) {
             $messageArray = ['general' => $e->getMessage()];

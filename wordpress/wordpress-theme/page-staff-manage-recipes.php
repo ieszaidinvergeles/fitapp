@@ -96,12 +96,12 @@ function recipe_short_text($value, int $limit = 90): string
 function recipe_macros_label($macros): string
 {
     if (is_string($macros)) {
-        $decoded = json_decode($macros, true);
+        $decoded = json_decode(str_replace("'", '"', $macros), true);
         $macros = is_array($decoded) ? $decoded : [];
     }
 
     if (!is_array($macros) || !$macros) {
-        return '';
+        return 'No macros';
     }
 
     $fat = $macros['fat'] ?? null;
@@ -122,7 +122,9 @@ function recipe_macros_label($macros): string
         $parts[] = 'F: ' . $fat . 'g';
     }
 
-    return $parts ? implode(' | ', $parts) : '';
+    $separator = ' ' . html_entity_decode('&middot;', ENT_QUOTES, 'UTF-8') . ' ';
+
+    return $parts ? implode($separator, $parts) : 'No macros';
 }
 
 function recipe_type_label($type): string
@@ -138,66 +140,10 @@ function recipe_type_label($type): string
 
 /*
 |--------------------------------------------------------------------------
-| Cargar todas las recetas
+| Cargar recetas paginadas
 |--------------------------------------------------------------------------
 */
 $paged = fitapp_api_get_page('/recipes', $page, $per_page, true);
-$all_recipes = [];
-$seen_ids = [];
-$listResp = ['result' => []];
-
-for ($api_page = 1; $api_page <= 0; $api_page++) {
-    $response = api_get('/recipes?page=' . $api_page, auth: true);
-
-    if (($response['result'] ?? null) === false) {
-        $listResp = $response;
-        break;
-    }
-
-    $items = recipe_extract_list($response);
-
-    if (empty($items)) {
-        break;
-    }
-
-    $added_this_page = 0;
-
-    foreach ($items as $item) {
-        $id = (int)($item['id'] ?? 0);
-
-        if ($id > 0 && isset($seen_ids[$id])) {
-            continue;
-        }
-
-        if ($id > 0) {
-            $seen_ids[$id] = true;
-        }
-
-        $all_recipes[] = $item;
-        $added_this_page++;
-    }
-
-    $listResp = $response;
-
-    if ($added_this_page === 0 || count($items) < 10) {
-        break;
-    }
-}
-
-$total = count($all_recipes);
-$last_page = max(1, (int)ceil($total / $per_page));
-
-if ($page > $last_page) {
-    $page = $last_page;
-}
-
-$current_page = $page;
-$offset = ($current_page - 1) * $per_page;
-$recipes = array_slice($all_recipes, $offset, $per_page);
-
-$from = $total > 0 ? $offset + 1 : 0;
-$to = $total > 0 ? min($total, $offset + count($recipes)) : 0;
-
 $listResp = $paged['response'];
 $recipes = $paged['items'];
 $pagination = $paged['meta'];
@@ -259,7 +205,7 @@ wp_app_page_start('Manage Recipes', true);
             $calories = h((string)recipe_value($recipe, ['calories'], ''));
             $type = recipe_type_label(recipe_value($recipe, ['type'], ''));
 
-            $macros_raw = $recipe['macros_json'] ?? [];
+            $macros_raw = $recipe['macros_json'] ?? $recipe['macros'] ?? [];
 
             if (is_string($macros_raw)) {
                 $clean_macros = str_replace("'", '"', $macros_raw);
@@ -274,8 +220,10 @@ wp_app_page_start('Manage Recipes', true);
                 $recipe_meta_bits[] = 'Calories: ' . $calories;
             }
 
-            if ($macros !== '') {
+            if ($macros !== '' && $macros !== 'No macros') {
                 $recipe_meta_bits[] = 'Macros: ' . h($macros);
+            } elseif ($macros === 'No macros') {
+                $recipe_meta_bits[] = 'No macros';
             }
 
             $image = fitapp_public_asset_url($recipe['image_url']

@@ -47,10 +47,11 @@ class EquipmentController extends Controller
      *
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $paginated    = Equipment::paginate(6)->withQueryString();
+            $perPage = max(1, min(50, (int)$request->input('per_page', 10)));
+            $paginated    = Equipment::paginate($perPage)->withQueryString();
             $result       = [
                 'data' => EquipmentResource::collection($paginated),
                 'meta' => [
