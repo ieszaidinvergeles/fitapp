@@ -43,22 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action_type'] ?? '') === '
 }
 
 /**
- * Helper: extraer lista de usuarios de una respuesta
- */
-function extract_users_from_response(array $response): array
-{
-    if (!empty($response['result']['data']) && is_array($response['result']['data'])) {
-        return $response['result']['data'];
-    }
-
-    if (!empty($response['result']) && is_array($response['result'])) {
-        return $response['result'];
-    }
-
-    return [];
-}
-
-/**
  * Helper: construir URL manteniendo búsqueda
  */
 function users_page_url(int $page, string $search = ''): string
@@ -70,78 +54,54 @@ function users_page_url(int $page, string $search = ''): string
     return $url;
 }
 
+function staff_user_avatar_url(array $user): string
+{
+    return fitapp_public_asset_url(
+        $user['profile_photo_url']
+        ?? $user['profile_image_url']
+        ?? $user['avatar_url']
+        ?? $user['photo_url']
+        ?? ''
+    );
+}
+
+function staff_user_initials(array $user): string
+{
+    $source = trim((string)(
+        $user['full_name']
+        ?? $user['username']
+        ?? $user['email']
+        ?? ''
+    ));
+
+    if ($source === '') {
+        return 'U';
+    }
+
+    $parts = preg_split('/\s+/', $source, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    $initials = '';
+
+    if (!empty($parts[0])) {
+        $initials .= mb_substr((string)$parts[0], 0, 1);
+    }
+
+    if (!empty($parts[1])) {
+        $initials .= mb_substr((string)$parts[1], 0, 1);
+    }
+
+    if ($initials === '') {
+        $initials = mb_substr($source, 0, 1);
+    }
+
+    return mb_strtoupper($initials ?: 'U');
+}
+
 /**
- * Cargar todos los usuarios desde la API
+ * Cargar usuarios paginados desde la API
  */
 $paged = fitapp_api_get_page('/users', $page_num, $per_page, true, $search !== '' ? ['search' => $search] : []);
 $first_response = $paged['response'];
 $api_error = (($first_response['result'] ?? null) === false);
-
-$all_users = [];
-
-if (!$api_error) {
-    $all_users = extract_users_from_response($first_response);
-
-    $api_page = 2;
-    while (false) {
-        $page_response = api_get('/users?page=' . $api_page, auth: true);
-
-        if (($page_response['result'] ?? null) === false) {
-            $flash_error = api_message($page_response);
-            break;
-        }
-
-        $page_users = extract_users_from_response($page_response);
-
-        if (empty($page_users)) {
-            break;
-        }
-
-        $all_users = array_merge($all_users, $page_users);
-        $api_page++;
-    }
-}
-
-/**
- * Ordenar por más recientes primero
- */
-usort($all_users, function ($a, $b) {
-    return (int)($b['id'] ?? 0) <=> (int)($a['id'] ?? 0);
-});
-
-/**
- * Filtrar por búsqueda
- */
-$filtered_users = $all_users;
-
-if ($search !== '') {
-    $search_lower = mb_strtolower($search);
-
-    $filtered_users = array_values(array_filter($all_users, function ($u) use ($search_lower) {
-        $full_name = mb_strtolower((string)($u['full_name'] ?? ''));
-        $email = mb_strtolower((string)($u['email'] ?? ''));
-        $username = mb_strtolower((string)($u['username'] ?? ''));
-        $role = mb_strtolower((string)($u['role'] ?? ''));
-
-        return str_contains($full_name, $search_lower)
-            || str_contains($email, $search_lower)
-            || str_contains($username, $search_lower)
-            || str_contains($role, $search_lower);
-    }));
-}
-
-/**
- * Paginación local
- */
-$total_users = count($filtered_users);
-$total_pages = max(1, (int)ceil($total_users / $per_page));
-$page_num = min($page_num, $total_pages);
-$page_num = max(1, $page_num);
-
-$offset = ($page_num - 1) * $per_page;
-$users = array_slice($filtered_users, $offset, $per_page);
-$from = $total_users > 0 ? $offset + 1 : 0;
-$to = $total_users > 0 ? min($total_users, $offset + count($users)) : 0;
 
 $users = $paged['items'];
 $pagination = $paged['meta'];
@@ -235,6 +195,8 @@ wp_app_page_start('Manage Users', true);
     <section class="space-y-3">
         <?php foreach ($users as $u): ?>
             <?php
+            $avatar_url = staff_user_avatar_url($u);
+            $avatar_initials = staff_user_initials($u);
             $user_meta_bits = [];
             $user_gym = h($u['gym']['name'] ?? $u['current_gym']['name'] ?? '');
             $user_plan = h($u['membership_plan']['name'] ?? $u['membership_status'] ?? '');
@@ -250,7 +212,22 @@ wp_app_page_start('Manage Users', true);
             <article class="bg-surface-container rounded-xl p-4 border border-outline-variant/20">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
-                    <div class="min-w-0 flex-1">
+                    <div class="flex min-w-0 flex-1 gap-4">
+                        <div class="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-outline-variant/20 bg-surface-container-high text-sm font-black uppercase text-primary-container shadow-[0_0_18px_rgba(212,251,0,0.08)]">
+                            <?php if ($avatar_url !== ''): ?>
+                                <img
+                                    src="<?= esc_url($avatar_url) ?>"
+                                    alt="<?= h($u['full_name'] ?? $u['email'] ?? 'User') ?>"
+                                    class="h-full w-full object-cover"
+                                    onerror="this.classList.add('hidden'); if (this.nextElementSibling) { this.nextElementSibling.classList.remove('hidden'); this.nextElementSibling.classList.add('flex'); }"
+                                >
+                                <span class="hidden h-full w-full items-center justify-center"><?= h($avatar_initials) ?></span>
+                            <?php else: ?>
+                                <span><?= h($avatar_initials) ?></span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="min-w-0 flex-1">
                         <p class="font-bold text-lg break-words">
                             <?= h($u['full_name'] ?? $u['email'] ?? 'User') ?>
                         </p>
@@ -281,6 +258,8 @@ wp_app_page_start('Manage Users', true);
                             • Strikes: <?= (int)($u['cancellation_strikes'] ?? 0) ?>
                         </p>
                     </div>
+
+                        </div>
 
                     <div class="flex flex-wrap gap-2 self-start sm:self-auto sm:shrink-0">
                         <a

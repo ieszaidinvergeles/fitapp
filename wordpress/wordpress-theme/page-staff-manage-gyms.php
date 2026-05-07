@@ -71,71 +71,15 @@ function gym_value(array $gym, array $keys, $default = '')
 
 function gym_page_url(int $page): string
 {
-    return home_url('/?pagename=staff-manage-gyms&page_num=' . $page);
+    return home_url('/?pagename=staff-manage-gyms&page_num=' . max(1, $page));
 }
 
 /*
 |--------------------------------------------------------------------------
-| Cargar todos los gimnasios
+| Cargar gimnasios paginados
 |--------------------------------------------------------------------------
 */
 $paged = fitapp_api_get_page('/gyms', $page, $per_page, true);
-$all_gyms = [];
-$seen_ids = [];
-$listResp = ['result' => []];
-
-for ($api_page = 1; $api_page <= 0; $api_page++) {
-    $response = api_get('/gyms?page=' . $api_page, auth: true);
-
-    if (($response['result'] ?? null) === false) {
-        $listResp = $response;
-        break;
-    }
-
-    $items = gym_extract_list($response);
-
-    if (empty($items)) {
-        break;
-    }
-
-    $added_this_page = 0;
-
-    foreach ($items as $item) {
-        $id = (int)($item['id'] ?? 0);
-
-        if ($id > 0 && isset($seen_ids[$id])) {
-            continue;
-        }
-
-        if ($id > 0) {
-            $seen_ids[$id] = true;
-        }
-
-        $all_gyms[] = $item;
-        $added_this_page++;
-    }
-
-    $listResp = $response;
-
-    if ($added_this_page === 0 || count($items) < 10) {
-        break;
-    }
-}
-
-$total = count($all_gyms);
-$last_page = max(1, (int)ceil($total / $per_page));
-
-if ($page > $last_page) {
-    $page = $last_page;
-}
-
-$current_page = $page;
-$offset = ($current_page - 1) * $per_page;
-$gyms = array_slice($all_gyms, $offset, $per_page);
-
-$from = $total > 0 ? $offset + 1 : 0;
-$to = $total > 0 ? min($total, $offset + count($gyms)) : 0;
-
 $listResp = $paged['response'];
 $gyms = $paged['items'];
 $pagination = $paged['meta'];
